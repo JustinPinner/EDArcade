@@ -1,0 +1,36 @@
+// doc/designBrief.txt
+
+Create a 2D top-down retro-style arcade shooter based on Elite: Dangerous.
+
+The game environment will represent a single system's space at any time. This space will scroll beneath the viewport as the player flies their ship around.
+
+The aim of the game is to shoot down 'wanted' ships, collecting power-ups that they may drop, cash rewards (bounties) for their destruction, experience points and cargo which will be instantly converted into cash.
+
+If the player shoots at a 'clean' status ship, they become wanted and gain a bounty themselves.
+
+Security ships roam the system and will engage any wanted ships they encounter. They will also respond to mayday calls from ships that are under attack.
+
+Ships will materialise from hyperspace randomly, and may leave the current system by jumping into hyperspace if they are under attack or losing a fight. The player cannot follow a ship into hyperspace.
+
+The player will promoted through successive ranks from 'Harmless' to 'Elite' baed on the number of experience points gained.
+
+A non-player ship's pilot may eject if their ship reaches a critical state. The player may catch the pilot for a 'captured alive' bonus.The player cannot eject from their ship.
+
+The ships featured in the game will have the same or similar characteristics to their Elite: Dangerous counterparts, including mass, agility, hardpoints, shield and thruster ratings, armour etc.
+
+A ship's hardpoints are used to mount weapons. These can be upgraded in-game by collecting dropped power-ups from destroyed ships. Not all hardpoints will be filled on any ship at the beginning. Non-player ships may also pick up power-ups and upgrade their weapon load-outs.
+
+Weapons will also have similar characteristics to their Elite: Dangerous equivalents; energy or projectile weapons, missiles and mining lasers etc.
+
+Ships will spawn in one of several roles: trader, miner, pirate, bounty hunter, security service or player. Each role will have a few key behaviours which will switch in and out automatically as the game progresses and as situational awareness allows.
+
+Non-player ship 'pilots' will each have a rank and corresponding flight skill level. The player may engage any ship at any rank.
+
+Ships spawned to engage the player (pirates, or bounty hunters if the player's ship is 'wanted') will be constrained to be within one or two ranks of the player. Security ships will have a minimum rank of 'dangerous' but will try to disable the player's ship rather than destroy it. If the player's ship is successfully disabled, they will pay off their own bounty and surrender all collected power-ups to the security forces, returning their ship to it's initial default state. 
+
+The player may make hyperspace jumps to other systems by collecting hyperspace power-ups from destroyed ships.
+
+All ships can engage or disengage 'flight assist' mode for increased control or combat agility respectively. When disengaged, yaw and thrust are partially disconnected from momentum, bringing inertia effects into play.
+
+
+

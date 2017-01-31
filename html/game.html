@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Game</title>
+		<script>
+		function sheetLoaded() {
+		  // Do something interesting; the sheet has been loaded
+		}
+		function sheetError() {
+		  alert("An error occurred loading the stylesheet!");
+		}
+		</script>
+		<link href="../css/game.css" rel="stylesheet">
+	</head>
+	<body>
+		<div id="bgdiv">
+			<canvas id="bgcanvas">
+			</canvas>	
+		</div>
+		<div id="mgdiv">
+			<canvas id="mgcanvas">
+			</canvas>	
+		</div>
+		<div id="fgdiv">
+			<canvas id="fgcanvas">
+				Your browser doesn't support the canvas element
+			</canvas>
+		</div>
+		<script type="text/javascript" src="../js/imageService.js"></script>
+		<script type="text/javascript" src="../model/environment.js"></script>
+		<script type="text/javascript" src="../js/perfmon.js"></script>
+		<script type="text/javascript" src="../js/keys.js"></script>
+		<script type="text/javascript" src="../util/polyfill.js"></script>
+		<script type="text/javascript" src="../model/weapon.js"></script>
+		<script type="text/javascript" src="../js/fsm.js"></script>
+		<script type="text/javascript" src="../model/ship.js"></script>
+		<script type="text/javascript" src="../model/player.js"></script>
+		<script type="text/javascript" src="../js/game.js"></script>
+	</body>
+</html>

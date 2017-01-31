@@ -1,0 +1,17 @@
+// css/test.css
+div {
+  margin-bottom: 1.5em;
+}
+
+#radial-gradient {
+  background: radial-gradient(circle, black, white);
+  width: 300px;
+  height: 300px;
+}
+
+#world {
+	background: url(../image/star-tile.jpg);
+  width: 300px;
+  height: 300px;
+}
+
