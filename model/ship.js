@@ -154,6 +154,10 @@ var Ship = function(shipType, shipName, player, centreX, centreY) {
 		x: centreX - (this.geometry.width / 2),
 		y: centreY - (this.geometry.height / 2),
 	};
+	this.position.global = {
+		x: centreX - (this.geometry.width / 2),
+		y: centreY - (this.geometry.height / 2),
+	};
 	this.centre = {
 		x: this.position.x + (this.geometry.width / 2),
 		y: this.position.y + (this.geometry.height / 2)
@@ -233,9 +237,7 @@ var Ship = function(shipType, shipName, player, centreX, centreY) {
 		if (this.vector.speed == 0) return;
 		var moveX = dir_x(this.vector.speed * 0.025, this.vector.direction);
 		var moveY = dir_y(this.vector.speed * 0.025, this.vector.direction);
-		// the player moves the entire viewport while NPCs move themselves anywhere within the environment geometry
-		// the viewport.scroll method determines whether the viewport or the ship (or neither) should be moved
-		if (this.player && (moveX != 0 || moveY != 0)) {
+		if (this.player) {
 			var scrollData = {
 				obj: this,
 				moveX: moveX,
@@ -243,8 +245,8 @@ var Ship = function(shipType, shipName, player, centreX, centreY) {
 			};
 			environment.viewport.scroll(scrollData);
 		}
-		this.position.x += moveX;
-		this.position.y += moveY;
+		this.position.x -= moveX;
+		this.position.y -= moveY;
 	};
 	this.npcUpdate = function () {
     this.fsm.execute();
@@ -255,17 +257,23 @@ var Ship = function(shipType, shipName, player, centreX, centreY) {
 			this.draw();
 		} else {
 			this.npcUpdate();
-			if(this.isInViewport()) {
-				this.draw();
-			}
+	    if (this.isOnScreen()) {
+	    	this.draw();
+	    }
     }
 	}
-	this.isInViewport = function() {
-		return (this.position.x + this.geometry.width > environment.viewport.x &&
-			this.position.y + this.geometry.height > environment.viewport.y) &&
-		(this.position.x < environment.viewport.x + environment.viewport.width &&
-			this.position.y < environment.viewport.y + environment.viewport.height);
-	};
+	this.isOnScreen = function() {
+		playerVisibleRegion = {
+			x1: playerShip.centre.x - environment.viewport.width / 2,
+			y1: playerShip.centre.y - environment.viewport.height / 2,
+			x2: playerShip.centre.x + environment.viewport.width / 2,
+			y2: playerShip.centre.y + environment.viewport.width / 2
+		};
+		return this.position.x > playerVisibleRegion.x1 && 
+						this.position.y > playerVisibleRegion.y1 &&
+						this.position.x < playerVisibleRegion.x2 &&
+						this.position.y < playerVisibleRegion.y2;
+	}
 	this.isKnown = function(ship) {
 		for (var n = 0; n < this.targets.length; n++) {
 			if (this.targets[n] === ship) {
@@ -384,8 +392,8 @@ var Ship = function(shipType, shipName, player, centreX, centreY) {
 		if (ship.vector.direction < this.vector.direction) this.yaw('ccw');
 	};
 	this.draw = function() {
-		var drawOffsetX = environment.viewport.x;
-		var drawOffsetY = environment.viewport.y;
+		var drawOffsetX = this.player ? environment.viewport.x : playerShip.position.x;
+		var drawOffsetY = this.player ? environment.viewport.y : playerShip.position.y;
 		environment.viewport.ctx.save();
 		environment.viewport.ctx.translate(
 		  this.centre.x - drawOffsetX, 

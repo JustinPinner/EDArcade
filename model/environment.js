@@ -154,6 +154,8 @@ var Viewport = function() {
 	};
 	this.scroll = function(scrollData) {
 		environment.midground.draw(scrollData);
+		//this.x += scrollData.moveX;
+		//this.y += scrollData.moveY;
 	};
 	this.contains = function(x, y, geometry) {
 	 return (x > this.x && x < this.x + this.width) && 

@@ -2,18 +2,20 @@
 
 var maxNPC = 10;
 var allShips = [];
-
-var playerName = null;  //TODO: get from user
-var shipName = null;  //TODO: get from user
-var player = new Player(playerName);
 var fps = 30;
 
 var imageService = new ImageService();
 var environment = new GameEnv();
 
+var playerName = null;  //TODO: get from user
+var shipName = null;  //TODO: get from user
+var player = new Player(playerName);
+var playerShip = null;
+
 function setup() {
   environment.init();
-  allShips.push(new Ship('Cobra3', shipName, player, environment.viewport.getCentre().x, environment.viewport.getCentre().y));
+  playerShip = new Ship('Cobra3', shipName, player, environment.viewport.getCentre().x, environment.viewport.getCentre().y);
+  allShips.push(playerShip);
 	var maxSpawnDistX = environment.viewport.width * 4;
   var maxSpawnDistY = environment.viewport.height * 4;
   for (var i = 0; i < maxNPC; i++) {
@@ -64,6 +66,12 @@ function refresh() {
   environment.viewport.clear();  
   for (var i = 0; i < allShips.length; i++) {
     allShips[i].updateAndDraw();
+    if (allShips[i] === playerShip) {
+      var uiCoord = document.querySelector("#coord");
+      if (uiCoord) {
+        uiCoord.innerHTML = "<p>x:" + playerShip.position.x + " y:" + playerShip.position.y + "</p>";
+      }
+    }
   }
 }
 
