@@ -67,10 +67,18 @@ function refresh() {
   for (var i = 0; i < allShips.length; i++) {
     allShips[i].updateAndDraw();
     if (allShips[i] === playerShip) {
-      var uiCoord = document.querySelector("#coord");
+      var uiCoord = document.querySelector(".ui.debug.coord");
       if (uiCoord) {
-        uiCoord.innerHTML = "<p>x:" + playerShip.position.x + " y:" + playerShip.position.y + "</p>";
+        uiCoord.innerHTML = "<p>x:" + playerShip.position.x.toFixed(1) + " y:" + playerShip.position.y.toFixed(1) + "</p>";
       }
+      var uiVector = document.querySelector(".ui.debug.vector");
+      if (uiVector) {
+        uiVector.innerHTML = "<p>spd:" + playerShip.vector.speed.toFixed(1) + " dir:" + playerShip.vector.direction.toFixed(1) + "</p>";
+      }
+      var uiInputs = document.querySelector(".ui.debug.inputs");
+      if (uiInputs) {
+        uiInputs.innerHTML = "<p>thrust:" + playerShip.thrust.toFixed(1) + "</p>";
+      }      
     }
   }
 }
