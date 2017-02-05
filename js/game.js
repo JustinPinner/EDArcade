@@ -1,6 +1,8 @@
 // js/game.js
 
-var maxNPC = 10;
+var debug = true;
+
+var maxNPC = 0;
 var allShips = [];
 var fps = 30;
 
@@ -14,7 +16,8 @@ var playerShip = null;
 
 function setup() {
   environment.init();
-  playerShip = new Ship('Cobra3', shipName, player, environment.viewport.getCentre().x, environment.viewport.getCentre().y);
+  //playerShip = new Ship('Cobra3', shipName, player, environment.viewport.getCentre().x, environment.viewport.getCentre().y);
+  playerShip = new Cobra3(shipName, player, environment.viewport.getCentre().x, environment.viewport.getCentre().y)
   allShips.push(playerShip);
 	var maxSpawnDistX = environment.viewport.width * 4;
   var maxSpawnDistY = environment.viewport.height * 4;
@@ -34,8 +37,8 @@ function rand(max) {
 }
 
 function distanceBetween(objA, objB) {
-  var dx = objA.centre.x - objB.centre.x;
-  var dy = objA.centre.y - objB.centre.y;
+  var dx = objA.centre().x - objB.centre().x;
+  var dy = objA.centre().y - objB.centre().y;
   return Math.sqrt((dx * dx) + (dy * dy));
 }
 
@@ -66,18 +69,21 @@ function refresh() {
   environment.viewport.clear();  
   for (var i = 0; i < allShips.length; i++) {
     allShips[i].updateAndDraw();
+    if (debug) {
+      allShips[i].drawDebug();
+    }
     if (allShips[i] === playerShip) {
       var uiCoord = document.querySelector(".ui.debug.coord");
       if (uiCoord) {
-        uiCoord.innerHTML = "<p>x:" + playerShip.position.x.toFixed(1) + " y:" + playerShip.position.y.toFixed(1) + "</p>";
+        uiCoord.innerHTML = "<p>x:" + (playerShip.x ? playerShip.x.toFixed(1) : "?") + " y:" + (playerShip.y ? playerShip.y.toFixed(1) : "?") + "</p>";
       }
       var uiVector = document.querySelector(".ui.debug.vector");
       if (uiVector) {
-        uiVector.innerHTML = "<p>spd:" + playerShip.vector.speed.toFixed(1) + " dir:" + playerShip.vector.direction.toFixed(1) + "</p>";
+        uiVector.innerHTML = "<p>spd:" + (playerShip.speed ? playerShip.speed.toFixed(1) : "?") + " dir:" + (playerShip.direction ? playerShip.direction.toFixed(1) : "?") + "</p>";
       }
       var uiInputs = document.querySelector(".ui.debug.inputs");
       if (uiInputs) {
-        uiInputs.innerHTML = "<p>thrust:" + playerShip.thrust.toFixed(1) + "</p>";
+        uiInputs.innerHTML = "<p>thrust:" + (playerShip.thrust ? playerShip.thrust.toFixed(1) : "?") + "</p>";
       }      
     }
   }

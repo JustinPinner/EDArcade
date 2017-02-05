@@ -1,6 +1,386 @@
 // model/ship.js
 var nextShipId = 0;
 
+/*
+	Generic ship constructor
+*/
+class Ship {
+	constructor(shipType, shipName, player, cx, cy) {
+		this.id = nextShipId += 1;
+		this.cx = cx;
+		this.cy = cy;
+		this.vx = 0;
+		this.vy = 0;
+		this.player = player;
+		this.flightAssist = true;
+		this.heading = this.player ? 270 : rand(359);
+		this.thrust = 0;
+		this.direction = this.heading;
+		this.targets = [];
+		this.role = this.player ? ShipRoles['Player'] : ShipRoles[Object.keys(ShipRoles)[Math.floor(rand(Object.keys(ShipRoles).length))]];
+		this.fsm = this.player ? null : new FSM(this, this.role.initialState);
+		this.sprite = {
+			x: 0,
+			y: 0,
+			width: 0,
+			height: 0,
+			image: null
+		};
+	}
+	get x() {
+		return this.cx - (this.width / 2);
+	}
+	get y() {
+		return this.cy - (this.height / 2);
+	}
+};
+
+Ship.prototype.updateAndDraw = function() {
+	if (this.player) {
+		this.playerUpdate();
+		this.draw();
+	} else {
+		this.npcUpdate();
+    if (this.isOnScreen()) {
+    	this.draw();
+    }
+  }
+};
+
+Ship.prototype.npcUpdate = function () {
+  if (this.fsm) {
+	  this.fsm.execute();
+	}
+};
+
+Ship.prototype.maximumWeaponRange = function() {
+	var range = null;
+	for (w in this.hardpoints) {
+		if (this.hardpoints[w].weapon && this.hardpoints[w].loaded) {
+			if (range) {
+				if (range > this.hardpoints[w].weapon.range) {
+					range = this.hardpoints[w].weapon.range;
+				}
+			} else {
+				range = this.hardpoints[w].weapon.range;
+			}
+		}
+	}
+	return range;
+};
+	
+Ship.prototype.playerUpdate = function() {
+	if (keyUp) {
+		this.increaseThrust();
+	}
+	if (keyDown) {
+		this.decreaseThrust();
+	}
+	if (keyLeft) {
+		this.yaw('ccw');
+	}
+	if (keyRight) {
+		this.yaw('cw');
+	}
+	if (keyBoost) {
+		this.boost();
+	}
+	if (keyFire) {
+		this.fireWeapons();
+	}
+	if (keyFlightAssist) {
+		this.flightAssist = !this.flightAssist;
+	}		
+	this.updateMomentum();
+	this.updatePosition();
+};
+	
+Ship.prototype.updateMomentum = function() {
+	if (this.thrust != 0) {
+		this.thrust > 0 ? this.accelerate() : this.decelerate();
+	}
+	//if (!this.flightAssist) return;
+	var dA = angleDifference(this.heading, this.direction);
+	//if (Math.abs(this.thrust) != 0) {
+	//	this.vector.direction += dA * (this.yawRate() * (1 / Math.abs(this.thrust)));	
+	//} else {
+		this.direction += dA * this.yawRate();
+	//}
+	if (this.direction > 359) {
+		this.direction -= 359;
+	}
+	if (this.direction < 0) {
+		this.direction += 359;
+	}
+};
+
+Ship.prototype.updatePosition = function() {
+	if (this.speed == 0) return;
+	var moveX = dir_x(this.speed * 0.025, this.direction);
+	var moveY = dir_y(this.speed * 0.025, this.direction);
+	if (this.player) {
+		var scrollData = {
+			obj: this,
+			moveX: moveX,
+			moveY: moveY
+		};
+		environment.viewport.scroll(scrollData);
+	}
+	this.x -= moveX;
+	this.y -= moveY;
+};
+
+Ship.prototype.isOnScreen = function() {
+	playerVisibleRegion = {
+		x1: playerShip.cx - environment.viewport.width / 2,
+		y1: playerShip.cy - environment.viewport.height / 2,
+		x2: playerShip.cx + environment.viewport.width / 2,
+		y2: playerShip.cy + environment.viewport.width / 2
+	};
+	return this.x > playerVisibleRegion.x1 && 
+					this.y > playerVisibleRegion.y1 &&
+					this.x < playerVisibleRegion.x2 &&
+					this.y < playerVisibleRegion.y2;
+};
+
+Ship.prototype.isKnown = function(ship) {
+	for (var n = 0; n < this.targets.length; n++) {
+		if (this.targets[n] === ship) {
+			return true;
+		}
+	}
+	return false;
+};
+
+Ship.prototype.isTargetedBy = function(ship) {
+	for (var n = 0; n < ship.targets.length; n++) {
+		if (ship.targets[n] === this) {
+			return true;
+		}
+	}
+	return false;
+};
+
+Ship.prototype.selectClosestTarget = function() {
+	var closest = null;
+	for (var n = 0; n < this.targets.length; n++) {
+		if (closest) {
+			if (distanceBetween(this, this.targets[i]) < distanceBetween(this, closest)) {
+				closest = this.targets[i];
+			}
+		} else {
+			closest = this.targets[n];
+		}
+	}
+	this.target = closest;
+};
+
+Ship.prototype.isInFrontOf = function(ship) {
+	var dA = angleBetween(this.cx, this.cy, ship.cx, ship.cy);
+	return Math.abs(dA) >= 150;
+};
+	
+Ship.prototype.isBehind = function(ship) {
+	return !this.isInFrontOf(ship);
+};
+
+Ship.prototype.fire = function(weapon) {
+	console.log(this.shipName + ':' + weapon + ' pewpew');
+};
+
+Ship.prototype.boost = function(topSpeed) {
+	console.log('boosting to ' + topSpeed + 'm/s');
+};
+
+Ship.prototype.isHostile = function() {
+	// TODO
+	return this.player ? true : false;
+};
+
+Ship.prototype.engageRadius = function() {
+	return this.height * 10;
+};
+
+Ship.prototype.accelerationRate = function() {
+	return (this.agility / this.mass) * Math.abs(this.thrust) * 10;
+}
+
+Ship.prototype.yawRate = function() {
+	return (this.agility * this.mass) / 100;
+};
+
+Ship.prototype.increaseThrust = function() {
+	this.thrust += 2;
+	if (this.thrust > 100) this.thrust = 100;	
+	if (this.thrust > 0) this.accelerate();
+};
+	
+Ship.prototype.decreaseThrust = function() {
+	this.thrust -= 2;
+	if (this.thrust < -100) this.thrust = -100;	
+	if (this.thrust < 0) this.decelerate();
+};
+	
+Ship.prototype.allStop = function() {
+	this.thrust = 0;
+};
+	
+Ship.prototype.accelerate = function() {	
+	this.speed += this.accelerationRate();
+	if (this.speed > this.maxSpeed) {
+		this.speed = this.maxSpeed;
+	}
+};
+	
+Ship.prototype.decelerate = function() {
+	this.speed -= this.accelerationRate();
+	if (this.speed < -this.maxSpeed) {
+		this.speed = -this.maxSpeed;
+	}
+};
+	
+Ship.prototype.yaw = function(dir) {
+	var degsToAdd = 0;
+	switch (dir) {
+		case 'cw':
+			degsToAdd = angleDifference(this.heading, this.heading - this.yawRate());
+			break;
+		case 'ccw':
+			degsToAdd = angleDifference(this.heading, this.heading + this.yawRate());
+			break;
+	}	
+	this.heading += degsToAdd;
+	if (this.heading > 359) {
+		this.heading -= 359;
+	}
+	if (this.heading < 0) {
+		this.heading += 359;
+	}
+};
+	
+Ship.prototype.boost = function() {
+	this.vector.speed = this.boostSpeed;	
+};
+	
+Ship.prototype.setTarget = function(ship) {
+	this.target = ship;
+};
+	
+Ship.prototype.fireWeapons = function() {
+	for (hardpoint in this.hardpoints) {
+		if (this.hardpoints[hardpoint].loaded && this.hardpoints[hardpoint].weapon) {
+			//this.hardpoints[hardpoint].weapon.fire();
+		}
+	}	
+};
+	
+Ship.prototype.matchTargetVector = function(ship) {
+	if (!ship) return;
+	if (ship.speed > this.speed) this.increaseThrust();
+	if (ship.speed < this.speed) this.decreaseThrust();
+	if (ship.direction > this.direction) this.yaw('cw');
+	if (ship.direction < this.direction) this.yaw('ccw');
+};
+	
+Ship.prototype.draw = function() {
+	var drawOffsetX = this.player ? environment.viewport.x : playerShip.x;
+	var drawOffsetY = this.player ? environment.viewport.y : playerShip.y;
+	environment.viewport.ctx.save();
+	environment.viewport.ctx.translate(
+	  this.cx - drawOffsetX, 
+	  this.cy - drawOffsetY
+	);
+	environment.viewport.ctx.rotate(degreesToRadians(this.heading + 90));
+	try {
+	  environment.viewport.ctx.drawImage(this.sprite.image, -this.width / 2, -this.height / 2, this.width, this.height);
+	} catch(e) {
+	  environment.viewport.ctx.restore();
+	  environment.viewport.ctx.fillRect(this.x - drawOffsetX, this.y - drawOffsetY, this.width, this.height);
+	}
+	environment.viewport.ctx.restore();
+};
+
+Ship.prototype.drawDebug = function() {
+	var drawOffsetX = this.player ? environment.viewport.x : playerShip.x;
+	var drawOffsetY = this.player ? environment.viewport.y : playerShip.y;
+
+	environment.viewport.ctx.save();
+	
+	// draw momentum vector
+	environment.viewport.ctx.beginPath();
+	environment.viewport.ctx.moveTo(this.cx - drawOffsetX, this.cy - drawOffsetY);
+	environment.viewport.ctx.lineTo((this.cx - drawOffsetX) + dir_x(this.engageRadius() * 0.1, this.direction), (this.cy - drawOffsetY) + dir_y(this.engageRadius() * 0.1, this.direction));
+	environment.viewport.ctx.strokeStyle = "blue";
+	environment.viewport.ctx.stroke();
+	// draw heading marker
+	environment.viewport.ctx.beginPath();
+	environment.viewport.ctx.moveTo(this.cx - drawOffsetX, this.cy - drawOffsetY);
+	environment.viewport.ctx.lineTo((this.cx - drawOffsetX) + dir_x(this.engageRadius() * 0.1, this.heading), (this.cy - drawOffsetY) + dir_y(this.engageRadius() * 0.1, this.heading));
+	environment.viewport.ctx.strokeStyle = "green";
+	environment.viewport.ctx.stroke();
+	// draw speed marker
+	environment.viewport.ctx.beginPath();
+	environment.viewport.ctx.moveTo(this.cx - drawOffsetX, this.cy - drawOffsetY);
+	environment.viewport.ctx.lineTo((this.cx - drawOffsetX) + dir_x(this.speed, this.heading), (this.cy - drawOffsetY) + dir_y(this.speed, this.heading));
+	environment.viewport.ctx.strokeStyle = "red";
+	environment.viewport.ctx.stroke();
+	// draw thrust marker
+	environment.viewport.ctx.beginPath();
+	environment.viewport.ctx.moveTo(this.cx - drawOffsetX, this.cy - drawOffsetY);
+	environment.viewport.ctx.lineTo((this.cx - drawOffsetX) + dir_x(this.thrust, this.heading), (this.cy - drawOffsetY) + dir_y(this.thrust, this.heading));
+	environment.viewport.ctx.strokeStyle = "yellow";
+	environment.viewport.ctx.stroke();
+
+	environment.viewport.ctx.restore();
+}
+
+/*
+	SIDEWINDER
+*/
+var Sidewinder = function(shipName, player, cx, cy) {
+	Ship.call(this);
+	this.shipName = shipName ? shipName : 'Sidewinder';
+	this.maxSpeed = 220;
+	this.boostSpeed = 321;
+	this.mass = 25;
+	this.agility = 0.8;
+	this.armour = 108;
+	this.hardpoints = Defaults.Hardpoints.Sidewinder;
+	this.width = 44;
+	this.height = 30;
+	this.player = player;
+	this.rank = 0;
+	this.sprite = {
+			x: 0,
+			y: 0,
+			width: 44,
+			height: 30,
+			image: null		
+	};
+};
+Sidewinder.prototype = Object.create(Ship.prototype);
+
+/*
+	COBRA III
+*/
+class Cobra3 extends Ship {
+	constructor(shipName, player, cx, cy) {
+		super('Cobra3', shipName, player, cx, cy);
+		this.shipName = shipName ? shipName : 'Cobra MkIII';
+		this.mass = 180;
+		this.agility = 0.6;
+		this.armour = 216;
+		this.maxSpeed = 282;
+		this.boostSpeed = 402;
+		this.hardpoints = Defaults.Hardpoints.Cobra['3'],
+		this.width = 88;
+		this.height = 54;
+		this.sprite.width = this.width;
+		this.sprite.height = this.height;
+		this.sprite.image = imageService.loadImage('../image/' + this.shipType + '.png');
+	}
+};
+
 var ShipTypes = {
 	Sidewinder: {
 		id: 'Sidewinder',
@@ -21,6 +401,28 @@ var ShipTypes = {
 			width: 44,
 			height: 30,
 			image: null
+		},
+		cellAnims: {
+			shieldStrike: {
+				src: null,
+				frames: null,
+				frameRate: null
+			},
+			hullStrike: {
+				src: null,
+				frames: null,
+				frameRate: null
+			},
+			boostEngage: {
+				src: null,
+				frames: null,
+				frameRate: null
+			},
+			explode: {
+				src: null,
+				frames: null,
+				frameRate: null
+			}
 		}
 	},
 	Cobra3: {
@@ -108,329 +510,10 @@ var ShipRoles = {
 	pirate: {
 		roleName: 'Pirate',
 		initialState: 'hunt'
+	},
+	player: {
+		roleName: 'Player',
+		initialState: null
 	}
 }
-
-// Generic ship constructor
-var Ship = function(shipType, shipName, player, centreX, centreY) {
-	var _shipType = ShipTypes[shipType];
-	this.id = nextShipId += 1;
-	this.shipType = _shipType.id;
-	this.shipName = shipName ? shipName : _shipType.name;
-	this.maxSpeed = _shipType.maxSpeed;
-	this.boostSpeed = _shipType.boostSpeed;
-	this.mass = _shipType.mass;
-	this.agility = _shipType.agility;
-	this.armour = _shipType.armour;
-	this.hardpoints = _shipType.hardpoints;
-	this.geometry = _shipType.geometry;
-	this.player = player;
-	this.rank = 0;
-	this.sprite = _shipType.sprite;
-	this.sprite.image = imageService.loadImage('../image/' + _shipType.id + '.png');
-	this.cellAnims = {
-		shieldStrike: {
-			src: null,
-			frames: null,
-			frameRate: null
-		},
-		hullStrike: {
-			src: null,
-			frames: null,
-			frameRate: null
-		},
-		boostEngage: {
-			src: null,
-			frames: null,
-			frameRate: null
-		},
-		explode: {
-			src: null,
-			frames: null,
-			frameRate: null
-		}
-	};
-	this.position = {
-		x: centreX - (this.geometry.width / 2),
-		y: centreY - (this.geometry.height / 2),
-	};
-	this.position.global = {
-		x: centreX - (this.geometry.width / 2),
-		y: centreY - (this.geometry.height / 2),
-	};
-	this.centre = {
-		x: this.position.x + (this.geometry.width / 2),
-		y: this.position.y + (this.geometry.height / 2)
-	}
-	this.flightAssist = true;
-	this.heading = this.player ? 270 : rand(359);
-	this.thrust = 0;
-	this.vector = {
-		speed: 0,
-		direction: this.heading
-	};
-	if (this.player) {
-		this.player.ship = this;
-	}
-	this.targets = [];
-	this.role = ShipRoles[Object.keys(ShipRoles)[Math.floor(rand(Object.keys(ShipRoles).length))]];
-	this.fsm = this.player ? null : new FSM(this, this.role.initialState);
-	this.maximumWeaponRange = function() {
-		var range = null;
-		for (w in this.hardpoints) {
-			if (this.hardpoints[w].weapon && this.hardpoints[w].loaded) {
-				if (range) {
-					if (range > this.hardpoints[w].weapon.range) {
-						range = this.hardpoints[w].weapon.range;
-					}
-				} else {
-					range = this.hardpoints[w].weapon.range;
-				}
-			}
-		}
-		return range;
-	};
-	this.playerUpdate = function() {
-		if (keyUp) {
-			this.increaseThrust();
-		}
-		if (keyDown) {
-			this.decreaseThrust();
-		}
-		if (keyLeft) {
-			this.yaw('ccw');
-		}
-		if (keyRight) {
-			this.yaw('cw');
-		}
-		if (keyBoost) {
-			this.boost();
-		}
-		if (keyFire) {
-			this.fireWeapons();
-		}
-		if (keyFlightAssist) {
-			this.flightAssist = !this.flightAssist;
-		}		
-		this.updateMomentum();
-		this.updatePosition();
-	};
-	this.updateMomentum = function() {
-		if (this.thrust != 0) {
-			this.thrust > 0 ? this.accelerate() : this.decelerate();
-		}
-		//if (!this.flightAssist) return;
-		var dA = angleDifference(this.heading, this.vector.direction);
-		//if (Math.abs(this.thrust) != 0) {
-		//	this.vector.direction += dA * (this.yawRate() * (1 / Math.abs(this.thrust)));	
-		//} else {
-			this.vector.direction += dA * this.yawRate();
-		//}
-		if (this.vector.direction > 359) {
-			this.vector.direction -= 359;
-		}
-		if (this.vector.direction < 0) {
-			this.vector.direction += 359;
-		}
-	};
-	this.updatePosition = function() {
-		if (this.vector.speed == 0) return;
-		var moveX = dir_x(this.vector.speed * 0.025, this.vector.direction);
-		var moveY = dir_y(this.vector.speed * 0.025, this.vector.direction);
-		if (this.player) {
-			var scrollData = {
-				obj: this,
-				moveX: moveX,
-				moveY: moveY
-			};
-			environment.viewport.scroll(scrollData);
-		}
-		this.position.x -= moveX;
-		this.position.y -= moveY;
-	};
-	this.npcUpdate = function () {
-    this.fsm.execute();
-	};
-	this.updateAndDraw = function() {
-		if (this.player) {
-			this.playerUpdate();
-			this.draw();
-		} else {
-			this.npcUpdate();
-	    if (this.isOnScreen()) {
-	    	this.draw();
-	    }
-    }
-	}
-	this.isOnScreen = function() {
-		playerVisibleRegion = {
-			x1: playerShip.centre.x - environment.viewport.width / 2,
-			y1: playerShip.centre.y - environment.viewport.height / 2,
-			x2: playerShip.centre.x + environment.viewport.width / 2,
-			y2: playerShip.centre.y + environment.viewport.width / 2
-		};
-		return this.position.x > playerVisibleRegion.x1 && 
-						this.position.y > playerVisibleRegion.y1 &&
-						this.position.x < playerVisibleRegion.x2 &&
-						this.position.y < playerVisibleRegion.y2;
-	}
-	this.isKnown = function(ship) {
-		for (var n = 0; n < this.targets.length; n++) {
-			if (this.targets[n] === ship) {
-				return true;
-			}
-		}
-		return false;
-	};
-	this.isTargetedBy = function(ship) {
-		for (var n = 0; n < ship.targets.length; n++) {
-			if (ship.targets[n] === this) {
-				return true;
-			}
-		}
-		return false;
-	};
-	this.selectClosestTarget = function() {
-		var closest = null;
-		for (var n = 0; n < this.targets.length; n++) {
-			if (closest) {
-				if (distanceBetween(this, this.targets[i]) < distanceBetween(this, closest)) {
-					closest = this.targets[i];
-				}
-			} else {
-				closest = this.targets[n];
-			}
-		}
-		this.target = closest;
-	};
-	this.isInFrontOf = function(ship) {
-		var dA = angleBetween(this.centre.x, this.centre.y, ship.centre.x, ship.centre.y);
-		return Math.abs(dA) >= 150;
-	};
-	this.isBehind = function(ship) {
-		return !this.isInFrontOf(ship);
-	};
-	this.fire = function(weapon) {
-		console.log(this.shipName + ':' + weapon + ' pewpew');
-	};
-	this.boost = function(topSpeed) {
-		console.log('boosting to ' + topSpeed + 'm/s');
-	};
-	this.isHostile = function() {
-		return this.player ? true : false;
-	};
-	this.engageRadius = function() {
-		return this.geometry.height * 10;
-	};
-	this.accelerationRate = function() {
-		return (this.agility / this.mass) * Math.abs(this.thrust) * 10;
-	}
-	this.yawRate = function() {
-		return (this.agility * this.mass) / 100;
-	};
-	this.increaseThrust = function() {
-		this.thrust += 2;
-		if (this.thrust > 100) this.thrust = 100;	
-		if (this.thrust > 0) this.accelerate();
-	};
-	this.decreaseThrust = function() {
-		this.thrust -= 2;
-		if (this.thrust < -100) this.thrust = -100;	
-		if (this.thrust < 0) this.decelerate();
-	};
-	this.allStop = function() {
-		this.thrust = 0;
-	};
-	this.accelerate = function() {	
-		this.vector.speed += this.accelerationRate();
-		if (this.vector.speed > this.maxSpeed) {
-			this.vector.speed = this.maxSpeed;
-		}
-	};
-	this.decelerate = function() {
-		this.vector.speed -= this.accelerationRate();
-		if (this.vector.speed < -this.maxSpeed) {
-			this.vector.speed = -this.maxSpeed
-		}
-	};
-	this.yaw = function(dir) {
-		var degsToAdd = 0;
-		switch (dir) {
-			case 'cw':
-				degsToAdd = angleDifference(this.heading, this.heading - this.yawRate());
-				break;
-			case 'ccw':
-				degsToAdd = angleDifference(this.heading, this.heading + this.yawRate());
-				break;
-		}	
-		this.heading += degsToAdd;
-		if (this.heading > 359) {
-			this.heading -= 359;
-		}
-		if (this.heading < 0) {
-			this.heading += 359;
-		}
-	};
-	this.boost = function() {
-		this.vector.speed = this.boostSpeed;	
-	};
-	this.setTarget = function(ship) {
-		this.target = ship;
-	};
-	this.fireWeapons = function() {
-		for (hardpoint in this.hardpoints) {
-			if (this.hardpoints[hardpoint].loaded && this.hardpoints[hardpoint].weapon) {
-				//this.hardpoints[hardpoint].weapon.fire();
-			}
-		}	
-	};
-	this.matchTargetVector = function(ship) {
-		if (!ship) return;
-		if (ship.vector.speed > this.vector.speed) this.increaseThrust();
-		if (ship.vector.speed < this.vector.speed) this.decreaseThrust();
-		if (ship.vector.direction > this.vector.direction) this.yaw('cw');
-		if (ship.vector.direction < this.vector.direction) this.yaw('ccw');
-	};
-	this.draw = function() {
-		var drawOffsetX = this.player ? environment.viewport.x : playerShip.position.x;
-		var drawOffsetY = this.player ? environment.viewport.y : playerShip.position.y;
-		environment.viewport.ctx.save();
-		environment.viewport.ctx.translate(
-		  this.centre.x - drawOffsetX, 
-		  this.centre.y - drawOffsetY
-		);
-		environment.viewport.ctx.rotate(degreesToRadians(this.heading + 90));
-		try {
-		  environment.viewport.ctx.drawImage(this.sprite.image, -this.geometry.width / 2, -this.geometry.height / 2, this.geometry.width, this.geometry.height);
-		} catch(e) {
-		  environment.viewport.ctx.restore();
-		  environment.viewport.ctx.fillRect(this.position.x - drawOffsetX, this.position.y - drawOffsetY, this.geometry.width, this.geometry.height);
-		}
-		environment.viewport.ctx.restore();
-		// draw momentum vector
-		environment.viewport.ctx.beginPath();
-		environment.viewport.ctx.moveTo(this.centre.x - drawOffsetX, this.centre.y - drawOffsetY);
-		environment.viewport.ctx.lineTo((this.centre.x - drawOffsetX) + dir_x(this.engageRadius() * 0.1, this.vector.direction), (this.centre.y - drawOffsetY) + dir_y(this.engageRadius() * 0.1, this.vector.direction));
-		environment.viewport.ctx.strokeStyle = "blue";
-		environment.viewport.ctx.stroke();
-		// draw heading marker
-		environment.viewport.ctx.beginPath();
-		environment.viewport.ctx.moveTo(this.centre.x - drawOffsetX, this.centre.y - drawOffsetY);
-		environment.viewport.ctx.lineTo((this.centre.x - drawOffsetX) + dir_x(this.engageRadius() * 0.1, this.heading), (this.centre.y - drawOffsetY) + dir_y(this.engageRadius() * 0.1, this.heading));
-		environment.viewport.ctx.strokeStyle = "green";
-		environment.viewport.ctx.stroke();
-		// draw speed marker
-		environment.viewport.ctx.beginPath();
-		environment.viewport.ctx.moveTo(this.centre.x - drawOffsetX, this.centre.y - drawOffsetY);
-		environment.viewport.ctx.lineTo((this.centre.x - drawOffsetX) + dir_x(this.vector.speed, this.heading), (this.centre.y - drawOffsetY) + dir_y(this.vector.speed, this.heading));
-		environment.viewport.ctx.strokeStyle = "red";
-		environment.viewport.ctx.stroke();
-		// draw thrust marker
-		environment.viewport.ctx.beginPath();
-		environment.viewport.ctx.moveTo(this.centre.x - drawOffsetX, this.centre.y - drawOffsetY);
-		environment.viewport.ctx.lineTo((this.centre.x - drawOffsetX) + dir_x(this.thrust, this.heading), (this.centre.y - drawOffsetY) + dir_y(this.thrust, this.heading));
-		environment.viewport.ctx.strokeStyle = "yellow";
-		environment.viewport.ctx.stroke();
-	};
-};
 

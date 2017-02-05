@@ -50,7 +50,7 @@ var fsmStates = {
 			}
 			ship.updateMomentum();
 	    
-		  var aT = angleBetween(ship.centre.x, ship.centre.y, ship.target.centre.x, ship.target.centre.y);
+		  var aT = angleBetween(ship.centre().x, ship.centre().y, ship.target.centre().x, ship.target.centre().y);
 		  var deltaA = angleDifference(ship.heading, aT);
 		  if (deltaA < 0) ship.yaw('ccw');
 		  if (deltaA > 0) ship.yaw('cw');
@@ -75,7 +75,7 @@ var fsmStates = {
 	    if (!ship.target) return;
 	    
 	    var dT = distanceBetween(ship, ship.target);
-	    var aT = angleBetween(ship.centre.x, ship.centre.y, ship.target.centre.x, ship.target.centre.y);
+	    var aT = angleBetween(ship.centre().x, ship.centre().y, ship.target.centre().x, ship.target.centre().y);
 		  var deltaA = angleDifference(ship.heading, aT);
 		  if (deltaA < 0) ship.yaw('ccw');
 		  if (deltaA > 0) ship.yaw('cw');
@@ -100,7 +100,7 @@ var fsmStates = {
 				ship.fsm.transition('chase');
 				return;
 			}
-	    var aE = angleBetween(ship.centre.x, ship.centre.y, -ship.target.centre.x , -ship.target.centre.y);
+	    var aE = angleBetween(ship.centre().x, ship.centre().y, -ship.target.centre().x , -ship.target.centre().y);
 	    var deltaA = angleDifference(ship.heading, aE);
 		  if (deltaA < 0) ship.yaw('ccw');
 		  if (deltaA > 0) ship.yaw('cw');
