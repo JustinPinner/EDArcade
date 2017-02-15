@@ -2,7 +2,7 @@
 
 var debug = true;
 
-var maxNPC = 0;
+var maxNPC = 5;
 var allShips = [];
 var fps = 30;
 
@@ -17,28 +17,43 @@ var playerShip = null;
 function setup() {
   environment.init();
   //playerShip = new Ship('Cobra3', shipName, player, environment.viewport.getCentre().x, environment.viewport.getCentre().y);
-  playerShip = new Cobra3(shipName, player, environment.viewport.getCentre().x, environment.viewport.getCentre().y)
+  playerShip = new ShipTypes['cobra3'](shipName, player);
+  playerShip.x = environment.viewport.cx - (playerShip.width / 2);
+  playerShip.y = environment.viewport.cy - (playerShip.height / 2);
   allShips.push(playerShip);
-	var maxSpawnDistX = environment.viewport.width * 4;
-  var maxSpawnDistY = environment.viewport.height * 4;
+	var maxSpawnDistX = 300;// environment.viewport.width * 4;
+  var maxSpawnDistY = 300;// environment.viewport.height * 4;
   for (var i = 0; i < maxNPC; i++) {
 		var spawnShipType = ShipTypes[Object.keys(ShipTypes)[Math.floor(rand(Object.keys(ShipTypes).length))]];
-    allShips.push(new Ship(spawnShipType.id, 'NPC' + i, null, rand(maxSpawnDistX), rand(maxSpawnDistY)));
+    var spawnShipRole = ShipRoles[Object.keys(ShipRoles)[Math.floor(rand(Object.keys(ShipRoles).length))]];
+    var newShip = new spawnShipType('NPC' + i, spawnShipRole);
+    newShip.x = rand(maxSpawnDistX, true);
+    newShip.y = rand(maxSpawnDistY, true);
+    allShips.push(newShip);
 	}
 	setInterval(main, 1000/fps);
+}
+
+function playerVisibleRegion() {
+  return {
+    x1: playerShip.cx - environment.viewport.width / 2,
+    y1: playerShip.cy - environment.viewport.height / 2,
+    x2: playerShip.cx + environment.viewport.width / 2,
+    y2: playerShip.cy + environment.viewport.height / 2
+  };
 }
 
 function randInt(max) {
   return Math.floor(rand(max));
 }
 
-function rand(max) {
-  return Math.random() * max;
+function rand(max, incNegatives) {
+  return (Math.random() * max) * (incNegatives ? (Math.random() * 2 > 1 ? -1 : 1) : 1);
 }
 
 function distanceBetween(objA, objB) {
-  var dx = objA.centre().x - objB.centre().x;
-  var dy = objA.centre().y - objB.centre().y;
+  var dx = objA.cx - objB.cx;
+  var dy = objA.cy - objB.cy;
   return Math.sqrt((dx * dx) + (dy * dy));
 }
 
@@ -75,15 +90,15 @@ function refresh() {
     if (allShips[i] === playerShip) {
       var uiCoord = document.querySelector(".ui.debug.coord");
       if (uiCoord) {
-        uiCoord.innerHTML = "<p>x:" + (playerShip.x ? playerShip.x.toFixed(1) : "?") + " y:" + (playerShip.y ? playerShip.y.toFixed(1) : "?") + "</p>";
+        uiCoord.innerHTML = "<p>x:" + (playerShip.x ? playerShip.x.toFixed(1) : " ") + " y:" + (playerShip.y ? playerShip.y.toFixed(1) : " ") + "</p>";
       }
       var uiVector = document.querySelector(".ui.debug.vector");
       if (uiVector) {
-        uiVector.innerHTML = "<p>spd:" + (playerShip.speed ? playerShip.speed.toFixed(1) : "?") + " dir:" + (playerShip.direction ? playerShip.direction.toFixed(1) : "?") + "</p>";
+        uiVector.innerHTML = "<p>spd:" + (playerShip.speed ? playerShip.speed.toFixed(1) : " ") + " dir:" + (playerShip.direction ? playerShip.direction.toFixed(1) : " ") + "</p>";
       }
       var uiInputs = document.querySelector(".ui.debug.inputs");
       if (uiInputs) {
-        uiInputs.innerHTML = "<p>thrust:" + (playerShip.thrust ? playerShip.thrust.toFixed(1) : "?") + "</p>";
+        uiInputs.innerHTML = "<p>thrust:" + (playerShip.thrust ? playerShip.thrust.toFixed(1) : " ") + "</p>";
       }      
     }
   }

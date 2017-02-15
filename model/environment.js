@@ -95,8 +95,8 @@ var Midground = function() {
 
 	this.draw = function(scrollData) {
 		// scroll direction is opposide of ship direction		
-		var newX = scrollData.moveX != 0 ? this.x + scrollData.moveX * this.scrollScale : this.x;
-		var newY = scrollData.moveY != 0 ? this.y + scrollData.moveY * this.scrollScale : this.y;
+		var newX = scrollData.vx != 0 ? this.x - scrollData.vx * this.scrollScale : this.x;
+		var newY = scrollData.vy != 0 ? this.y - scrollData.vy * this.scrollScale : this.y;
 		this.x = newX >= this.width ? 0 : (newX < 0 ? this.width : newX);
 		this.y = newY >= this.height ? 0 : (newY < 0 ? this.height : newY);
 		this.clear();
@@ -128,14 +128,19 @@ var Viewport = function() {
 	this.width = systemGeometry.width;
 	this.height = systemGeometry.height;
 
+	// x and y will be virtual coordinates based on the player's location
 	this.x = 0;
 	this.y = 0;
+	
+	// the viewport is always anchored at 0,0
+	this.cx = this.width / 2;
+	this.cy = this.height / 2;
 
 	this.div = document.querySelector('#fgdiv');
 	this.div.style.width = this.width.toString() + 'px';
 	this.div.style.height = this.height.toString() + 'px';
-	this.div.style.left = this.x.toString() + 'px';
-	this.div.style.top = this.y.toString() + 'px';
+	this.div.style.left = '0px';
+	this.div.style.top = '0px';
 
 	this.cnv = document.querySelector("#fgcanvas");
 	this.cnv.width = this.width;
@@ -143,23 +148,19 @@ var Viewport = function() {
 
 	this.ctx = this.cnv.getContext('2d');
 
-	this.getCentre = function() {
-		return {
-			x: this.x + (this.width / 2),
-			y: this.y + (this.height / 2)
-		};
-	};	
 	this.clear = function() {
 		this.ctx.clearRect(0, 0, this.width, this.height);
 	};
+	
 	this.scroll = function(scrollData) {
+		this.x += scrollData.vx;
+		this.y += scrollData.vy;
 		environment.midground.draw(scrollData);
-		//this.x += scrollData.moveX;
-		//this.y += scrollData.moveY;
 	};
-	this.contains = function(x, y, geometry) {
-	 return (x > this.x && x < this.x + this.width) && 
-	 	(y > this.y && y < this.y + this.height)
+	
+	this.contains = function(x, y, width, height) {
+	 return (x + width >= this.x && x < this.x + this.width) && 
+	 	(y + height >= this.y && y <= this.y + this.height)
 	};
 };
 
