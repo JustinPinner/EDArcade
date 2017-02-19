@@ -11,7 +11,7 @@ class Ship {
 		this.shipType = shipType;
 		this.player = role instanceof Player ? role : null;
 		this.flightAssist = this.player ? false : true;
-		this.speed = 0;
+		//this.speed = 0;
 		this.heading = this.player ? 270 : rand(359);
 		this.thrust = 0;
 		this.direction = this.heading;
@@ -96,6 +96,9 @@ class Ship {
 		}
 		return range;
 	}
+	get speed() {
+		return Math.abs(this.vx + this.vy) * fps;
+	}
 	/* 
 			setters
 	*/
@@ -162,23 +165,14 @@ Ship.prototype.accelerate = function() {
 	var rate = this.thrust * 0.01;
 	var new_x = dir_x(rate, this.heading);
 	var new_y = dir_y(rate, this.heading);
-	if (this.vx + new_x > this.maxSpeed || this.vy + new_y > this.maxSpeed) {
-		return;
-	}
 	this.vx += new_x;
 	this.vy += new_y;
 };
 
 Ship.prototype.updateMomentum = function() {
-	//if (this.thrust != 0) {
-	//	this.thrust > 0 ? this.accelerate() : this.decelerate();
-	//}
-	//if (!this.flightAssist) return;
 	var dA = angleDifference(this.heading, this.direction);
 	if (Math.abs(this.thrust) != 0) {
 		this.direction += dA * this.yawRate * 0.1; //(this.yawRate * (1 / (this.thrust != 0 ? Math.abs(this.thrust) : 1)));	
-	} else {
-	//	this.direction += dA * this.yawRate();
 	}
 	if (this.direction > 359) {
 		this.direction -= 359;
@@ -189,9 +183,6 @@ Ship.prototype.updateMomentum = function() {
 };
 
 Ship.prototype.updatePosition = function() {
-	//if (this.speed == 0) return;
-	//var vx = dir_x(this.speed * 0.05, this.direction);
-	//var vy = dir_y(this.speed * 0.05, this.direction);
 	if (this.player) {
 		var scrollData = {
 			obj: this,
@@ -355,8 +346,6 @@ Ship.prototype.draw = function() {
 	try {
 	  environment.viewport.ctx.drawImage(this.sprite.image, -this.width / 2, -this.height / 2, this.width, this.height);
 	} catch(e) {
-	  //environment.viewport.ctx.restore();
-	  //environment.viewport.ctx.fillRect(this.x - drawOffset_x, this.y - drawOffset_y, this.width, this.height);
 	  environment.viewport.ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
 	}
 	environment.viewport.ctx.restore();
@@ -370,6 +359,12 @@ Ship.prototype.drawDebug = function() {
 	environment.viewport.ctx.moveTo(origin.x, origin.y);
 	environment.viewport.ctx.lineTo(origin.x + dir_x(this.speed, this.direction), origin.y + dir_y(this.speed, this.direction));
 	environment.viewport.ctx.strokeStyle = "blue";
+	environment.viewport.ctx.stroke();
+	// draw direction marker
+	environment.viewport.ctx.beginPath();
+	environment.viewport.ctx.moveTo(origin.x, origin.y);
+	environment.viewport.ctx.lineTo(origin.x + dir_x(this.engageRadius * 0.1, this.direction), origin.y + dir_y(this.engageRadius * 0.1, this.direction));
+	environment.viewport.ctx.strokeStyle = "orange";
 	environment.viewport.ctx.stroke();
 	// draw heading marker
 	environment.viewport.ctx.beginPath();
