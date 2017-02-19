@@ -8,7 +8,8 @@ var Keys = {
 	LEFT: 37,	// left arrow
 	RIGHT: 39,	// right arrow
 	BOOST: 16,	// l-shift
-	FIRE: 32,	// space
+	THRUST: 32,	// space
+  FIRE: 13, // enter
 	FLIGHTASSIST: 90	// z
 }
 
@@ -19,6 +20,7 @@ var keyRight = false;
 var keyBoost = false;
 var keyFire = false;
 var keyFlightAssist = false;
+var keyThrust = false;
 
 function handleKeyDown(e) {
   switch (e.keyCode) {
@@ -40,12 +42,19 @@ function handleKeyDown(e) {
       break;
     case Keys.BOOST:
       keyBoost = true;
+      e.preventDefault();
       break;
     case Keys.FIRE:
       keyFire = true;
+      e.preventDefault();
       break;
     case Keys.FLIGHTASSIST:
       keyFlightAssist = true;
+      e.preventDefault();
+      break;  
+    case Keys.THRUST:
+      keyThrust = true;
+      e.preventDefault();
       break;  
   }
 }
@@ -54,24 +63,35 @@ function handleKeyUp(e) {
   switch (e.keyCode) {
     case Keys.UP:
       keyUp = false;
+      e.preventDefault();
       break;
     case Keys.DOWN:
       keyDown = false;
+      e.preventDefault();
       break;
     case Keys.LEFT:
       keyLeft = false;
+      e.preventDefault();
       break;
     case Keys.RIGHT:
       keyRight = false;
+      e.preventDefault();
       break;
     case Keys.BOOST:
       keyBoost = false;
+      e.preventDefault();
       break;
     case Keys.FIRE:
       keyFire = false;
+      e.preventDefault();
       break;
     case Keys.FLIGHTASSIST:
       keyFlightAssist = false;
+      e.preventDefault();
+      break;  
+    case Keys.THRUST:
+      keyThrust = false;
+      e.preventDefault();
       break;  
   }
 }

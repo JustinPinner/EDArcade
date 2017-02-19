@@ -10,7 +10,7 @@ class Ship {
 		this.shipName = shipName ? shipName : shipType + this.id;
 		this.shipType = shipType;
 		this.player = role instanceof Player ? role : null;
-		this.flightAssist = true;
+		this.flightAssist = this.player ? false : true;
 		this.speed = 0;
 		this.heading = this.player ? 270 : rand(359);
 		this.thrust = 0;
@@ -18,6 +18,8 @@ class Ship {
 		this.targets = [];
 		this.role = this.player ? null : role;
 		this.fsm = this.player ? null : new FSM(this, this.role.initialState);
+		this.vx = 0;
+		this.vy = 0;
 		this.coordinates = {
 			x: null,
 			y: null
@@ -52,6 +54,9 @@ class Ship {
 			}
 		};
 	}
+	/* 
+			getters
+	*/
 	get x() {
 		return this.coordinates.x;
 	}
@@ -64,6 +69,36 @@ class Ship {
 	get cy() {
 		return this.coordinates.y + this.height / 2;
 	}
+	get thrustVector() {
+		return (this.heading + 180) - 360;
+	}
+	get engageRadius() {
+		return this.maximumWeaponRange * 3;
+	}
+	get accelerationRate() {
+		return (this.agility / this.mass) * Math.abs(this.thrust) * 10;
+	}
+	get yawRate() {
+		return (this.agility * this.mass) / 100;
+	}
+	get maximumWeaponRange() {
+		var range = null;
+		for (var w in this.hardpoints) {
+			if (this.hardpoints[w].weapon && this.hardpoints[w].loaded) {
+				if (range) {
+					if (range > this.hardpoints[w].weapon.range) {
+						range = this.hardpoints[w].weapon.range;
+					}
+				} else {
+					range = this.hardpoints[w].weapon.range;
+				}
+			}
+		}
+		return range;
+	}
+	/* 
+			setters
+	*/
 	set x(val) {
 		this.coordinates.x = val;
 	}
@@ -89,22 +124,6 @@ Ship.prototype.npcUpdate = function () {
 	  this.fsm.execute();
 	}
 };
-
-Ship.prototype.maximumWeaponRange = function() {
-	var range = null;
-	for (w in this.hardpoints) {
-		if (this.hardpoints[w].weapon && this.hardpoints[w].loaded) {
-			if (range) {
-				if (range > this.hardpoints[w].weapon.range) {
-					range = this.hardpoints[w].weapon.range;
-				}
-			} else {
-				range = this.hardpoints[w].weapon.range;
-			}
-		}
-	}
-	return range;
-};
 	
 Ship.prototype.playerUpdate = function() {
 	if (keyUp) {
@@ -127,22 +146,40 @@ Ship.prototype.playerUpdate = function() {
 	}
 	if (keyFlightAssist) {
 		this.flightAssist = !this.flightAssist;
-	}		
-	this.updateMomentum();
+	}
+	if (keyThrust) {
+		this.thrustOn();
+	} else {
+		this.thrustOff();
+	}
+	if (this.thrust != 0) {
+		this.updateMomentum();
+	}
 	this.updatePosition();
 };
-	
-Ship.prototype.updateMomentum = function() {
-	if (this.thrust != 0) {
-		this.thrust > 0 ? this.accelerate() : this.decelerate();
+
+Ship.prototype.accelerate = function() {
+	var rate = this.thrust * 0.01;
+	var new_x = dir_x(rate, this.heading);
+	var new_y = dir_y(rate, this.heading);
+	if (this.vx + new_x > this.maxSpeed || this.vy + new_y > this.maxSpeed) {
+		return;
 	}
+	this.vx += new_x;
+	this.vy += new_y;
+};
+
+Ship.prototype.updateMomentum = function() {
+	//if (this.thrust != 0) {
+	//	this.thrust > 0 ? this.accelerate() : this.decelerate();
+	//}
 	//if (!this.flightAssist) return;
 	var dA = angleDifference(this.heading, this.direction);
-	//if (Math.abs(this.thrust) != 0) {
-	//	this.vector.direction += dA * (this.yawRate() * (1 / Math.abs(this.thrust)));	
-	//} else {
-		this.direction += dA * this.yawRate();
-	//}
+	if (Math.abs(this.thrust) != 0) {
+		this.direction += dA * this.yawRate * 0.1; //(this.yawRate * (1 / (this.thrust != 0 ? Math.abs(this.thrust) : 1)));	
+	} else {
+	//	this.direction += dA * this.yawRate();
+	}
 	if (this.direction > 359) {
 		this.direction -= 359;
 	}
@@ -152,19 +189,19 @@ Ship.prototype.updateMomentum = function() {
 };
 
 Ship.prototype.updatePosition = function() {
-	if (this.speed == 0) return;
-	var vx = dir_x(this.speed * 0.025, this.direction);
-	var vy = dir_y(this.speed * 0.025, this.direction);
+	//if (this.speed == 0) return;
+	//var vx = dir_x(this.speed * 0.05, this.direction);
+	//var vy = dir_y(this.speed * 0.05, this.direction);
 	if (this.player) {
 		var scrollData = {
 			obj: this,
-			vx: vx,
-			vy: vy
+			vx: this.vx,
+			vy: this.vy
 		};
 		environment.viewport.scroll(scrollData);
 	}
-	this.x -= vx;
-	this.y -= vy;
+	this.x -= this.vx;
+	this.y -= this.vy;
 };
 
 Ship.prototype.isOnScreen = function() {
@@ -221,16 +258,13 @@ Ship.prototype.isHostile = function() {
 	return this.player ? true : false;
 };
 
-Ship.prototype.engageRadius = function() {
-	return this.maximumWeaponRange * 3;
+Ship.prototype.thrustOn = function() {
+	this.thrust = 100;
+	this.accelerate();
 };
 
-Ship.prototype.accelerationRate = function() {
-	return (this.agility / this.mass) * Math.abs(this.thrust) * 10;
-}
-
-Ship.prototype.yawRate = function() {
-	return (this.agility * this.mass) / 100;
+Ship.prototype.thrustOff = function() {
+	this.thrust = 0;
 };
 
 Ship.prototype.increaseThrust = function() {
@@ -249,15 +283,15 @@ Ship.prototype.allStop = function() {
 	this.thrust = 0;
 };
 	
-Ship.prototype.accelerate = function() {	
-	this.speed += this.accelerationRate();
+Ship.prototype.npcAccelerate = function() {	
+	this.speed += this.accelerationRate;
 	if (this.speed > this.maxSpeed) {
 		this.speed = this.maxSpeed;
 	}
 };
 	
 Ship.prototype.decelerate = function() {
-	this.speed -= this.accelerationRate();
+	this.speed -= this.accelerationRate;
 	if (this.speed < -this.maxSpeed) {
 		this.speed = -this.maxSpeed;
 	}
@@ -267,10 +301,10 @@ Ship.prototype.yaw = function(dir) {
 	var degsToAdd = 0;
 	switch (dir) {
 		case 'cw':
-			degsToAdd = angleDifference(this.heading, this.heading - this.yawRate());
+			degsToAdd = angleDifference(this.heading, this.heading - this.yawRate * 3);
 			break;
 		case 'ccw':
-			degsToAdd = angleDifference(this.heading, this.heading + this.yawRate());
+			degsToAdd = angleDifference(this.heading, this.heading + this.yawRate * 3);
 			break;
 	}	
 	this.heading += degsToAdd;
@@ -334,13 +368,13 @@ Ship.prototype.drawDebug = function() {
 	// draw momentum vector
 	environment.viewport.ctx.beginPath();
 	environment.viewport.ctx.moveTo(origin.x, origin.y);
-	environment.viewport.ctx.lineTo(origin.x + dir_x(this.engageRadius() * 0.1, this.direction), origin.y + dir_y(this.engageRadius() * 0.1, this.direction));
+	environment.viewport.ctx.lineTo(origin.x + dir_x(this.speed, this.direction), origin.y + dir_y(this.speed, this.direction));
 	environment.viewport.ctx.strokeStyle = "blue";
 	environment.viewport.ctx.stroke();
 	// draw heading marker
 	environment.viewport.ctx.beginPath();
 	environment.viewport.ctx.moveTo(origin.x, origin.y);
-	environment.viewport.ctx.lineTo(origin.x + dir_x(this.engageRadius() * 0.1, this.heading), origin.y + dir_y(this.engageRadius() * 0.1, this.heading));
+	environment.viewport.ctx.lineTo(origin.x + dir_x(this.engageRadius * 0.1, this.heading), origin.y + dir_y(this.engageRadius * 0.1, this.heading));
 	environment.viewport.ctx.strokeStyle = "green";
 	environment.viewport.ctx.stroke();
 	// draw speed marker

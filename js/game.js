@@ -70,11 +70,11 @@ function degreesToRadians(degrees) {
 }
 
 function dir_x(length, angle) {
-  return Math.ceil(length * Math.cos(degreesToRadians(angle)));
+  return length * Math.cos(degreesToRadians(angle));
 }
 
 function dir_y(length, angle) {
-  return Math.ceil(length * Math.sin(degreesToRadians(angle)));
+  return length * Math.sin(degreesToRadians(angle));
 }
 
 function refresh() {

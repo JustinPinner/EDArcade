@@ -57,10 +57,10 @@ var fsmStates = {
 		  ship.updatePosition();
 	  	
 	    var dT = distanceBetween(ship, ship.target);
-	    if (dT <= ship.maximumWeaponRange() && ship.isBehind(ship.target)) {
+	    if (dT <= ship.maximumWeaponRange && ship.isBehind(ship.target)) {
 			  ship.fireWeapons();
 	    }
-	    if (dT > ship.maximumWeaponRange()) {
+	    if (dT > ship.maximumWeaponRange) {
 	    	ship.fsm.transition('chase');
 	    }
 	    if (dT <= ship.height * 1.5 || ship.isInFrontOf(ship.target)) {
@@ -81,7 +81,7 @@ var fsmStates = {
 		  if (deltaA > 0) ship.yaw('cw');
 		  ship.updatePosition();
 
-	    if (dT <= ship.maximumWeaponRange()) {
+	    if (dT <= ship.maximumWeaponRange) {
 	    	if (aT >= 0 && aT <= 180) {
 	    		ship.increaseThrust();
 	    	} else {
@@ -96,7 +96,7 @@ var fsmStates = {
 		mode: 'evade',
 		nextState: ['chase','engage','escape'],
 		execute: function(ship) {
-			if (!ship.target || (distanceBetween(ship, ship.target) >= ship.maximumWeaponRange())) {
+			if (!ship.target || distanceBetween(ship, ship.target) >= ship.maximumWeaponRange) {
 				ship.fsm.transition('chase');
 				return;
 			}
