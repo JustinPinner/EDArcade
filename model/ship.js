@@ -110,20 +110,22 @@ class Ship {
 	}
 };
 
-Ship.prototype.updateAndDraw = function() {
+Ship.prototype.updateAndDraw = function(debug) {
 	if (this.player) {
 		this.playerUpdate();
-		this.draw();
+		this.draw(debug);
 	} else {
 		this.npcUpdate();
-    if (this.isOnScreen()) {
-    	this.draw();
+    if (this.isOnScreen(debug)) {
+    	this.draw(debug);
     }
   }
 };
 
 Ship.prototype.npcUpdate = function () {
   if (this.fsm) {
+	  this.updateMomentum();
+		this.updatePosition();
 	  this.fsm.execute();
 	}
 };
@@ -163,10 +165,35 @@ Ship.prototype.playerUpdate = function() {
 
 Ship.prototype.accelerate = function() {
 	var rate = this.thrust * 0.01;
-	var new_x = dir_x(rate, this.heading);
-	var new_y = dir_y(rate, this.heading);
-	this.vx += new_x;
-	this.vy += new_y;
+	var dx = dir_x(rate, this.heading);
+	var dy = dir_y(rate, this.heading);	
+	
+	// speed limiter
+	var apply_dx = true;
+	var apply_dy = true;
+	var maxLimit = this.maxSpeed / fps;
+	var minLimit = maxLimit * -1;
+
+	if (dx > 0 && this.vx > 0 && (this.vx + dx > maxLimit)) {
+		apply_dx = false;
+	}
+	if (dx < 0 && this.vx < 0 && (this.vx + dx < minLimit)) {
+		apply_dx = false;
+	}
+	if (dy > 0 && this.vy > 0 && (this.vy + dy > maxLimit)) {
+		apply_dy = false;
+	}
+	if (dy < 0 && this.vy < 0 && (this.vy + dy < minLimit)) {
+		apply_dy = false;
+	}
+
+	if (apply_dx) {
+		this.vx += dx;
+	}
+	if (apply_dy) {
+		this.vy += dy;
+	}
+
 };
 
 Ship.prototype.updateMomentum = function() {
@@ -191,12 +218,17 @@ Ship.prototype.updatePosition = function() {
 		};
 		environment.viewport.scroll(scrollData);
 	}
-	this.x -= this.vx;
-	this.y -= this.vy;
+	this.x += this.vx;
+	this.y += this.vy;
 };
 
-Ship.prototype.isOnScreen = function() {
-	return environment.viewport.contains(this.x, this.y, this.width, this.height);
+Ship.prototype.isOnScreen = function(debug) {
+	return environment.viewport.contains(
+		this.x - (debug ? this.maximumWeaponRange : 0), 
+		this.y - (debug ? this.maximumWeaponRange : 0), 
+		this.width + (debug ? this.maximumWeaponRange : 0), 
+		this.height + (debug ? this.maximumWeaponRange : 0)
+	);
 };
 
 Ship.prototype.isKnown = function(ship) {
@@ -333,14 +365,17 @@ Ship.prototype.matchTargetVector = function(ship) {
 
 Ship.prototype.calculateDrawOrigin = function() {
 	return {
-		x: this.player ? environment.viewport.cx : playerShip.cx - (environment.viewport.width / 2) + this.cx,
-		y: this.player ? environment.viewport.cy : playerShip.cy - (environment.viewport.height / 2) + this.cy
+		x: this.player ? environment.viewport.cx : this.x + (environment.viewport.x * -1),
+		y: this.player ? environment.viewport.cy : this.y + (environment.viewport.y * -1)
 	};
 };
 	
-Ship.prototype.draw = function() {
+Ship.prototype.draw = function(debug) {
 	var origin = this.calculateDrawOrigin();
 	environment.viewport.ctx.save();
+	if (!this.player && (origin.x != this.x || origin.y != this.y)) {
+			console.log('');  //debug here
+	}
 	environment.viewport.ctx.translate(origin.x, origin.y);
 	environment.viewport.ctx.rotate(degreesToRadians(this.heading + 90));
 	try {
@@ -349,6 +384,9 @@ Ship.prototype.draw = function() {
 	  environment.viewport.ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
 	}
 	environment.viewport.ctx.restore();
+  if (debug) {
+  	this.drawDebug();
+  }
 };
 
 Ship.prototype.drawDebug = function() {
@@ -384,6 +422,12 @@ Ship.prototype.drawDebug = function() {
 	environment.viewport.ctx.lineTo(origin.x - dir_x(this.thrust, this.heading), origin.y - dir_y(this.thrust, this.heading));
 	environment.viewport.ctx.strokeStyle = "yellow";
 	environment.viewport.ctx.stroke();
+	// draw weapon range ring
+  environment.viewport.ctx.beginPath();
+  environment.viewport.ctx.arc(origin.x, origin.y, this.maximumWeaponRange, 0, 2 * Math.PI, false);
+  environment.viewport.ctx.lineWidth = 1;
+  environment.viewport.ctx.strokeStyle = 'red';
+  environment.viewport.ctx.stroke();
 
 	environment.viewport.ctx.restore();
 }

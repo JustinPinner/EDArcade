@@ -83,10 +83,7 @@ function refresh() {
   }
   environment.viewport.clear();  
   for (var i = 0; i < allShips.length; i++) {
-    allShips[i].updateAndDraw();
-    if (debug) {
-      allShips[i].drawDebug();
-    }
+    allShips[i].updateAndDraw(debug);
     if (allShips[i] === playerShip) {
       var uiCoord = document.querySelector(".ui.debug.coord");
       if (uiCoord) {

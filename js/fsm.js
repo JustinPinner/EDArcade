@@ -11,112 +11,129 @@ var fsmStates = {
 	hunt: {
 		mode: 'hunt',
 		nextState: ['chase','engage','evade','escape'],
-		execute: function(ship) {		  
-		  if (ship.target) {
-		  	ship.fsm.transition('chase');
+		execute: function(self) {		  
+		  if (self.target) {
+		  	self.fsm.transition('chase');
 		  	return;
 		  }
 	    // seek out a new target
 	    for (var j = 0; j < allShips.length; j++) {
 	      var neighbour = allShips[j];
-	      if (neighbour !== ship && !ship.isKnown(neighbour)) {
+	      if (neighbour !== self && !self.isKnown(neighbour)) {
 	        if (neighbour.isHostile()) {
-	          ship.targets.push(neighbour);
+	          self.targets.push(neighbour);
 	        }
 	      }
 	    }
-	    if (ship.targets.length > 0) {
-		    ship.selectClosestTarget();
-		    ship.fsm.transition('chase');
+	    if (self.targets.length > 0) {
+		    self.selectClosestTarget();
+		    self.fsm.transition('chase');
 	    }
 		}
 	},
 	engage: {
 		mode: 'engage',
 		nextState: ['chase','evade','escape'],
-		execute: function(ship) {
-			if (!ship.target) return;
-
+		execute: function(self) {
+			if (!self.target) {
+				self.fsm.transition('hunt');
+				return;
+			}
 			var combatSpeedRange = {
-				min: ship.maxSpeed * 0.4,
-				max: ship.maxSpeed * 0.6
+				min: self.maxSpeed * 0.4,
+				max: self.maxSpeed * 0.6
 			}
-			if (ship.speed < combatSpeedRange.min) {
-				ship.increaseThrust();
-			} else if (ship.speed > combatSpeedRange.max) {
-				ship.decreaseThrust();
-			} else {
-				ship.allStop(0);
+			if (self.speed < combatSpeedRange.min) {
+				self.increaseThrust();
+			} else if (self.speed > combatSpeedRange.max) {
+				self.decreaseThrust();
 			}
-			ship.updateMomentum();
 	    
-		  var aT = angleBetween(ship.cx, ship.cy, ship.target.cx, ship.target.cy);
-		  var deltaA = angleDifference(ship.heading, aT);
-		  if (deltaA < 0) ship.yaw('ccw');
-		  if (deltaA > 0) ship.yaw('cw');
-		  ship.updatePosition();
-	  	
-	    var dT = distanceBetween(ship, ship.target);
-	    if (dT <= ship.maximumWeaponRange && ship.isBehind(ship.target)) {
-			  ship.fireWeapons();
+	    var aTmin = angleBetween(self.cx, self.cy, self.target.x, self.target.y);
+	    var aTmax = angleBetween(self.cx, self.cy, self.target.x + self.target.width, self.target.y + self.target.height);
+
+		  var deltaMin = angleDifference(self.heading, aTmin);
+		  var deltaMax = angleDifference(self.heading, aTmax);
+
+		  if (Math.abs(deltaMax - deltaMin) >= 5) {
+		  	if (deltaMax - deltaMin < 0) self.yaw('ccw');
+		  	if (deltaMax - deltaMin > 0) self.yaw('cw');
+		  }
+
+	    var dT = distanceBetween(self, self.target);
+	    if (dT <= self.maximumWeaponRange && self.isBehind(self.target)) {
+			  self.fireWeapons();
 	    }
-	    if (dT > ship.maximumWeaponRange) {
-	    	ship.fsm.transition('chase');
+	    if (dT > self.engageRadius) {
+	    	self.fsm.transition('chase');
 	    }
-	    if (dT <= ship.height * 1.5 || ship.isInFrontOf(ship.target)) {
-	    	ship.fsm.transition('evade');
+	    if (dT <= self.maximumWeaponRange * 0.3 || self.isInFrontOf(self.target)) {
+	    	self.fsm.transition('evade');
 	    }
 		}
 	},
 	chase: {
 		mode: 'chase',
-		nextState: ['engage','evade','escape'],
-		execute: function(ship) {
-	    if (!ship.target) return;
+		nextState: ['engage','evade','escape','hunt'],
+		execute: function(self) {
+	    if (!self.target) self.fsm.transition('hunt');
 	    
-	    var dT = distanceBetween(ship, ship.target);
-	    var aT = angleBetween(ship.cx, ship.cy, ship.target.cx, ship.target.cy);
-		  var deltaA = angleDifference(ship.heading, aT);
-		  if (deltaA < 0) ship.yaw('ccw');
-		  if (deltaA > 0) ship.yaw('cw');
-		  ship.updatePosition();
+	    var dT = distanceBetween(self, self.target);
+	    var aTmin = angleBetween(self.cx, self.cy, self.target.x, self.target.y);
+	    var aTmax = angleBetween(self.cx, self.cy, self.target.x + self.target.width, self.target.y + self.target.height);
 
-	    if (dT <= ship.maximumWeaponRange) {
-	    	if (aT >= 0 && aT <= 180) {
-	    		ship.increaseThrust();
-	    	} else {
-	    		ship.decreaseThrust();
-	    	}
-			  ship.updateMomentum();
-	    	ship.fsm.transition('engage');
+		  var deltaMin = angleDifference(self.heading, aTmin);
+		  var deltaMax = angleDifference(self.heading, aTmax);
+
+		  if (Math.abs(deltaMax - deltaMin) >= 5) {
+		  	if (deltaMax - deltaMin < 0) self.yaw('ccw');
+		  	if (deltaMax - deltaMin > 0) self.yaw('cw');
+		  }
+		  
+	    if (dT >= self.engageRadius) {
+    		self.increaseThrust();
+    	} else {
+    		self.decreaseThrust();
+    	}
+
+	    if (dT < self.engageRadius) {
+	    	self.fsm.transition('engage');
 	    }
 		}
 	},
 	evade: {
 		mode: 'evade',
-		nextState: ['chase','engage','escape'],
-		execute: function(ship) {
-			if (!ship.target || distanceBetween(ship, ship.target) >= ship.maximumWeaponRange) {
-				ship.fsm.transition('chase');
+		nextState: ['chase','engage','escape','hunt','neutral'],
+		execute: function(self) {
+			if (!self.target) {
+				self.fsm.transition(self.role.initialState);
 				return;
 			}
-	    var aE = angleBetween(ship.cx, ship.cy, -ship.target.cx , -ship.target.cy);
-	    var deltaA = angleDifference(ship.heading, aE);
-		  if (deltaA < 0) ship.yaw('ccw');
-		  if (deltaA > 0) ship.yaw('cw');
-		  ship.updatePosition();
-			if (ship.speed < ship.maxSpeed) {
-				ship.increaseThrust();
+			if (distanceBetween(self, self.target) >= self.engageRadius) {
+				self.fsm.transition('chase');
+				return;
 			}
-			ship.updateMomentum();
+	    var aE = angleBetween(self.cx, self.cy, -self.target.cx , -self.target.cy);
+	    var deltaA = angleDifference(self.heading, aE);
+		  if (deltaA < 0) self.yaw('ccw');
+		  if (deltaA > 0) self.yaw('cw');
+			self.increaseThrust();
+			self.fsm.transition('escape');
 		}		
 	},
 	escape: {
 		lastTick:  0,
 		mode: 'escape',
-		nextState: ['neutral','evade','engage','despawn'],
-		execute: function(ship) {
-			// TODO
+		nextState: ['neutral','evade','engage','despawn','chase'],
+		execute: function(self) {
+			self.increaseThrust();
+			if (!self.target) {
+				self.fsm.transition(self.initialState);
+				return;
+			}
+			if (self.target && distanceBetween(self, self.target) >= self.engageRadius * 2) {
+				self.fsm.transition('chase');
+			}
 		}		
 	},
 	die: {
@@ -148,7 +165,10 @@ var FSM = function(ship, currentState) {
 	}
 	this.transition = function(newState) {
 		if (this.state.nextState.includes(newState)) {
+			//console.log(this.ship.shipName + '.' + this.ship.shipType + '.' + this.ship.role.roleName + '.' + this.state.mode + ' > ' + newState);
 			this.state = fsmStates[newState];
+		} else {
+			this.state = this.startState;
 		}
 	}
 }
