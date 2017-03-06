@@ -11,13 +11,15 @@ class Ship {
 		this.shipType = shipType;
 		this.player = role instanceof Player ? role : null;
 		this.flightAssist = this.player ? false : true;
-		//this.speed = 0;
 		this.heading = this.player ? 270 : rand(359);
 		this.thrust = 0;
 		this.direction = this.heading;
-		this.targets = [];
 		this.role = this.player ? null : role;
 		this.fsm = this.player ? null : new FSM(this, this.role.initialState);
+		this.status = this.player ? 'clean' : this.role.initialStatus;
+		this.contacts = [];
+		this.currentTarget = null;
+		this.scanner = new Scanner(this);
 		this.vx = 0;
 		this.vy = 0;
 		this.coordinates = {
@@ -57,6 +59,32 @@ class Ship {
 	/* 
 			getters
 	*/
+	get threats() {
+		var scannedThreats = this.contacts ? this.contacts.filter(function(ping){return ping.threat;}) : [];
+		scannedThreats.sort(function(a, b) {
+			if (a.range < b.range) {
+				return -1;
+			}
+			if (a.range > b.range) {
+				return 1;
+			}
+			return 0;
+		});
+		return scannedThreats; 
+	}
+	get targets() {
+		var scannedTargets = this.contacts ? this.contacts.filter(function(ping){return ping.target;}) : [];
+		scannedTargets.sort(function(a, b) {
+			if (a.range < b.range) {
+				return -1;
+			}
+			if (a.range > b.range) {
+				return 1;
+			}
+			return 0;
+		});
+		return scannedTargets;
+	}
 	get x() {
 		return this.coordinates.x;
 	}
@@ -111,6 +139,7 @@ class Ship {
 };
 
 Ship.prototype.updateAndDraw = function(debug) {
+	this.scanner.scan();
 	if (this.player) {
 		this.playerUpdate();
 		this.draw(debug);
@@ -232,6 +261,7 @@ Ship.prototype.isOnScreen = function(debug) {
 };
 
 Ship.prototype.isKnown = function(ship) {
+	
 	for (var n = 0; n < this.targets.length; n++) {
 		if (this.targets[n] === ship) {
 			return true;
@@ -241,26 +271,37 @@ Ship.prototype.isKnown = function(ship) {
 };
 
 Ship.prototype.isTargetedBy = function(ship) {
-	for (var n = 0; n < ship.targets.length; n++) {
-		if (ship.targets[n] === this) {
-			return true;
+	for (var s = 0; s < allShips.length; s++) {
+		for (var t = 0; t < allShips[s].targets.length; t++) {
+			if (allShips[s].targets[t] === this) {
+				return true;
+			}
 		}
 	}
 	return false;
 };
 
-Ship.prototype.selectClosestTarget = function() {
-	var closest = null;
-	for (var n = 0; n < this.targets.length; n++) {
-		if (closest) {
-			if (distance_between(this, this.targets[i]) < distanceBetween(this, closest)) {
-				closest = this.targets[i];
-			}
-		} else {
-			closest = this.targets[n];
+Ship.prototype.isTargetting = function(ship) {
+	for (var t = 0; t < this.targets.length; t++) {
+		if (this.targets[t] === ship) {
+			return true;
 		}
 	}
-	this.target = closest;
+	return false;
+}
+
+Ship.prototype.identifyTargets = function() {
+	for (var c = 0; c < this.contacts.length; c++) {
+		if (this.role && this.contacts[c].ship.role) {
+			this.contacts[c].target = this.role.opponents.filter(function(opp){
+				return opp.roleName = this.contacts[c].ship.roleName;
+			}).length > 0 ? true : false;
+		}
+	}
+};
+
+Ship.prototype.selectClosestTarget = function() {
+	return this.targets.length > 0 ? this.targets[0] : null;
 };
 
 Ship.prototype.isInFrontOf = function(ship) {
@@ -324,10 +365,10 @@ Ship.prototype.yaw = function(dir) {
 	var degsToAdd = 0;
 	switch (dir) {
 		case 'cw':
-			degsToAdd = angleDifference(this.heading, this.heading - this.yawRate * 3);
+			degsToAdd = angleDifference(this.heading, this.heading - (this.yawRate * 2));
 			break;
 		case 'ccw':
-			degsToAdd = angleDifference(this.heading, this.heading + this.yawRate * 3);
+			degsToAdd = angleDifference(this.heading, this.heading + (this.yawRate * 2));
 			break;
 	}	
 	this.heading += degsToAdd;
@@ -374,7 +415,7 @@ Ship.prototype.draw = function(debug) {
 	var origin = this.calculateDrawOrigin();
 	environment.viewport.ctx.save();
 	if (!this.player && (origin.x != this.x || origin.y != this.y)) {
-			console.log('');  //debug here
+		//debug here
 	}
 	environment.viewport.ctx.translate(origin.x, origin.y);
 	environment.viewport.ctx.rotate(degreesToRadians(this.heading + 90));
@@ -518,23 +559,75 @@ var ShipTypes = {
 var ShipRoles = {
 	trader: {
 		roleName: 'Trader',
-		initialState: 'neutral'
+		initialState: 'neutral',
+		initialStatus: 'clean',
+		threatStatus: ['wanted'],
+		targetStatus: ['cargo']
 	},
 	miner: {
 		roleName: 'Miner',
-		initialState: 'neutral'
+		initialState: 'neutral',
+		initialStatus: 'clean',
+		threatStatus: ['wanted'],
+		targetStatus: ['mineral']
 	},
 	bountyHunter: {
 		roleName: 'Bounty Hunter',
-		initialState: 'hunt'
+		initialState: 'hunt',
+		initialStatus: 'vigilante',
+		threatStatus: ['wanted'],
+		targetStatus: ['wanted']
 	},
 	security: {
 		roleName: 'Security Service',
-		initialState: 'neutral'
+		initialState: 'hunt',
+		initialStatus: 'security',
+		threatStatus: ['wanted'],
+		targetStatus: ['wanted']
 	},
 	pirate: {
 		roleName: 'Pirate',
-		initialState: 'hunt'
+		initialState: 'hunt',
+		initialStatus: 'wanted',
+		threatStatus: ['security', 'vigilante'],
+		targetStatus: ['clean', 'wanted']
 	}
+}
+
+class Scanner {
+	constructor(ship) {
+		this.ship = ship;
+		this.interval = 500;
+	}
+}
+
+Scanner.prototype.scan = function() {
+  if (!this.lastScan || Date.now() - this.lastScan >= this.interval){
+    this.ship.contacts = [];
+		var scanLimit = this.ship.maximumWeaponRange * 3;	//todo - use a better scan limit
+    for (var j = 0; j < allShips.length; j++) {
+   		var range = distanceBetween(this.ship, allShips[j]);
+   		if (allShips[j] !== this.ship && range <= scanLimit) {
+				var threat = false;				
+				var target = false;
+				if (this.ship.role) {
+					threat = allShips[j].currentTarget === this.ship || this.ship.role.threatStatus.filter(function(t) {
+						return t == allShips[j].status;
+					}).length > 0 ? true : false;
+					target = this.ship.role.targetStatus.filter(function(t) {
+						return t == allShips[j].status;
+					}).length > 0 ? true : false;
+				}
+      	var ping = {
+      		ship: allShips[j],
+      		threat: threat,
+      		target: target,
+      		range: range
+      	};
+      	this.ship.contacts.push(ping);
+      }
+		}    	
+  	this.lastScan = Date.now();
+  }
 }
 
