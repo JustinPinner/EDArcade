@@ -20,11 +20,11 @@ function setup() {
   playerShip.x = environment.viewport.cx - (playerShip.width / 2);
   playerShip.y = environment.viewport.cy - (playerShip.height / 2);
   allShips.push(playerShip);
-	var maxSpawnDistX = environment.viewport.width * 4;
-  var maxSpawnDistY = environment.viewport.height * 4;
+	var maxSpawnDistX = 1000; //environment.viewport.width * 4;
+  var maxSpawnDistY = 1000; //environment.viewport.height * 4;
   for (var i = 0; i < maxNPC; i++) {
 		var spawnShipType = ShipTypes[Object.keys(ShipTypes)[Math.floor(rand(Object.keys(ShipTypes).length))]];
-    var spawnShipRole = ShipRoles[Object.keys(ShipRoles)[Math.floor(rand(Object.keys(ShipRoles).length))]];
+    var spawnShipRole = ShipRoles[Object.keys(ShipRoles)[Math.floor(rand(Object.keys(ShipRoles).length - 1))]];
     var newShip = new spawnShipType('NPC' + i, spawnShipRole);
     newShip.x = rand(maxSpawnDistX, true);
     newShip.y = rand(maxSpawnDistY, true);

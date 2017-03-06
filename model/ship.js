@@ -14,7 +14,7 @@ class Ship {
 		this.heading = this.player ? 270 : rand(359);
 		this.thrust = 0;
 		this.direction = this.heading;
-		this.role = this.player ? null : role;
+		this.role = this.player ? ShipRoles['player'] : role;
 		this.fsm = this.player ? null : new FSM(this, this.role.initialState);
 		this.status = this.player ? 'clean' : this.role.initialStatus;
 		this.contacts = [];
@@ -425,9 +425,39 @@ Ship.prototype.draw = function(debug) {
 	  environment.viewport.ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
 	}
 	environment.viewport.ctx.restore();
+  if (this.player && this.threats) {
+  	this.drawHud();
+  }
   if (debug) {
   	this.drawDebug();
   }
+};
+
+Ship.prototype.drawHud = function() {
+	var origin = null;
+	environment.viewport.ctx.save();	
+	// draw threat pointers
+	for (var t=0; t < this.threats.length; t++) {
+		var threat = this.threats[t];
+		var angle = angleBetween(this.cx, this.cy, threat.ship.cx, threat.ship.cy);
+		var distance = distanceBetween(this, threat.ship) * 0.2;
+		if (threat.ship.isOnScreen()) {
+			origin = threat.ship.calculateDrawOrigin();
+			// draw threat ring
+			environment.viewport.ctx.moveTo(origin.x, origin.y);
+			environment.viewport.ctx.beginPath();
+			environment.viewport.ctx.strokeStyle = (this.currentTarget && this.currentTarget === threat.ship) ? 'red' : 'orange';
+			environment.viewport.ctx.arc(origin.x, origin.y, threat.ship.width, 0, Math.PI * 2, false);
+			environment.viewport.ctx.stroke();
+		} else {
+			// show marker
+			origin = this.calculateDrawOrigin();
+			environment.viewport.ctx.fillStyle =  (this.currentTarget && this.currentTarget === threat.ship) ? 'red' : 'orange';
+			environment.viewport.ctx.font = '24px serif';
+			environment.viewport.ctx.fillText('!', origin.x - dir_x(distance, angle), origin.y - dir_y(distance, angle));		
+		}
+	}
+	environment.viewport.ctx.restore();
 };
 
 Ship.prototype.drawDebug = function() {
@@ -591,6 +621,14 @@ var ShipRoles = {
 		initialStatus: 'wanted',
 		threatStatus: ['security', 'vigilante'],
 		targetStatus: ['clean', 'wanted']
+	},
+	player: {
+		// always last in the list
+		roleName: 'Player',
+		initialState: 'player',
+		initialStatus: 'player',
+		threatStatus: ['wanted'],
+		targetStatus: []
 	}
 }
 
@@ -604,7 +642,7 @@ class Scanner {
 Scanner.prototype.scan = function() {
   if (!this.lastScan || Date.now() - this.lastScan >= this.interval){
     this.ship.contacts = [];
-		var scanLimit = this.ship.maximumWeaponRange * 3;	//todo - use a better scan limit
+		var scanLimit = this.ship.maximumWeaponRange * 10;	//todo - use a better scan limit
     for (var j = 0; j < allShips.length; j++) {
    		var range = distanceBetween(this.ship, allShips[j]);
    		if (allShips[j] !== this.ship && range <= scanLimit) {
