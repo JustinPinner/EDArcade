@@ -440,7 +440,7 @@ Ship.prototype.drawHud = function() {
 	for (var t=0; t < this.threats.length; t++) {
 		var threat = this.threats[t];
 		var angle = angleBetween(this.cx, this.cy, threat.ship.cx, threat.ship.cy);
-		var distance = distanceBetween(this, threat.ship) * 0.2;
+		var distance = distanceBetween(this, threat.ship);
 		if (threat.ship.isOnScreen()) {
 			origin = threat.ship.calculateDrawOrigin();
 			// draw threat ring
@@ -450,11 +450,21 @@ Ship.prototype.drawHud = function() {
 			environment.viewport.ctx.arc(origin.x, origin.y, threat.ship.width, 0, Math.PI * 2, false);
 			environment.viewport.ctx.stroke();
 		} else {
-			// show marker
+			// show off-screen threat marker
 			origin = this.calculateDrawOrigin();
 			environment.viewport.ctx.fillStyle =  (this.currentTarget && this.currentTarget === threat.ship) ? 'red' : 'orange';
 			environment.viewport.ctx.font = '24px serif';
-			environment.viewport.ctx.fillText('!', origin.x - dir_x(distance, angle), origin.y - dir_y(distance, angle));		
+			var symbol_x = origin.x - dir_x(distance, angle);
+			if (symbol_x < 0) symbol_x = 10;
+			if (symbol_x > environment.viewport.width) symbol_x = environment.viewport.width - 10;
+
+			var symbol_y = origin.y - dir_y(distance, angle);
+			if (symbol_y < 0) symbol_y = 20;
+			if (symbol_y > environment.viewport.height) symbol_y = environment.viewport.height - 10;
+			
+			environment.viewport.ctx.fillText('!', symbol_x, symbol_y);		
+			// draw at screen edge
+			//environment.viewport.ctx.fillText('!', origin.x - dir_x(environment.viewport.width - this.cx, angle), origin.y - dir_y(environment.viewport.height - this.cy, angle));		
 		}
 	}
 	environment.viewport.ctx.restore();

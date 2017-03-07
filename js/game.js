@@ -1,6 +1,6 @@
 // js/game.js
 
-var debug = true;
+var debug = false;
 
 var maxNPC = 5;
 var allShips = [];
