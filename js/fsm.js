@@ -59,7 +59,7 @@ var fsmStates = {
 		  }
 
 	    var dT = distanceBetween(self, self.currentTarget);
-	    if (dT <= self.maximumWeaponRange && self.isBehind(self.currentTarget)) {
+	    if (dT <= self.maximumWeaponRange) {
 			  self.fireWeapons();
 	    }
 	    if (dT > self.engageRadius) {
@@ -120,7 +120,6 @@ var fsmStates = {
 		}		
 	},
 	escape: {
-		lastTick:  0,
 		mode: 'escape',
 		nextState: ['neutral','evade','engage','despawn','chase'],
 		execute: function(self) {
@@ -144,35 +143,54 @@ var fsmStates = {
 		}		
 	},
 	die: {
-		lastTick:  0,
 		mode: 'die',
 		nextState: ['despawn'],
-		execute: function(ship) {
+		execute: function(self) {
 			// TODO
 		}		
 	},
 	despawn: {
-		lastTick:  0,
 		mode: 'despawn',
 		nextState: null,
-		execute: function(ship) {
+		execute: function(self) {
 			// TODO
+		}
+	},
+	loaded: {
+		mode: 'loaded',
+		nextState: ['launch', 'unload'],
+		execute: function(self) {
+			// TODO
+		}
+	},
+	launch: {
+		mode: 'launch',
+		nextState: ['inflight'],
+		execute: function(self) {
+			// TODO
+		}
+	},
+	inflight: {
+		mode: 'inflight',
+		nextState: ['hit', 'despawn'],
+		execute: function(self) {
+			// TODO	
 		}
 	}
 }
 
-var FSM = function(ship, currentState) {
-	this.ship = ship;
+var FSM = function(gameObject, currentState) {
+	this.gameObject = gameObject;
 	this.state = fsmStates[currentState];
 	this.startState = currentState;
 	this.lastTransitionTime = null;
 	this.execute = function() {
-		if (this.ship) {
+		if (this.gameObject) {
 			var now = Date.now();
 			if (this.lastTransitionTime && this.state.duration && now - this.lastTransitionTime < this.state.duration) {
 				return;
 			}
-			this.state.execute(this.ship);
+			this.state.execute(this.gameObject);
 		 	if (this.state.duration) {
 			 	this.lastTransitionTime = Date.now();
 		 	}

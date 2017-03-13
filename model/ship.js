@@ -1,12 +1,11 @@
 // model/ship.js
-var nextShipId = 0;
 
 /*
 	Generic ship constructor
 */
-class Ship {
+class Ship extends GameObject {
 	constructor(shipType, shipName, role) {
-		this.id = nextShipId += 1;
+		super('ship', shipName, player);
 		this.shipName = shipName ? shipName : shipType + this.id;
 		this.shipType = shipType;
 		this.player = role instanceof Player ? role : null;
@@ -17,22 +16,11 @@ class Ship {
 		this.role = this.player ? ShipRoles['player'] : role;
 		this.fsm = this.player ? null : new FSM(this, this.role.initialState);
 		this.status = this.player ? 'clean' : this.role.initialStatus;
+		this.hardpoints = [];
 		this.contacts = [];
 		this.currentTarget = null;
 		this.scanner = new Scanner(this);
-		this.vx = 0;
-		this.vy = 0;
-		this.coordinates = {
-			x: null,
-			y: null
-		}
-		this.sprite = {
-			x: 0,
-			y: 0,
-			width: 0,
-			height: 0,
-			image: imageService.loadImage('../image/' + this.shipType + '.png')
-		};
+		this.sprite.image = imageService.loadImage('../image/' + this.shipType + '.png');
 		this.cellAnims = {
 			shieldStrike: {
 				src: null,
@@ -85,18 +73,6 @@ class Ship {
 		});
 		return scannedTargets;
 	}
-	get x() {
-		return this.coordinates.x;
-	}
-	get y() {
-		return this.coordinates.y;
-	}
-	get cx() {
-		return this.coordinates.x + this.width / 2;
-	}
-	get cy() {
-		return this.coordinates.y + this.height / 2;
-	}
 	get thrustVector() {
 		return (this.heading + 180) - 360;
 	}
@@ -130,12 +106,6 @@ class Ship {
 	/* 
 			setters
 	*/
-	set x(val) {
-		this.coordinates.x = val;
-	}
-	set y(val) {
-		this.coordinates.y = val;
-	}
 };
 
 Ship.prototype.updateAndDraw = function(debug) {
@@ -261,7 +231,6 @@ Ship.prototype.isOnScreen = function(debug) {
 };
 
 Ship.prototype.isKnown = function(ship) {
-	
 	for (var n = 0; n < this.targets.length; n++) {
 		if (this.targets[n] === ship) {
 			return true;
@@ -271,9 +240,9 @@ Ship.prototype.isKnown = function(ship) {
 };
 
 Ship.prototype.isTargetedBy = function(ship) {
-	for (var s = 0; s < allShips.length; s++) {
-		for (var t = 0; t < allShips[s].targets.length; t++) {
-			if (allShips[s].targets[t] === this) {
+	for (var s = 0; s < gameObjects.length; s++) {
+		for (var t = 0; t < gameObjects[s].targets.length; t++) {
+			if (gameObjects[s].targets[t] === this) {
 				return true;
 			}
 		}
@@ -311,10 +280,6 @@ Ship.prototype.isInFrontOf = function(ship) {
 	
 Ship.prototype.isBehind = function(ship) {
 	return !this.isInFrontOf(ship);
-};
-
-Ship.prototype.fire = function(weapon) {
-	console.log(this.shipName + ':' + weapon + ' pewpew');
 };
 
 Ship.prototype.isHostile = function() {
@@ -391,7 +356,7 @@ Ship.prototype.setTarget = function(ship) {
 Ship.prototype.fireWeapons = function() {
 	for (hardpoint in this.hardpoints) {
 		if (this.hardpoints[hardpoint].loaded && this.hardpoints[hardpoint].weapon) {
-			//this.hardpoints[hardpoint].weapon.fire();
+			this.hardpoints[hardpoint].weapon.fire(this);
 		}
 	}	
 };
@@ -463,8 +428,6 @@ Ship.prototype.drawHud = function() {
 			if (symbol_y > environment.viewport.height) symbol_y = environment.viewport.height - 10;
 			
 			environment.viewport.ctx.fillText('!', symbol_x, symbol_y);		
-			// draw at screen edge
-			//environment.viewport.ctx.fillText('!', origin.x - dir_x(environment.viewport.width - this.cx, angle), origin.y - dir_y(environment.viewport.height - this.cy, angle));		
 		}
 	}
 	environment.viewport.ctx.restore();
@@ -524,11 +487,41 @@ class Sidewinder extends Ship {
 		this.armour = 108;
 		this.maxSpeed = 220;
 		this.boostSpeed = 321;
-		this.hardpoints = Defaults.Hardpoints.Sidewinder,
 		this.width = 44;
 		this.height = 30;
 		this.sprite.width = this.width;
 		this.sprite.height = this.height;
+		this.hardpointGeometry = {
+			weapon: {
+				small: {
+					1: {
+						x: 17,
+						y: 8,
+						z: 1
+					},
+					2: {
+						x: 26,
+						y: 8,
+						z: 1
+					}				
+				}
+			},
+			utility: {
+				small: {
+					1: {
+						x: 8,
+						y: 21, 
+						z: -1
+					},
+					2: {
+						x: 35,
+						y: 21,
+						z: -1
+					}
+				}
+			}
+		};
+		Defaults.Hardpoints.Sidewinder.load(this);
 	}
 };
 
@@ -543,11 +536,53 @@ class Cobra3 extends Ship {
 		this.armour = 216;
 		this.maxSpeed = 282;
 		this.boostSpeed = 402;
-		this.hardpoints = Defaults.Hardpoints.Cobra['3'],
 		this.width = 88;
 		this.height = 54;
 		this.sprite.width = this.width;
 		this.sprite.height = this.height;
+		this.hardpointGeometry = {
+			weapon: {
+				medium: {
+					1: {
+						x: 36,
+						y: 7,
+						z: 1
+					},
+					2: {
+						x: 49,
+						y: 7,
+						z: 1
+					}					
+				},
+				small: {
+					1: {
+						x: 32,
+						y: 15,
+						z: -1
+					},
+					2: {
+						x: 55,
+						y: 15,
+						z: -1
+					}				
+				}
+			},
+			utility: {
+				small: {
+					1: {
+						x: 17,
+						y: 43, 
+						z: -1
+					},
+					2: {
+						x: 70,
+						y: 43,
+						z: -1
+					}
+				}
+			}
+		};
+		Defaults.Hardpoints.Cobra['3'].load(this);
 	}
 };
 
@@ -562,11 +597,58 @@ class Cobra4 extends Ship {
 		this.armour = 216;
 		this.maxSpeed = 282;
 		this.boostSpeed = 402;
-		this.hardpoints = Defaults.Hardpoints.Cobra['4'],
 		this.width = 96;
 		this.height = 66;
 		this.sprite.width = this.width;
 		this.sprite.height = this.height;
+		this.hardpointGeometry = {
+			weapon: {
+				medium: {
+					1: {
+						x: 36,
+						y: 7,
+						z: 1
+					},
+					2: {
+						x: 49,
+						y: 7,
+						z: 1
+					}					
+				},
+				small: {
+					1: {
+						x: 32,
+						y: 15,
+						z: -1
+					},
+					2: {
+						x: 55,
+						y: 15,
+						z: -1
+					},
+					3: {
+						x: 44,
+						y: 19,
+						z: 1
+					}				
+				}
+			},
+			utility: {
+				small: {
+					1: {
+						x: 17,
+						y: 43, 
+						z: -1
+					},
+					2: {
+						x: 70,
+						y: 43,
+						z: -1
+					}
+				}
+			}
+		};
+		Defaults.Hardpoints.Cobra['4'].load(this);
 	}
 };
 
@@ -581,11 +663,80 @@ class Python extends Ship {
 		this.armour = 468;
 		this.maxSpeed = 234;
 		this.boostSpeed = 305;
-		this.hardpoints = Defaults.Hardpoints.Python,
 		this.width = 116;
 		this.height = 175;
 		this.sprite.width = this.width;
 		this.sprite.height = this.height;
+		this.hardpointGeometry = {
+			weapon: {
+				large: {
+					1: {
+						x: 56,
+						y: 25,
+						z: -1
+					},
+					2: {
+						x: 48,
+						y: 86,
+						z: -1
+					},
+					3: {
+						x: 67,
+						y: 86,
+						x: -1
+					}
+				},
+				medium: {
+					1: {
+						x: 39,
+						y: 81,
+						z: 1
+					},
+					2: {
+						x: 77,
+						y: 81,
+						z: 1
+					}					
+				},
+				small: {
+					1: {
+						x: 44,
+						y: 44,
+						z: -1
+					},
+					2: {
+						x: 71,
+						y: 44,
+						z: -1
+					}				
+				}
+			},
+			utility: {
+				small: {
+					1: {
+						x: 17,
+						y: 43, 
+						z: -1
+					},
+					2: {
+						x: 70,
+						y: 43,
+						z: -1
+					},
+					3: {
+						x: 17,
+						y: 43,
+						z: 1, 
+					},
+					4: {
+						x: 70,
+						y: 43,
+						z: 1
+					}
+				}
+			}
+		};
+		Defaults.Hardpoints.Python.load(this);
 	}
 }
 
@@ -653,21 +804,21 @@ Scanner.prototype.scan = function() {
   if (!this.lastScan || Date.now() - this.lastScan >= this.interval){
     this.ship.contacts = [];
 		var scanLimit = this.ship.maximumWeaponRange * 10;	//todo - use a better scan limit
-    for (var j = 0; j < allShips.length; j++) {
-   		var range = distanceBetween(this.ship, allShips[j]);
-   		if (allShips[j] !== this.ship && range <= scanLimit) {
+    for (var j = 0; j < gameObjects.length; j++) {
+   		var range = distanceBetween(this.ship, gameObjects[j]);
+   		if (gameObjects[j] !== this.ship && range <= scanLimit) {
 				var threat = false;				
 				var target = false;
 				if (this.ship.role) {
-					threat = allShips[j].currentTarget === this.ship || this.ship.role.threatStatus.filter(function(t) {
-						return t == allShips[j].status;
+					threat = gameObjects[j].currentTarget === this.ship || this.ship.role.threatStatus.filter(function(t) {
+						return t == gameObjects[j].status;
 					}).length > 0 ? true : false;
 					target = this.ship.role.targetStatus.filter(function(t) {
-						return t == allShips[j].status;
+						return t == gameObjects[j].status;
 					}).length > 0 ? true : false;
 				}
       	var ping = {
-      		ship: allShips[j],
+      		ship: gameObjects[j],
       		threat: threat,
       		target: target,
       		range: range
