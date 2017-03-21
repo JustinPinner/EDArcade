@@ -10,7 +10,8 @@ var Keys = {
 	BOOST: 16,	// l-shift
 	THRUST: 32,	// space
   FIRE: 13, // enter
-	FLIGHTASSIST: 90	// z
+	FLIGHTASSIST: 90,	// z
+  DEBUGBREAK: 27 // esc
 }
 
 var keyUp = false;
@@ -21,6 +22,7 @@ var keyBoost = false;
 var keyFire = false;
 var keyFlightAssist = false;
 var keyThrust = false;
+var keyDebugBreak = false;
 
 function handleKeyDown(e) {
   switch (e.keyCode) {
@@ -54,6 +56,10 @@ function handleKeyDown(e) {
       break;  
     case Keys.THRUST:
       keyThrust = true;
+      e.preventDefault();
+      break;  
+    case Keys.DEBUGBREAK:
+      debugger;
       e.preventDefault();
       break;  
   }

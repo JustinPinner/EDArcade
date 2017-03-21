@@ -76,6 +76,15 @@ function dir_y(length, angle) {
   return length * Math.sin(degreesToRadians(angle));
 };
 
+// source: http://stackoverflow.com/questions/17410809/how-to-calculate-rotation-in-2d-in-javascript
+function rotatePoint(cx, cy, x, y, radians) {
+    var cos = Math.cos(radians),
+        sin = Math.sin(radians),
+        nx = (cos * (x - cx)) + (sin * (y - cy)) + cx,
+        ny = (cos * (y - cy)) + (sin * (x - cx)) + cy;
+    return {x: nx, y: ny};
+}
+
 function refresh() {
   if (!environment.isReady()) {
     return;
@@ -90,7 +99,7 @@ function refresh() {
       }
       var uiVector = document.querySelector(".ui.debug.vector");
       if (uiVector) {
-        uiVector.innerHTML = "<p>spd:" + (playerShip.speed ? playerShip.speed.toFixed(1) : " ") + " dir:" + (playerShip.direction ? playerShip.direction.toFixed(1) : " ") + "</p>";
+        uiVector.innerHTML = "<p>spd:" + (playerShip.speed ? playerShip.speed.toFixed(1) : " ") + " hdg:" + (playerShip.heading ? playerShip.heading.toFixed(1) : " ") + "</p>";
       }
       var uiInputs = document.querySelector(".ui.debug.inputs");
       if (uiInputs) {

@@ -153,7 +153,12 @@ var fsmStates = {
 		mode: 'despawn',
 		nextState: null,
 		execute: function(self) {
-			// TODO
+			for(var i = 0; i < gameObjects.length; i++) {
+				if(gameObjects[i] === self) {
+					gameObjects.splice(i, 1);
+					return;
+				}
+			}
 		}
 	},
 	loaded: {
@@ -167,14 +172,21 @@ var fsmStates = {
 		mode: 'launch',
 		nextState: ['inflight'],
 		execute: function(self) {
-			// TODO
+			self.vx = dir_x(self.speed, self.heading);
+			self.vy = dir_y(self.speed, self.heading);
+			self.fsm.transition('inflight');
 		}
 	},
 	inflight: {
 		mode: 'inflight',
 		nextState: ['hit', 'despawn'],
 		execute: function(self) {
-			// TODO	
+			// TODO: collisionDetect
+			self.vx = dir_x(self.speed, self.heading);
+			self.vy = dir_y(self.speed, self.heading);
+			if(distanceBetween(self, self.hardpoint.parent) > environment.viewport.width * 5) {
+				self.fsm.transition('despawn');
+			}
 		}
 	}
 }

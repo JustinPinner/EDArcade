@@ -47,6 +47,12 @@ class Ship extends GameObject {
 	/* 
 			getters
 	*/
+	get drawOriginCentre() {
+		return {
+			x: this.player ? environment.viewport.cx : this.cx + (environment.viewport.x * -1),
+			y: this.player ? environment.viewport.cy : this.cy + (environment.viewport.y * -1)
+		};	
+	}
 	get threats() {
 		var scannedThreats = this.contacts ? this.contacts.filter(function(ping){return ping.threat;}) : [];
 		scannedThreats.sort(function(a, b) {
@@ -369,15 +375,8 @@ Ship.prototype.matchTargetVector = function(ship) {
 	if (ship.direction < this.direction) this.yaw('ccw');
 };
 
-Ship.prototype.calculateDrawOrigin = function() {
-	return {
-		x: this.player ? environment.viewport.cx : this.x + (environment.viewport.x * -1),
-		y: this.player ? environment.viewport.cy : this.y + (environment.viewport.y * -1)
-	};
-};
-	
 Ship.prototype.draw = function(debug) {
-	var origin = this.calculateDrawOrigin();
+	var origin = this.drawOriginCentre;
 	environment.viewport.ctx.save();
 	if (!this.player && (origin.x != this.x || origin.y != this.y)) {
 		//debug here
@@ -407,7 +406,7 @@ Ship.prototype.drawHud = function() {
 		var angle = angleBetween(this.cx, this.cy, threat.ship.cx, threat.ship.cy);
 		var distance = distanceBetween(this, threat.ship);
 		if (threat.ship.isOnScreen()) {
-			origin = threat.ship.calculateDrawOrigin();
+			origin = threat.ship.drawOriginCentre;
 			// draw threat ring
 			environment.viewport.ctx.moveTo(origin.x, origin.y);
 			environment.viewport.ctx.beginPath();
@@ -416,7 +415,7 @@ Ship.prototype.drawHud = function() {
 			environment.viewport.ctx.stroke();
 		} else {
 			// show off-screen threat marker
-			origin = this.calculateDrawOrigin();
+			origin = this.drawOriginCentre;
 			environment.viewport.ctx.fillStyle =  (this.currentTarget && this.currentTarget === threat.ship) ? 'red' : 'orange';
 			environment.viewport.ctx.font = '24px serif';
 			var symbol_x = origin.x - dir_x(distance, angle);
@@ -434,7 +433,7 @@ Ship.prototype.drawHud = function() {
 };
 
 Ship.prototype.drawDebug = function() {
-	var origin = this.calculateDrawOrigin();
+	var origin = this.drawOriginCentre;
 	environment.viewport.ctx.save();	
 	// draw momentum vector
 	environment.viewport.ctx.beginPath();
@@ -494,30 +493,14 @@ class Sidewinder extends Ship {
 		this.hardpointGeometry = {
 			weapon: {
 				small: {
-					1: {
-						x: 17,
-						y: 8,
-						z: 1
-					},
-					2: {
-						x: 26,
-						y: 8,
-						z: 1
-					}				
+					1: {x: 17, y: 8, z: 1},
+					2: {x: 26, y: 8, z: 1}				
 				}
 			},
 			utility: {
 				small: {
-					1: {
-						x: 8,
-						y: 21, 
-						z: -1
-					},
-					2: {
-						x: 35,
-						y: 21,
-						z: -1
-					}
+					1: {x: 8, y: 21, z: -1},
+					2: {x: 35, y: 21,	z: -1}
 				}
 			}
 		};
@@ -543,42 +526,18 @@ class Cobra3 extends Ship {
 		this.hardpointGeometry = {
 			weapon: {
 				medium: {
-					1: {
-						x: 36,
-						y: 7,
-						z: 1
-					},
-					2: {
-						x: 49,
-						y: 7,
-						z: 1
-					}					
+					1: {x: 36, y: 7, z: 1},
+					2: {x: 49, y: 7, z: 1}					
 				},
 				small: {
-					1: {
-						x: 32,
-						y: 15,
-						z: -1
-					},
-					2: {
-						x: 55,
-						y: 15,
-						z: -1
-					}				
+					1: {x: 32, y: 15, z: -1},
+					2: {x: 55, y: 15, z: -1}				
 				}
 			},
 			utility: {
 				small: {
-					1: {
-						x: 17,
-						y: 43, 
-						z: -1
-					},
-					2: {
-						x: 70,
-						y: 43,
-						z: -1
-					}
+					1: {x: 17, y: 43, z: -1},
+					2: {x: 70, y: 43, z: -1}
 				}
 			}
 		};
@@ -604,47 +563,19 @@ class Cobra4 extends Ship {
 		this.hardpointGeometry = {
 			weapon: {
 				medium: {
-					1: {
-						x: 36,
-						y: 7,
-						z: 1
-					},
-					2: {
-						x: 49,
-						y: 7,
-						z: 1
-					}					
+					1: {x: 36, y: 7, z: 1},
+					2: {x: 49, y: 7, z: 1}					
 				},
 				small: {
-					1: {
-						x: 32,
-						y: 15,
-						z: -1
-					},
-					2: {
-						x: 55,
-						y: 15,
-						z: -1
-					},
-					3: {
-						x: 44,
-						y: 19,
-						z: 1
-					}				
+					1: {x: 32, y: 15, z: -1},
+					2: {x: 55, y: 15, z: -1},
+					3: {x: 44, y: 19, z: 1}				
 				}
 			},
 			utility: {
 				small: {
-					1: {
-						x: 17,
-						y: 43, 
-						z: -1
-					},
-					2: {
-						x: 70,
-						y: 43,
-						z: -1
-					}
+					1: {x: 17, y: 43, z: -1},
+					2: {x: 70, y: 43, z: -1}
 				}
 			}
 		};
@@ -669,70 +600,26 @@ class Python extends Ship {
 		this.sprite.height = this.height;
 		this.hardpointGeometry = {
 			weapon: {
-				large: {
-					1: {
-						x: 56,
-						y: 25,
-						z: -1
-					},
-					2: {
-						x: 48,
-						y: 86,
-						z: -1
-					},
-					3: {
-						x: 67,
-						y: 86,
-						x: -1
-					}
+				large: { 
+					1: {x: 56, y: 25,	z: -1},
+					2: {x: 48, y: 86, z: -1},
+					3: {x: 67, y: 86,	x: -1}
 				},
 				medium: {
-					1: {
-						x: 39,
-						y: 81,
-						z: 1
-					},
-					2: {
-						x: 77,
-						y: 81,
-						z: 1
-					}					
+					1: {x: 39, y: 81, z: 1},
+					2: {x: 77, y: 81, z: 1}					
 				},
 				small: {
-					1: {
-						x: 44,
-						y: 44,
-						z: -1
-					},
-					2: {
-						x: 71,
-						y: 44,
-						z: -1
-					}				
+					1: {x: 44, y: 44, z: -1},
+					2: {x: 71, y: 44, z: -1}				
 				}
 			},
 			utility: {
 				small: {
-					1: {
-						x: 17,
-						y: 43, 
-						z: -1
-					},
-					2: {
-						x: 70,
-						y: 43,
-						z: -1
-					},
-					3: {
-						x: 17,
-						y: 43,
-						z: 1, 
-					},
-					4: {
-						x: 70,
-						y: 43,
-						z: 1
-					}
+					1: {x: 17, y: 43, z: -1},
+					2: {x: 70, y: 43, z: -1},
+					3: {x: 17, y: 43, z: 1,},
+					4: {x: 70, y: 43, z: 1}
 				}
 			}
 		};

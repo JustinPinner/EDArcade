@@ -1,10 +1,17 @@
 // model/weapon.js
 
+var SIZE = {
+  Small: {value: 1, name: 'Small', code: 'S'}, 
+  Medium: {value: 2, name: 'Medium', code: 'M'}, 
+  Large: {value: 3, name: 'Large', code: 'L'},
+  Huge: {value: 4, name: 'Huge', code: 'H'} 
+};
+
 class Weapon {
 	constructor(parent, type, size) {
 		this.parent = parent;
-		this.weaponType = type;
-		this.weaponSize = size;
+		this.type = type;
+		this.size = size;
 		this.lft = null;
 		this.rateOfFire = 0;
 	}
@@ -17,31 +24,31 @@ class Weapon {
 }
 
 class LaserWeapon extends Weapon {
-	constructor(parent, mountType, category, size) {
+	constructor(parent, mount, category, size) {
 		super(parent, 'energy', size);
-		this.mountType = mountType;
+		this.mount = mount;
 		this.category = category;
-		this.range = Lasers[size][category][mountType].range;
-		this.damage = Lasers[size][category][mountType].damage;
-		this.rateOfFire = Lasers[size][category][mountType].rof;
+		this.range = Lasers[size][category][mount].range;
+		this.damage = Lasers[size][category][mount].damage;
+		this.rateOfFire = Lasers[size][category][mount].rof;
 	}
+}
+
+LaserWeapon.prototype.fire = function() {
+	var now = Date.now();
+	if (this.lastFiredTime && this.rateOfFire && now - this.lastFiredTime < 1000 / this.rateOfFire) {
+		return;
+	}
+	this.lastFiredTime = Date.now();
+	var beam = new LaserBeam(this.category, this.size, this.parent);
+	gameObjects.push(beam);
+	beam.fsm.transition('launch');
 }
 
 class PulseLaser extends LaserWeapon {
 	constructor(parent, mount, size) {
 		super(parent, mount, 'pulse', size);
 	}
-}
-
-PulseLaser.prototype.fire = function(source) {
-	var now = Date.now();
-	if (this.lastFiredTime && this.rateOfFire && now - this.lastFiredTime < 1000 / this.rateOfFire) {
-		return;
-	}
-	this.lastFiredTime = Date.now();
-	var beam = new LaserBeam('pulse', this.weaponSize, source, this.parent.x, this.parent.y, this.parent.z);
-	gameObjects.push(beam);
-	beam.fsm.transition('launch');
 }
 
 class Munition extends GameObject {
@@ -69,21 +76,38 @@ class Munition extends GameObject {
 }
 
 Munition.prototype.updateAndDraw = function(debug) {
-	// TODO
+	this.updatePosition();
+	this.draw();
+  this.fsm.execute();
 }
 
 class LaserBeam extends Munition {
-	constructor(beamType, size, source, x, y, z) {
+	constructor(type, size, hardpoint) {
 		super('energy', 'point', MunitionRoles['beam']);
-		this.beamWidth = LaserBeams[beamType][size].width;
-		this.beamLength = LaserBeams[beamType][size].length;
-		this.beamColour = LaserBeams[beamType][size].colour;
-		this.beamStrength = LaserBeams[beamType][size].strength;
-		this.beamSource = source;
-		this.coordinates.x = x;
-		this.coordinates.y = y;
-		this.coordinates.z = z;
+		this.width = LaserBeams[type][size].width;
+		this.height = LaserBeams[type][size].length;
+		this.colour = LaserBeams[type][size].colour;
+		this.strength = LaserBeams[type][size].strength;
+		this.hardpoint = hardpoint;
+		this.coordinates.x = this.hardpoint.coordinates.x;
+		this.coordinates.y = this.hardpoint.coordinates.y;
+		this.coordinates.z = this.hardpoint.coordinates.z;
+		this.heading = hardpoint.parent.heading;
+		this.speed = 200;
 	}
+}
+
+LaserBeam.prototype.draw = function(debug) {
+	if (!this.isOnScreen(debug)) {
+		return;
+	}
+	environment.viewport.ctx.save();
+	environment.viewport.ctx.beginPath();
+	environment.viewport.ctx.moveTo(this.coordinates.x, this.coordinates.y);
+	environment.viewport.ctx.lineTo(this.coordinates.x + dir_x(this.speed, this.heading), this.coordinates.y + dir_y(this.speed, this.heading));
+	environment.viewport.ctx.strokeStyle = this.colour ? this.colour : '#ffffff';
+	environment.viewport.ctx.stroke();
+	environment.viewport.ctx.restore();	
 }
 
 var Lasers = {
@@ -119,14 +143,14 @@ var LaserBeams = {
 	pulse: {
 		1: {
 			width: 2,
-			length: 20,
+			length: 200,
 			colour: '#ff0000',
 			strength: 3,
 			role: MunitionRoles['beam']
 		},
 		2: {
 			width: 3,
-			length: 30,
+			length: 300,
 			colour: '#ff3300',
 			strength: 4			
 		}
@@ -136,12 +160,29 @@ var LaserBeams = {
 class Hardpoint {
 	constructor(parent, type, size, index) {
 		this.parent = parent;
+		this.type = type;
 		this.size = size;
 		this.sizeName = size == 1 ? 'small' : size == 2 ? 'medium' : size == 3 ? 'large' : 'huge';
-		this.x = parent.hardpointGeometry[type][this.sizeName][index].x;
-		this.y = parent.hardpointGeometry[type][this.sizeName][index].y;
-		this.z = parent.hardpointGeometry[type][this.sizeName][index].z;
+		this.index = index;
 	}
+	get coordinates() {
+		var x = (this.parent.drawOriginCentre.x - (this.parent.width / 2)) + this.parent.hardpointGeometry[this.type][this.sizeName][this.index].x,
+				y = (this.parent.drawOriginCentre.y - (this.parent.height / 2)) + this.parent.hardpointGeometry[this.type][this.sizeName][this.index].y,
+				z = this.parent.hardpointGeometry[this.type][this.sizeName][this.index].z;
+		var rotated = rotatePoint(this.parent.drawOriginCentre.x, this.parent.drawOriginCentre.y, x, y, degreesToRadians(this.parent.heading + 90));
+		return {x: rotated.x, y: rotated.y, z: z};	
+	}
+	/*
+	get x() {
+		return this.parent.drawOriginCentre().x - (this.parent.width / 2) + this.parent.hardpointGeometry[this.type][this.sizeName][this.index].x;
+	}
+	get y() {
+		return this.parent.drawOriginCentre().y - (this.parent.height / 2) + this.parent.hardpointGeometry[this.type][this.sizeName][this.index].y;	
+	}
+	get z() {
+		return this.parent.hardpointGeometry[this.type][this.sizeName][this.index].z;
+	}
+	*/
 }
 
 class WeaponHardpoint extends Hardpoint {
@@ -164,46 +205,45 @@ var Defaults = {
 	Hardpoints: {
 		Sidewinder: {
 			load: function(parent) {
-				parent.hardpoints.push(new WeaponHardpoint(parent, 1, 1, PulseLaser, 'fixed', 1));
-				parent.hardpoints.push(new WeaponHardpoint(parent, 1, 2, PulseLaser, 'fixed', 1));
-				parent.hardpoints.push(new UtilityHardpoint(parent, 1, 1));
-				parent.hardpoints.push(new UtilityHardpoint(parent, 1, 2));
+				for (var i=1; i < 3; i++){
+					parent.hardpoints.push(new WeaponHardpoint(parent, SIZE.Small.value, i, PulseLaser, 'fixed', 1));
+					parent.hardpoints.push(new UtilityHardpoint(parent, SIZE.Small.value, i));
+				}
 			}
 		},		
 		Cobra: {
 			3: {
 				load: function(parent) {
-					parent.hardpoints.push(new WeaponHardpoint(parent, 1, 1));
-					parent.hardpoints.push(new WeaponHardpoint(parent, 1, 2));
-					parent.hardpoints.push(new WeaponHardpoint(parent, 2, 1, PulseLaser, 'fixed', 1));
-					parent.hardpoints.push(new WeaponHardpoint(parent, 2, 2, PulseLaser, 'fixed', 1));
-					parent.hardpoints.push(new UtilityHardpoint(parent, 1, 1));
-					parent.hardpoints.push(new UtilityHardpoint(parent, 1, 2));
+					for (var i=1; i < 3; i++){
+						parent.hardpoints.push(new WeaponHardpoint(parent, SIZE.Small.value, i));
+						parent.hardpoints.push(new WeaponHardpoint(parent, SIZE.Medium.value, i, PulseLaser, 'fixed', 1));
+						parent.hardpoints.push(new UtilityHardpoint(parent, SIZE.Small.value, i));
+					}
 				}
 			},
 			4: {
 				load: function(parent) {
-					parent.hardpoints.push(new WeaponHardpoint(parent, 1, 1));
-					parent.hardpoints.push(new WeaponHardpoint(parent, 1, 2));
-					parent.hardpoints.push(new WeaponHardpoint(parent, 1, 3));
-					parent.hardpoints.push(new WeaponHardpoint(parent, 2, 1, PulseLaser, 'fixed', 1));
-					parent.hardpoints.push(new WeaponHardpoint(parent, 2, 2, PulseLaser, 'fixed', 1));
-					parent.hardpoints.push(new UtilityHardpoint(parent, 1, 1));
-					parent.hardpoints.push(new UtilityHardpoint(parent, 1, 2));
+					for (var i=1; i < 4; i++){
+						parent.hardpoints.push(new WeaponHardpoint(parent, SIZE.Small.value, i));				
+					}
+					for (var i=1; i < 3; i++){
+						parent.hardpoints.push(new WeaponHardpoint(parent, SIZE.Medium.value, i, PulseLaser, 'fixed', 1));
+						parent.hardpoints.push(new UtilityHardpoint(parent, SIZE.Small.value, i));
+					}									
 				}
 			}
 		},
 		Python: {
 			load: function(parent) {
-				parent.hardpoints.push(new WeaponHardpoint(parent, 3, 1));
-				parent.hardpoints.push(new WeaponHardpoint(parent, 3, 2));
-				parent.hardpoints.push(new WeaponHardpoint(parent, 3, 3));
-				parent.hardpoints.push(new WeaponHardpoint(parent, 2, 1, PulseLaser, 'fixed', 1));
-				parent.hardpoints.push(new WeaponHardpoint(parent, 2, 2, PulseLaser, 'fixed', 1));
-				parent.hardpoints.push(new UtilityHardpoint(parent, 1, 1));
-				parent.hardpoints.push(new UtilityHardpoint(parent, 1, 2));
-				parent.hardpoints.push(new UtilityHardpoint(parent, 1, 3));
-				parent.hardpoints.push(new UtilityHardpoint(parent, 1, 4));
+				for (var i=1; i < 4; i++){
+					parent.hardpoints.push(new WeaponHardpoint(parent, SIZE.Large.value, i));	
+				}
+				for (var i=1; i < 3; i++){
+					parent.hardpoints.push(new WeaponHardpoint(parent, SIZE.Medium.value, i, PulseLaser, 'fixed', 1));				
+				}
+				for (var i=1; i < 5; i++){
+					parent.hardpoints.push(new UtilityHardpoint(parent, SIZE.Small.value, i));	
+				}
 			}
 		}
 	}

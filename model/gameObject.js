@@ -14,8 +14,8 @@ class GameObject {
 		};
 		this.width = null;
 		this.height = null;
-		this.vx = 0;
-		this.vy = 0;
+		this._vx = 0;
+		this._vy = 0;
 		this.heading = null;
 		this.direction = null;
 		this.sprite = {
@@ -49,10 +49,16 @@ class GameObject {
 	get cy() {
 		return this.coordinates.y + this.height / 2;
 	}
-	get drawOrigin() {
+	get vx() {
+		return parseFloat(this._vx.toFixed(1));
+	}
+	get vy() {
+		return parseFloat(this._vy.toFixed(1));
+	}
+	get drawOriginCentre() {
 		return {
-			x: this.x + (environment.viewport.x * -1),
-			y: this.y + (environment.viewport.y * -1)
+			x: this.cx + (environment.viewport.x * -1),
+			y: this.cy + (environment.viewport.y * -1)
 		};
 	}
 	// setters
@@ -61,7 +67,18 @@ class GameObject {
 	}
 	set y(val) {
 		this.coordinates.y = val;
+	}
+	set vx(val) {
+		this._vx = parseFloat(val);
+	}
+	set vy(val) {
+		this._vy = parseFloat(val);
 	}		
+}
+
+GameObject.prototype.updatePosition = function() {
+	this.x += this.vx;
+	this.y += this.vy;
 }
 
 GameObject.prototype.isOnScreen = function(debug) {
@@ -74,9 +91,10 @@ GameObject.prototype.draw = function(debug) {
 	environment.viewport.ctx.save();
 	environment.viewport.ctx.translate(this.drawOrigin.x, this.drawOrigin.y);
 	environment.viewport.ctx.rotate(degreesToRadians(this.heading + 90));
-	try {
+	if (this.sprite && this.sprite.image) {
 	  environment.viewport.ctx.drawImage(this.sprite.image, -this.width / 2, -this.height / 2, this.width, this.height);
-	} catch(e) {
+	} else {
+	  environment.viewport.ctx.fillStyle = this.colour ? this.colour : '#ffffff';
 	  environment.viewport.ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
 	}
 	environment.viewport.ctx.restore();
