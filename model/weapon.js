@@ -93,7 +93,7 @@ class LaserBeam extends Munition {
 		this.coordinates.y = this.hardpoint.coordinates.y;
 		this.coordinates.z = this.hardpoint.coordinates.z;
 		this.heading = hardpoint.parent.heading;
-		this.speed = 200;
+		this.speed = 20;
 	}
 }
 
@@ -101,13 +101,11 @@ LaserBeam.prototype.draw = function(debug) {
 	if (!this.isOnScreen(debug)) {
 		return;
 	}
-	environment.viewport.ctx.save();
 	environment.viewport.ctx.beginPath();
 	environment.viewport.ctx.moveTo(this.coordinates.x, this.coordinates.y);
 	environment.viewport.ctx.lineTo(this.coordinates.x + dir_x(this.speed, this.heading), this.coordinates.y + dir_y(this.speed, this.heading));
 	environment.viewport.ctx.strokeStyle = this.colour ? this.colour : '#ffffff';
 	environment.viewport.ctx.stroke();
-	environment.viewport.ctx.restore();	
 }
 
 var Lasers = {
@@ -164,25 +162,25 @@ class Hardpoint {
 		this.size = size;
 		this.sizeName = size == 1 ? 'small' : size == 2 ? 'medium' : size == 3 ? 'large' : 'huge';
 		this.index = index;
+		this.x = this.parent.x + this.parent.hardpointGeometry[this.type][this.sizeName][this.index].x;
+		this.y = this.parent.y + this.parent.hardpointGeometry[this.type][this.sizeName][this.index].y;
+		this.z = this.parent.hardpointGeometry[this.type][this.sizeName][this.index].z;
 	}
 	get coordinates() {
-		var x = (this.parent.drawOriginCentre.x - (this.parent.width / 2)) + this.parent.hardpointGeometry[this.type][this.sizeName][this.index].x,
-				y = (this.parent.drawOriginCentre.y - (this.parent.height / 2)) + this.parent.hardpointGeometry[this.type][this.sizeName][this.index].y,
-				z = this.parent.hardpointGeometry[this.type][this.sizeName][this.index].z;
-		var rotated = rotatePoint(this.parent.drawOriginCentre.x, this.parent.drawOriginCentre.y, x, y, degreesToRadians(this.parent.heading + 90));
-		return {x: rotated.x, y: rotated.y, z: z};	
+		return {
+			x: this.x, 
+			y: this.y, 
+			z: this.z
+		};	
 	}
-	/*
-	get x() {
-		return this.parent.drawOriginCentre().x - (this.parent.width / 2) + this.parent.hardpointGeometry[this.type][this.sizeName][this.index].x;
-	}
-	get y() {
-		return this.parent.drawOriginCentre().y - (this.parent.height / 2) + this.parent.hardpointGeometry[this.type][this.sizeName][this.index].y;	
-	}
-	get z() {
-		return this.parent.hardpointGeometry[this.type][this.sizeName][this.index].z;
-	}
-	*/
+}
+
+Hardpoint.prototype.draw = function() {
+	environment.viewport.ctx.moveTo(this.x, this.y);
+	environment.viewport.ctx.beginPath();
+	environment.viewport.ctx.strokeStyle = (this.z == 1 ? 'yellow' : 'orange');
+	environment.viewport.ctx.arc(this.x, this.y, 2, 0, Math.PI * 2, false);
+	environment.viewport.ctx.stroke();
 }
 
 class WeaponHardpoint extends Hardpoint {

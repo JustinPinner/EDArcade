@@ -14,14 +14,15 @@ var shipName = null;  //TODO: get from user
 var player = new Player(playerName);
 var playerShip = null;
 
+var maxSpawnDistX = 500; //environment.viewport.width * 4;
+var maxSpawnDistY = 500; //environment.viewport.height * 4;
+
 function setup() {
   environment.init();
   playerShip = new ShipTypes['cobra3'](shipName, player);
   playerShip.x = environment.viewport.cx - (playerShip.width / 2);
   playerShip.y = environment.viewport.cy - (playerShip.height / 2);
   gameObjects.push(playerShip);
-	var maxSpawnDistX = 1000; //environment.viewport.width * 4;
-  var maxSpawnDistY = 1000; //environment.viewport.height * 4;
   for (var i = 0; i < maxNPC; i++) {
 		var spawnShipType = ShipTypes[Object.keys(ShipTypes)[Math.floor(rand(Object.keys(ShipTypes).length))]];
     var spawnShipRole = ShipRoles[Object.keys(ShipRoles)[Math.floor(rand(Object.keys(ShipRoles).length - 1))]];
@@ -49,41 +50,6 @@ function randInt(max) {
 function rand(max, incNegatives) {
   return (Math.random() * max) * (incNegatives ? (Math.random() * 2 > 1 ? -1 : 1) : 1);
 };
-
-function distanceBetween(objA, objB) {
-  var dx = objA.cx - objB.cx;
-  var dy = objA.cy - objB.cy;
-  return Math.sqrt((dx * dx) + (dy * dy));
-};
-
-function angleBetween(x1, y1, x2, y2) {
-  return Math.atan2(y1 - y2, x1 - x2) * (180.0 / Math.PI);
-};
-
-function angleDifference(a1, a2) {
-  return ((((a1 - a2) % 360) + 540) % 360) - 180;
-};
-
-function degreesToRadians(degrees) {
-  return degrees * (Math.PI / 180);
-};
-
-function dir_x(length, angle) {
-  return length * Math.cos(degreesToRadians(angle));
-};
-
-function dir_y(length, angle) {
-  return length * Math.sin(degreesToRadians(angle));
-};
-
-// source: http://stackoverflow.com/questions/17410809/how-to-calculate-rotation-in-2d-in-javascript
-function rotatePoint(cx, cy, x, y, radians) {
-    var cos = Math.cos(radians),
-        sin = Math.sin(radians),
-        nx = (cos * (x - cx)) + (sin * (y - cy)) + cx,
-        ny = (cos * (y - cy)) + (sin * (x - cx)) + cy;
-    return {x: nx, y: ny};
-}
 
 function refresh() {
   if (!environment.isReady()) {

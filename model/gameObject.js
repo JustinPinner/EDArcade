@@ -57,9 +57,12 @@ class GameObject {
 	}
 	get drawOriginCentre() {
 		return {
-			x: this.cx + (environment.viewport.x * -1),
-			y: this.cy + (environment.viewport.y * -1)
+			x: this.cx + -environment.viewport.x,
+			y: this.cy + -environment.viewport.y
 		};
+	}
+	get coordinatesRotated() {
+		return rotatePoint(this.cx, this.cy, this.x, this.y, this.heading);
 	}
 	// setters
 	set x(val) {
