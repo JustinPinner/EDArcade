@@ -1,4 +1,11 @@
 // model/gameObject.js
+const GameObjectTypes = {
+	SHIP: 'ship',
+	ASTEROID: 'asteroid',
+	PICKUP: 'pickup',
+	ESCAPEPOD: 'escape-pod',
+	MUNITION: 'munition'
+}
 var nextObjId = 0;
 
 class GameObject {
@@ -83,6 +90,25 @@ GameObject.prototype.updatePosition = function() {
 	this.x += this.vx;
 	this.y += this.vy;
 }
+
+GameObject.prototype.collisionDetect = function() {
+	var self = this;
+	var hitObjects = gameObjects.filter(function(obj) {
+		return obj.oType === GameObjectTypes.SHIP && 
+			obj !== self.hardpoint.parent &&
+			self.x >= obj.x &&
+			self.x <= obj.x + obj.width &&
+			self.y >= obj.y &&
+			self.y <= obj.y + obj.height;
+	});
+	if (hitObjects.length > 0) {
+		hitObjects[0].takeDamage(this);
+		self.fsm.transition('despawn');
+	}
+}
+
+// abstract
+GameObject.prototype.takeDamage = function(source) {};
 
 GameObject.prototype.isOnScreen = function(debug) {
 	return environment.viewport.contains(this.x, this.y, this.width, this.height);	

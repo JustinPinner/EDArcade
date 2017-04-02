@@ -5,7 +5,7 @@
 */
 class Ship extends GameObject {
 	constructor(shipType, shipName, role) {
-		super('ship', shipName, player);
+		super(GameObjectTypes.SHIP, shipName, player);
 		this.shipName = shipName ? shipName : shipType + this.id;
 		this.shipType = shipType;
 		this.player = role instanceof Player ? role : null;
@@ -20,6 +20,8 @@ class Ship extends GameObject {
 		this.contacts = [];
 		this.currentTarget = null;
 		this.scanner = new Scanner(this);
+		this.shield = new Shield(this);
+		this.hullIntegrity = 100;
 		this.sprite.image = imageService.loadImage('../image/' + this.shipType + '.png');
 		this.cellAnims = {
 			shieldStrike: {
@@ -43,6 +45,7 @@ class Ship extends GameObject {
 				frameRate: null
 			}
 		};
+		if (this.player) player.ship = this;
 	}
 	/* 
 			getters
@@ -208,7 +211,6 @@ Ship.prototype.accelerate = function() {
 	if (apply_dy) {
 		this.vy += dy;
 	}
-
 };
 
 Ship.prototype.updateMomentum = function() {
@@ -365,14 +367,12 @@ Ship.prototype.yaw = function(dir) {
 };
 	
 Ship.prototype.syncHardpoints = function() {
-	var originCentre = this.drawOriginCentre;
-	var origin = this.drawOrigin;
-
 	for (hardpoint in this.hardpoints) {
-		var hp = this.hardpoints[hardpoint], 
-				x = origin.x + this.hardpointGeometry[hp.type][hp.sizeName][hp.index].x,
-				y = origin.y + this.hardpointGeometry[hp.type][hp.sizeName][hp.index].y,
-				rotated = rotatePoint(originCentre.x, originCentre.y, x, y, this.heading + 90);
+		var hp = this.hardpoints[hardpoint],
+				geometry = this.hardpointGeometry[hp.type][hp.sizeName][hp.index], 
+				x = this.x + geometry.x,
+				y = this.y + geometry.y,
+				rotated = rotatePoint(this.cx, this.cy, x, y, this.heading + 90);
 		hp.x = rotated.x;
 		hp.y = rotated.y;
 	}
@@ -394,6 +394,19 @@ Ship.prototype.fireWeapons = function() {
 	}	
 };
 	
+Ship.prototype.takeDamage = function(source) {
+	if (this.shield && this.shield.charge > 0) {
+		this.shield.impact(source);
+	} else if (this.armour && this.armour > 0) {
+		this.armour -= source.strength * 10;
+	} else if (this.hullIntegrity && this.hullIntegrity > 0) {
+		this.hullIntegrity -= source.strength * 10;
+	}
+	if (this.hullIntegrity <= 0) {
+		this.fsm.transition('despawn');
+	}
+};
+
 Ship.prototype.matchTargetVector = function(ship) {
 	if (!ship) return;
 	if (ship.speed > this.speed) this.increaseThrust();
@@ -776,5 +789,16 @@ Scanner.prototype.scan = function() {
 		}    	
   	this.lastScan = Date.now();
   }
+}
+
+class Shield {
+	constructor(ship) {
+		this.ship = ship;
+		this.charge = 100;
+	}
+}
+
+Shield.prototype.impact = function(source) {
+	this.charge -= source.strength * 3;
 }
 

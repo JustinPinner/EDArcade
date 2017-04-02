@@ -146,7 +146,8 @@ var fsmStates = {
 		mode: 'die',
 		nextState: ['despawn'],
 		execute: function(self) {
-			// TODO
+			// TODO - animations/effects etc
+			self.fsm.transition('despawn');
 		}		
 	},
 	despawn: {
@@ -179,9 +180,8 @@ var fsmStates = {
 	},
 	inflight: {
 		mode: 'inflight',
-		nextState: ['hit', 'despawn'],
+		nextState: ['hit'],
 		execute: function(self) {
-			// TODO: collisionDetect
 			self.vx = dir_x(self.speed, self.heading);
 			self.vy = dir_y(self.speed, self.heading);
 			if(distanceBetween(self, self.hardpoint.parent) > environment.viewport.width * 5) {
@@ -202,14 +202,14 @@ var FSM = function(gameObject, currentState) {
 			if (this.lastTransitionTime && this.state.duration && now - this.lastTransitionTime < this.state.duration) {
 				return;
 			}
-			this.state.execute(this.gameObject);
+			this.state.execute && this.state.execute(this.gameObject);
 		 	if (this.state.duration) {
 			 	this.lastTransitionTime = Date.now();
 		 	}
 		}
 	}
 	this.transition = function(newState) {
-		if (this.state.nextState.includes(newState)) {
+		if (this.state.nextState.includes(newState) || newState === 'die') {
 			this.state = fsmStates[newState];
 		} else {
 			this.state = this.startState;

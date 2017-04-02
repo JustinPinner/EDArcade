@@ -34,15 +34,6 @@ function setup() {
 	setInterval(main, 1000/fps);
 };
 
-function playerVisibleRegion() {
-  return {
-    x1: playerShip.cx - environment.viewport.width / 2,
-    y1: playerShip.cy - environment.viewport.height / 2,
-    x2: playerShip.cx + environment.viewport.width / 2,
-    y2: playerShip.cy + environment.viewport.height / 2
-  };
-};
-
 function randInt(max) {
   return Math.floor(rand(max));
 };

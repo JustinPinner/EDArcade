@@ -1,11 +1,37 @@
 // model/weapon.js
 
-var SIZE = {
-  Small: {value: 1, name: 'Small', code: 'S'}, 
-  Medium: {value: 2, name: 'Medium', code: 'M'}, 
-  Large: {value: 3, name: 'Large', code: 'L'},
-  Huge: {value: 4, name: 'Huge', code: 'H'} 
+const Size = {
+  SMALL: {value: 1, name: 'Small', code: 'S'}, 
+  MEDIUM: {value: 2, name: 'Medium', code: 'M'}, 
+  LARGE: {value: 3, name: 'Large', code: 'L'},
+  HUGE: {value: 4, name: 'Huge', code: 'H'} 
 };
+
+const WeaponTypes = {
+	ENERGY: 'energy',
+	PROJECTILE: 'projectile'
+}
+
+const LaserTypes = {
+	PULSE: 'pulse',
+	BEAM: 'beam'
+}
+
+const DamageTypes = {
+	POINT: 'point',
+	AREA: 'area'
+}
+
+const HardpointTypes = {
+	WEAPON: 'weapon',
+	UTILITY: 'utility'
+}
+
+const HardpointMountTypes = {
+	FIXED: 'fixed',
+	GIMBAL: 'gimbal',
+	TURRET: 'turret'
+}
 
 class Weapon {
 	constructor(parent, type, size) {
@@ -25,7 +51,7 @@ class Weapon {
 
 class LaserWeapon extends Weapon {
 	constructor(parent, mount, category, size) {
-		super(parent, 'energy', size);
+		super(parent, WeaponTypes.ENERGY, size);
 		this.mount = mount;
 		this.category = category;
 		this.range = Lasers[size][category][mount].range;
@@ -47,13 +73,13 @@ LaserWeapon.prototype.fire = function() {
 
 class PulseLaser extends LaserWeapon {
 	constructor(parent, mount, size) {
-		super(parent, mount, 'pulse', size);
+		super(parent, mount, LaserTypes.PULSE, size);
 	}
 }
 
 class Munition extends GameObject {
 	constructor(type, effect, role) {
-		super('munition', type, role);
+		super(GameObjectTypes.MUNITION, type, role);
 		this.munitionType = type;
 		this.munitionEffect = effect;
 		this.munitionRole = role;
@@ -78,12 +104,13 @@ class Munition extends GameObject {
 Munition.prototype.updateAndDraw = function(debug) {
 	this.updatePosition();
 	this.draw();
+	this.collisionDetect();
   this.fsm.execute();
 }
 
 class LaserBeam extends Munition {
 	constructor(type, size, hardpoint) {
-		super('energy', 'point', MunitionRoles['beam']);
+		super(WeaponTypes.ENERGY, DamageTypes.POINT, MunitionRoles['beam']);
 		this.width = LaserBeams[type][size].width;
 		this.height = LaserBeams[type][size].length;
 		this.colour = LaserBeams[type][size].colour;
@@ -93,7 +120,7 @@ class LaserBeam extends Munition {
 		this.coordinates.y = this.hardpoint.coordinates.y;
 		this.coordinates.z = this.hardpoint.coordinates.z;
 		this.heading = hardpoint.parent.heading;
-		this.speed = 20;
+		this.speed = 100;
 	}
 }
 
@@ -101,9 +128,11 @@ LaserBeam.prototype.draw = function(debug) {
 	if (!this.isOnScreen(debug)) {
 		return;
 	}
+	var x = -environment.viewport.x + this.coordinates.x,
+			y = -environment.viewport.y + this.coordinates.y;
 	environment.viewport.ctx.beginPath();
-	environment.viewport.ctx.moveTo(this.coordinates.x, this.coordinates.y);
-	environment.viewport.ctx.lineTo(this.coordinates.x + dir_x(this.speed, this.heading), this.coordinates.y + dir_y(this.speed, this.heading));
+	environment.viewport.ctx.moveTo(x, y);
+	environment.viewport.ctx.lineTo(x + dir_x(this.speed, this.heading), y + dir_y(this.speed, this.heading));
 	environment.viewport.ctx.strokeStyle = this.colour ? this.colour : '#ffffff';
 	environment.viewport.ctx.stroke();
 }
@@ -143,8 +172,7 @@ var LaserBeams = {
 			width: 2,
 			length: 200,
 			colour: '#ff0000',
-			strength: 3,
-			role: MunitionRoles['beam']
+			strength: 3
 		},
 		2: {
 			width: 3,
@@ -173,19 +201,31 @@ class Hardpoint {
 			z: this.z
 		};	
 	}
+	get geometry() {
+		var g = this.parent.hardpointGeometry[this.type][this.sizeName][this.index];
+		return {
+			x: g.x,
+			y: g.y,
+			z: g.z
+		};
+	}
 }
 
 Hardpoint.prototype.draw = function() {
-	environment.viewport.ctx.moveTo(this.x, this.y);
+	var x = -environment.viewport.x + this.parent.x + this.geometry.x,
+			y = -environment.viewport.y + this.parent.y + this.geometry.y,
+			z = this.geometry.z,
+			r = rotatePoint(-environment.viewport.x + this.parent.cx, -environment.viewport.y + this.parent.cy, x, y, this.parent.heading + 90);
+	environment.viewport.ctx.moveTo(r.x, r.y);
 	environment.viewport.ctx.beginPath();
 	environment.viewport.ctx.strokeStyle = (this.z == 1 ? 'yellow' : 'orange');
-	environment.viewport.ctx.arc(this.x, this.y, 2, 0, Math.PI * 2, false);
+	environment.viewport.ctx.arc(r.x, r.y, 2, 0, Math.PI * 2, false);
 	environment.viewport.ctx.stroke();
 }
 
 class WeaponHardpoint extends Hardpoint {
 	constructor(parent, size, index, weaponClass, weaponMount, weaponSize) {
-		super(parent, 'weapon', size, index);
+		super(parent, HardpointTypes.WEAPON, size, index);
 		this.weapon = weaponClass ? new weaponClass(this, weaponMount, weaponSize) : null;
 		this.loaded = this.weapon ? true : false;
 	}
@@ -193,7 +233,7 @@ class WeaponHardpoint extends Hardpoint {
 
 class UtilityHardpoint extends Hardpoint {
 	constructor(parent, size, index, module) {
-		super(parent, 'utility', size, index);
+		super(parent, HardpointTypes.UTILITY, size, index);
 		this.loaded = module ? true : false;
 		this.module = module;
 	}
@@ -204,8 +244,8 @@ var Defaults = {
 		Sidewinder: {
 			load: function(parent) {
 				for (var i=1; i < 3; i++){
-					parent.hardpoints.push(new WeaponHardpoint(parent, SIZE.Small.value, i, PulseLaser, 'fixed', 1));
-					parent.hardpoints.push(new UtilityHardpoint(parent, SIZE.Small.value, i));
+					parent.hardpoints.push(new WeaponHardpoint(parent, Size.SMALL.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
+					parent.hardpoints.push(new UtilityHardpoint(parent, Size.SMALL.value, i));
 				}
 			}
 		},		
@@ -213,20 +253,20 @@ var Defaults = {
 			3: {
 				load: function(parent) {
 					for (var i=1; i < 3; i++){
-						parent.hardpoints.push(new WeaponHardpoint(parent, SIZE.Small.value, i));
-						parent.hardpoints.push(new WeaponHardpoint(parent, SIZE.Medium.value, i, PulseLaser, 'fixed', 1));
-						parent.hardpoints.push(new UtilityHardpoint(parent, SIZE.Small.value, i));
+						parent.hardpoints.push(new WeaponHardpoint(parent, Size.SMALL.value, i));
+						parent.hardpoints.push(new WeaponHardpoint(parent, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
+						parent.hardpoints.push(new UtilityHardpoint(parent, Size.SMALL.value, i));
 					}
 				}
 			},
 			4: {
 				load: function(parent) {
 					for (var i=1; i < 4; i++){
-						parent.hardpoints.push(new WeaponHardpoint(parent, SIZE.Small.value, i));				
+						parent.hardpoints.push(new WeaponHardpoint(parent, Size.SMALL.value, i));				
 					}
 					for (var i=1; i < 3; i++){
-						parent.hardpoints.push(new WeaponHardpoint(parent, SIZE.Medium.value, i, PulseLaser, 'fixed', 1));
-						parent.hardpoints.push(new UtilityHardpoint(parent, SIZE.Small.value, i));
+						parent.hardpoints.push(new WeaponHardpoint(parent, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
+						parent.hardpoints.push(new UtilityHardpoint(parent, Size.SMALL.value, i));
 					}									
 				}
 			}
@@ -234,13 +274,13 @@ var Defaults = {
 		Python: {
 			load: function(parent) {
 				for (var i=1; i < 4; i++){
-					parent.hardpoints.push(new WeaponHardpoint(parent, SIZE.Large.value, i));	
+					parent.hardpoints.push(new WeaponHardpoint(parent, Size.LARGE.value, i));	
 				}
 				for (var i=1; i < 3; i++){
-					parent.hardpoints.push(new WeaponHardpoint(parent, SIZE.Medium.value, i, PulseLaser, 'fixed', 1));				
+					parent.hardpoints.push(new WeaponHardpoint(parent, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));				
 				}
 				for (var i=1; i < 5; i++){
-					parent.hardpoints.push(new UtilityHardpoint(parent, SIZE.Small.value, i));	
+					parent.hardpoints.push(new UtilityHardpoint(parent, Size.SMALL.value, i));	
 				}
 			}
 		}
