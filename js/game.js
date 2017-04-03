@@ -47,6 +47,10 @@ function refresh() {
     return;
   }
   environment.viewport.clear();  
+  var deadAndAlive = gameObjects.partition(function(obj) {
+    return obj.disposable;
+  });
+  gameObjects = deadAndAlive[1];
   for (var i = 0; i < gameObjects.length; i++) {
     gameObjects[i].updateAndDraw(debug);
     if (gameObjects[i] === playerShip) {

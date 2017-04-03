@@ -10,6 +10,7 @@ var nextObjId = 0;
 
 class GameObject {
 	constructor(oType, oName, oRole) {
+		this.disposable = false;
 		this.id = nextObjId += 1;
 		this.oType = oType;
 		this.oName = oName;
@@ -91,19 +92,19 @@ GameObject.prototype.updatePosition = function() {
 	this.y += this.vy;
 }
 
-GameObject.prototype.collisionDetect = function() {
+GameObject.prototype.collisionDetect = function(x, y) {
 	var self = this;
 	var hitObjects = gameObjects.filter(function(obj) {
 		return obj.oType === GameObjectTypes.SHIP && 
 			obj !== self.hardpoint.parent &&
-			self.x >= obj.x &&
-			self.x <= obj.x + obj.width &&
-			self.y >= obj.y &&
-			self.y <= obj.y + obj.height;
+			x >= obj.x &&
+			x <= obj.x + obj.width &&
+			y >= obj.y &&
+			y <= obj.y + obj.height;
 	});
 	if (hitObjects.length > 0) {
 		hitObjects[0].takeDamage(this);
-		self.fsm.transition('despawn');
+		self.takeDamage(hitObjects[0]);
 	}
 }
 

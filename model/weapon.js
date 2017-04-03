@@ -68,7 +68,7 @@ LaserWeapon.prototype.fire = function() {
 	this.lastFiredTime = Date.now();
 	var beam = new LaserBeam(this.category, this.size, this.parent);
 	gameObjects.push(beam);
-	beam.fsm.transition('launch');
+	beam.fsm.transition(FSMState.LAUNCH);
 }
 
 class PulseLaser extends LaserWeapon {
@@ -83,6 +83,11 @@ class Munition extends GameObject {
 		this.munitionType = type;
 		this.munitionEffect = effect;
 		this.munitionRole = role;
+		this.coordinates = {
+			x: null,
+			y: null,
+			z: null
+		};
 		this.fsm = new FSM(this, role.initialState);
 	}
 	// getters
@@ -104,7 +109,7 @@ class Munition extends GameObject {
 Munition.prototype.updateAndDraw = function(debug) {
 	this.updatePosition();
 	this.draw();
-	this.collisionDetect();
+	this.collisionDetect(this.x + dir_x(this.height, this.heading), this.y + dir_y(this.height, this.heading));
   this.fsm.execute();
 }
 
@@ -119,9 +124,18 @@ class LaserBeam extends Munition {
 		this.coordinates.x = this.hardpoint.coordinates.x;
 		this.coordinates.y = this.hardpoint.coordinates.y;
 		this.coordinates.z = this.hardpoint.coordinates.z;
+		this.collisionDetectionPoint = {
+			x: this.x + dir_x(this.height, this.heading),
+			y: this.y + dir_y(this.height, this.heading)
+		}
 		this.heading = hardpoint.parent.heading;
 		this.speed = 100;
 	}
+}
+
+LaserBeam.prototype.takeDamage = function(source) {
+	// if we hit something - we die
+	this.fsm.transition(FSMState.DIE);
 }
 
 LaserBeam.prototype.draw = function(debug) {
@@ -130,11 +144,14 @@ LaserBeam.prototype.draw = function(debug) {
 	}
 	var x = -environment.viewport.x + this.coordinates.x,
 			y = -environment.viewport.y + this.coordinates.y;
+	var normalWidth = environment.viewport.ctx.lineWidth;		
 	environment.viewport.ctx.beginPath();
 	environment.viewport.ctx.moveTo(x, y);
 	environment.viewport.ctx.lineTo(x + dir_x(this.speed, this.heading), y + dir_y(this.speed, this.heading));
 	environment.viewport.ctx.strokeStyle = this.colour ? this.colour : '#ffffff';
+	environment.viewport.ctx.lineWidth = this.width;
 	environment.viewport.ctx.stroke();
+	environment.viewport.ctx.lineWidth = normalWidth;
 }
 
 var Lasers = {
@@ -162,7 +179,7 @@ var Lasers = {
 
 var MunitionRoles = {
 	beam: {
-		initialState: 'loaded'
+		initialState: FSMState.LOADED
 	}
 }
 

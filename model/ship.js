@@ -367,8 +367,8 @@ Ship.prototype.yaw = function(dir) {
 };
 	
 Ship.prototype.syncHardpoints = function() {
-	for (hardpoint in this.hardpoints) {
-		var hp = this.hardpoints[hardpoint],
+	for (var i = 0; i < this.hardpoints.length; i++) {
+		var hp = this.hardpoints[i],
 				geometry = this.hardpointGeometry[hp.type][hp.sizeName][hp.index], 
 				x = this.x + geometry.x,
 				y = this.y + geometry.y,
@@ -403,7 +403,7 @@ Ship.prototype.takeDamage = function(source) {
 		this.hullIntegrity -= source.strength * 10;
 	}
 	if (this.hullIntegrity <= 0) {
-		this.fsm.transition('despawn');
+		this.fsm.transition(FSMState.DIE);
 	}
 };
 
@@ -437,8 +437,8 @@ Ship.prototype.draw = function(debug) {
 	environment.viewport.ctx.arc(origin.x, origin.y, 2, 0, Math.PI * 2, false);
 	environment.viewport.ctx.stroke();
   
-  for (hardpoint in this.hardpoints) {
-  	this.hardpoints[hardpoint].draw();
+  for (var i = 0; i < this.hardpoints.length; i++) {
+  	this.hardpoints[i].draw();
   }
   if (this.player && this.threats) {
   	this.drawHud();
@@ -711,35 +711,35 @@ var ShipTypes = {
 var ShipRoles = {
 	trader: {
 		roleName: 'Trader',
-		initialState: 'neutral',
+		initialState: FSMState.NEUTRAL,
 		initialStatus: 'clean',
 		threatStatus: ['wanted'],
 		targetStatus: ['cargo']
 	},
 	miner: {
 		roleName: 'Miner',
-		initialState: 'neutral',
+		initialState: FSMState.NEUTRAL,
 		initialStatus: 'clean',
 		threatStatus: ['wanted'],
 		targetStatus: ['mineral']
 	},
 	bountyHunter: {
 		roleName: 'Bounty Hunter',
-		initialState: 'hunt',
+		initialState: FSMState.HUNT,
 		initialStatus: 'vigilante',
 		threatStatus: ['wanted'],
 		targetStatus: ['wanted']
 	},
 	security: {
 		roleName: 'Security Service',
-		initialState: 'hunt',
+		initialState: FSMState.HUNT,
 		initialStatus: 'security',
 		threatStatus: ['wanted'],
 		targetStatus: ['wanted']
 	},
 	pirate: {
 		roleName: 'Pirate',
-		initialState: 'hunt',
+		initialState: FSMState.HUNT,
 		initialStatus: 'wanted',
 		threatStatus: ['security', 'vigilante'],
 		targetStatus: ['clean', 'wanted']
@@ -747,7 +747,7 @@ var ShipRoles = {
 	player: {
 		// always last in the list
 		roleName: 'Player',
-		initialState: 'player',
+		initialState: FSMState.PLAYER,
 		initialStatus: 'player',
 		threatStatus: ['wanted'],
 		targetStatus: []
