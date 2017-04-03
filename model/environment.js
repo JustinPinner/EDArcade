@@ -159,8 +159,11 @@ var Viewport = function() {
 	};
 	
 	this.contains = function(x, y, width, height) {
-	 return (x + width >= this.x && x < this.x + this.width) && 
-	 	(y + height >= this.y && y <= this.y + this.height)
+		// Xo + Wo >= Xs && Yo + Ho >= Ys
+		// Xo <= Xs + Ws && Yo <= Ys + Hs
+
+		return (x + width >= this.x && y + height >= this.y) &&
+	 		(x <= this.x + this.width && y <= this.y + this.height)
 	};
 };
 

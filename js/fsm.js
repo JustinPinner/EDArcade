@@ -1,13 +1,29 @@
 // js/fsm.js
+const FSMState = {
+	PLAYER: 'player',
+	NEUTRAL: 'neutral',
+	HUNT: 'hunt',
+	ENGAGE: 'engage',
+	CHASE: 'chase',
+	EVADE: 'evade',
+	ESCAPE: 'escape',
+	DIE: 'die',
+	DESPAWN: 'despawn',
+	LOADED: 'munitionLoaded',
+	LAUNCH: 'munitionLaunch',
+	UNLOAD: 'munitionUnload',
+	INFLIGHT: 'munitionInFlight',
+	IMPACT: 'munitionImpact'
+}
 
 var fsmStates = {
 	neutral: {
-		mode: 'neutral',
-		nextState: ['engage','chase','evade','escape','die'],
+		mode: FSMState.NEUTRAL,
+		nextState: [FSMState.ENGAGE, FSMState.CHASE, FSMState.EVADE, FSMState.ESCAPE],
 		duration: 5000,
 		execute: function(self) {
 			if (self.threats.length > 0) {
-				self.fsm.transition('escape');
+				self.fsm.transition(FSMState.ESCAPE);
 			} else {
 				var newHeading = randInt(360);
 				var deltaA = angleDifference(self.heading, newHeading);
@@ -20,21 +36,21 @@ var fsmStates = {
 		}
 	},
 	hunt: {
-		mode: 'hunt',
-		nextState: ['chase','engage','evade','escape'],
+		mode: FSMState.HUNT,
+		nextState: [FSMState.CHASE, FSMState.ENGAGE, FSMState.EVADE, FSMState.ESCAPE],
 		execute: function(self) {		  
 	    if (!self.currentTarget && self.threats.length > 0) {
 	    	self.currentTarget = self.threats[0].ship;
-		    self.fsm.transition('chase');
+		    self.fsm.transition(FSMState.CHASE);
 	    }
 		}
 	},
 	engage: {
-		mode: 'engage',
-		nextState: ['chase','evade','escape'],
+		mode: FSMState.ENGAGE,
+		nextState: [FSMState.CHASE, FSMState.EVADE, FSMState.ESCAPE],
 		execute: function(self) {
 			if (!self.currentTarget) {
-				self.fsm.transition('hunt');
+				self.fsm.transition(FSMState.HUNT);
 				return;
 			}
 			var combatSpeedRange = {
@@ -59,22 +75,22 @@ var fsmStates = {
 		  }
 
 	    var dT = distanceBetween(self, self.currentTarget);
-	    if (dT <= self.maximumWeaponRange && self.isBehind(self.currentTarget)) {
+	    if (dT <= self.maximumWeaponRange) {
 			  self.fireWeapons();
 	    }
 	    if (dT > self.engageRadius) {
-	    	self.fsm.transition('chase');
+	    	self.fsm.transition(FSMState.CHASE);
 	    }
 	    if (dT <= self.maximumWeaponRange * 0.3 || self.isInFrontOf(self.currentTarget)) {
-	    	self.fsm.transition('evade');
+	    	self.fsm.transition(FSMState.EVADE);
 	    }
 		}
 	},
 	chase: {
-		mode: 'chase',
-		nextState: ['engage','evade','escape','hunt'],
+		mode: FSMState.CHASE,
+		nextState: [FSMState.ENGAGE, FSMState.EVADE, FSMState.ESCAPE, FSMState.HUNT],
 		execute: function(self) {
-	    if (!self.currentTarget) self.fsm.transition('hunt');
+	    if (!self.currentTarget) self.fsm.transition(FSMState.HUNT);
 	    
 	    var dT = distanceBetween(self, self.currentTarget);
 	    var aTmin = angleBetween(self.cx, self.cy, self.currentTarget.x, self.currentTarget.y);
@@ -95,20 +111,20 @@ var fsmStates = {
     	}
 
 	    if (dT < self.engageRadius) {
-	    	self.fsm.transition('engage');
+	    	self.fsm.transition(FSMState.ENGAGE);
 	    }
 		}
 	},
 	evade: {
-		mode: 'evade',
-		nextState: ['chase','engage','escape','hunt','neutral'],
+		mode: FSMState.EVADE,
+		nextState: [FSMState.CHASE, FSMState.ENGAGE, FSMState.ESCAPE, FSMState.HUNT, FSMState.NEUTRAL],
 		execute: function(self) {
 			if (!self.currentTarget) {
 				self.fsm.transition(self.role.initialState);
 				return;
 			}
 			if (distanceBetween(self, self.currentTarget) >= self.engageRadius) {
-				self.fsm.transition('chase');
+				self.fsm.transition(FSMState.CHASE);
 				return;
 			}
 	    var aE = angleBetween(self.cx, self.cy, -self.currentTarget.cx , -self.currentTarget.cy);
@@ -116,13 +132,12 @@ var fsmStates = {
 		  if (deltaA < 0) self.yaw('ccw');
 		  if (deltaA > 0) self.yaw('cw');
 			self.increaseThrust();
-			self.fsm.transition('escape');
+			self.fsm.transition(FSMState.ESCAPE);
 		}		
 	},
 	escape: {
-		lastTick:  0,
-		mode: 'escape',
-		nextState: ['neutral','evade','engage','despawn','chase'],
+		mode: FSMState.ESCAPE,
+		nextState: [FSMState.NEUTRAL, FSMState.EVADE, FSMState.ENGAGE, FSMState.CHASE],
 		execute: function(self) {
 			var threats = self.threats.sort(function(a, b) {
 				if (a.range < b.range) {
@@ -139,47 +154,67 @@ var fsmStates = {
 		  	(escapeVector < 0) ? self.yaw('ccw') : self.yaw('cw');
 				self.increaseThrust();
 			} else {
-				self.fsm.transition('neutral');
+				self.fsm.transition(FSMState.NEUTRAL);
 			}
 		}		
 	},
 	die: {
-		lastTick:  0,
-		mode: 'die',
-		nextState: ['despawn'],
-		execute: function(ship) {
-			// TODO
+		mode: FSMState.DIE,
+		nextState: [],
+		execute: function(self) {
+			// TODO - animations/effects etc
+			// mark this object disposable
+			self.disposable = true;
 		}		
 	},
-	despawn: {
-		lastTick:  0,
-		mode: 'despawn',
-		nextState: null,
-		execute: function(ship) {
+	munitionLoaded: {
+		mode: FSMState.LOADED,
+		nextState: [FSMState.LAUNCH, FSMState.UNLOAD],
+		execute: function(self) {
 			// TODO
+		}
+	},
+	munitionLaunch: {
+		mode: FSMState.LAUNCH,
+		nextState: [FSMState.INFLIGHT],
+		execute: function(self) {
+			self.vx = dir_x(self.speed, self.heading);
+			self.vy = dir_y(self.speed, self.heading);
+			self.fsm.transition(FSMState.INFLIGHT);
+		}
+	},
+	munitionInFlight: {
+		mode: FSMState.INFLIGHT,
+		nextState: [FSMState.IMPACT],
+		execute: function(self) {
+			self.vx = dir_x(self.speed, self.heading);
+			self.vy = dir_y(self.speed, self.heading);
+			if(distanceBetween(self, self.hardpoint.parent) > environment.viewport.width * 5) {
+				self.fsm.transition(FSMState.DIE);
+			}
 		}
 	}
 }
 
-var FSM = function(ship, currentState) {
-	this.ship = ship;
+var FSM = function(gameObject, currentState) {
+	this.gameObject = gameObject;
 	this.state = fsmStates[currentState];
 	this.startState = currentState;
 	this.lastTransitionTime = null;
 	this.execute = function() {
-		if (this.ship) {
+		if (this.gameObject) {
 			var now = Date.now();
 			if (this.lastTransitionTime && this.state.duration && now - this.lastTransitionTime < this.state.duration) {
 				return;
 			}
-			this.state.execute(this.ship);
+			this.state.execute && this.state.execute(this.gameObject);
 		 	if (this.state.duration) {
 			 	this.lastTransitionTime = Date.now();
 		 	}
 		}
 	}
 	this.transition = function(newState) {
-		if (this.state.nextState.includes(newState)) {
+		if (this.state.nextState.includes(newState) || newState === FSMState.DIE) {
 			this.state = fsmStates[newState];
 		} else {
 			this.state = this.startState;

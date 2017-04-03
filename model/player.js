@@ -40,4 +40,12 @@ var Player = function(name) {
 			this.ship.flightAssist = !this.ship.flightAssist;
 		}
 	}
-}
+	this.visibleRegion = function() {
+	  return {
+	  	x1: playerShip.cx - environment.viewport.width / 2,
+			y1: playerShip.cy - environment.viewport.height / 2,
+			x2: playerShip.cx + environment.viewport.width / 2,
+			y2: playerShip.cy + environment.viewport.height / 2
+	  };
+	}
+};
