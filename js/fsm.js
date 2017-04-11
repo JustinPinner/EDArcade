@@ -7,13 +7,15 @@ const FSMState = {
 	CHASE: 'chase',
 	EVADE: 'evade',
 	ESCAPE: 'escape',
+	EXPLODING: 'exploding',
 	DIE: 'die',
 	DESPAWN: 'despawn',
 	LOADED: 'munitionLoaded',
 	LAUNCH: 'munitionLaunch',
 	UNLOAD: 'munitionUnload',
 	INFLIGHT: 'munitionInFlight',
-	IMPACT: 'munitionImpact'
+	IMPACT: 'munitionImpact',
+	EFFECT: 'effectPlay'
 }
 
 var fsmStates = {
@@ -158,12 +160,22 @@ var fsmStates = {
 			}
 		}		
 	},
+	exploding: {
+		mode: FSMState.EXPLODING,
+		nextState: [FSMState.DIE],
+		duration: 3000,
+		execute: function(self) {
+			var explosion = new ShipExplosionEffect(self.drawOriginCentre.x, self.drawOriginCentre.y);
+			explosion.vx = self.vx;
+			explosion.vy = self.vy;
+			gameObjects.push(explosion);
+			self.fsm.transition(FSMState.DIE);			
+		}
+	},
 	die: {
 		mode: FSMState.DIE,
 		nextState: [],
 		execute: function(self) {
-			// TODO - animations/effects etc
-			// mark this object disposable
 			self.disposable = true;
 		}		
 	},
@@ -193,6 +205,13 @@ var fsmStates = {
 				self.fsm.transition(FSMState.DIE);
 			}
 		}
+	},
+	effectPlay: {
+		mode: FSMState.EFFECT,
+		nextState: [FSMState.DESPAWN],
+		execute: function(self) {
+			self.draw();
+		}
 	}
 }
 
@@ -214,7 +233,7 @@ var FSM = function(gameObject, currentState) {
 		}
 	}
 	this.transition = function(newState) {
-		if (this.state.nextState.includes(newState) || newState === FSMState.DIE) {
+		if (this.state.nextState.includes(newState) || newState === FSMState.EXPLODING || newState === FSMState.DIE) {
 			this.state = fsmStates[newState];
 		} else {
 			this.state = this.startState;

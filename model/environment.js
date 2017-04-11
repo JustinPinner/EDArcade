@@ -33,7 +33,7 @@ var Background = function() {
 	
 	this.ctx = this.cnv.getContext('2d');	
 	
-	this.imgSrc = '../image/starfield-1920x1080.jpg';
+	this.imgSrc = null; //'../image/starfield-simple.jpg'; // '../image/starfield-1920x1080.jpg';
 	this.image = null;
 
 	this.scrollScale = 0;
@@ -43,13 +43,17 @@ var Background = function() {
 	};
 
 	this.init = function() {
-		this.image = imageService.loadImage(this.imgSrc);
-	}
+		this.image = imageService.loadImage(this.imgSrc, function() {
+			environment.background.draw();			
+		});
+	};
 
 	this.draw = function() {
 		this.clear();
-		this.ctx.drawImage(this.image, this.x, this.y, this.width, this.height)
-	}
+		this.ctx.drawImage(this.image, 0, 0, this.cnv.width, this.cnv.height);	
+		this.image.removeEventListener('load', environment.background.draw, false);	
+	};
+
 }
 
 /*
@@ -58,7 +62,7 @@ var Background = function() {
 var Midground = function() {
 	this.isReady = function() {
 		return this.image !== null;
-	}
+	};
 
 	this.width = systemGeometry.width;
 	this.height = systemGeometry.height;
@@ -91,7 +95,7 @@ var Midground = function() {
 
 	this.init = function() {
 		this.image = imageService.loadImage('../image/star-tile-transparent.png');
-	}
+	};
 
 	this.draw = function(scrollData) {
 		// scroll direction is opposide of ship direction		
@@ -118,7 +122,7 @@ var Midground = function() {
 		this.ctx.drawImage(this.image, this.x - this.width, this.y + this.height, this.width, this.height);
 		// left
 		this.ctx.drawImage(this.image, this.x - this.width, this.y, this.width, this.height);		
-	}
+	};
 }
 
 /*
