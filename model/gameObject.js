@@ -4,7 +4,8 @@ const GameObjectTypes = {
 	ASTEROID: 'asteroid',
 	PICKUP: 'pickup',
 	ESCAPEPOD: 'escape-pod',
-	MUNITION: 'munition'
+	MUNITION: 'munition',
+	EFFECT: 'effect'
 }
 var nextObjId = 0;
 
@@ -62,6 +63,12 @@ class GameObject {
 	}
 	get vy() {
 		return parseFloat(this._vy.toFixed(1));
+	}
+	get drawOrigin() {
+		return {
+			x: this.coordinates.x + -environment.viewport.x,
+			y: this.coordinates.y + -environment.viewport.y
+		}
 	}
 	get drawOriginCentre() {
 		return {

@@ -403,7 +403,7 @@ Ship.prototype.takeDamage = function(source) {
 		this.hullIntegrity -= source.strength * 10;
 	}
 	if (this.hullIntegrity <= 0) {
-		this.fsm.transition(FSMState.DIE);
+		this.fsm.transition(FSMState.EXPLODING);
 	}
 };
 
@@ -446,9 +446,6 @@ Ship.prototype.draw = function(debug) {
   if (debug) {
   	this.drawDebug();
   }
-
-	
-
 };
 
 Ship.prototype.drawHud = function() {

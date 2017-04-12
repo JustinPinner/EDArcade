@@ -11,7 +11,7 @@ var ImageService = function() {
 		var image = new Image();
 		image.src = imgPath;
 		if (onLoad) {
-			image.onload = onLoad(image);
+			image.addEventListener('load', onLoad, false);
 		}
 		loadedImages.push({path: imgPath, img: image});
 		return image;
