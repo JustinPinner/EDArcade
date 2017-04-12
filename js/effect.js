@@ -13,7 +13,6 @@ class Effect extends GameObject {
 			lastFrameDrawn: 0,
 			framesRepeat: false
 		};		
-
 	}
 }
 
