@@ -106,10 +106,30 @@ class Munition extends GameObject {
 	}
 }
 
+Munition.prototype.collisionDetect = function(x, y, scale) {
+	var self = this;
+	var hitObjects = gameObjects.filter(function(obj) {
+		if (obj.oType !== this.oType && obj !== self.hardpoint.parent) {
+			var impactBox = scaleBox(obj, scale);
+			return x >= impactBox.x &&
+				x <= impactBox.x + impactBox.width &&
+				y >= impactBox.y &&
+				y <= impactBox.y + impactBox.height;
+		} else {
+			return false;
+		}
+	});
+	if (hitObjects.length > 0) {
+		hitObjects[0].takeDamage(this);
+		self.takeDamage(hitObjects[0]);
+	}
+}
+
 Munition.prototype.updateAndDraw = function(debug) {
+	var scale = 0.75;
 	this.updatePosition();
 	this.draw();
-	this.collisionDetect(this.x + dir_x(this.height, this.heading), this.y + dir_y(this.height, this.heading));
+	this.collisionDetect(this.x + dir_x(this.height, this.heading), this.y + dir_y(this.height, this.heading), scale);
   this.fsm.execute();
 }
 
