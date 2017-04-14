@@ -15,7 +15,7 @@ class Ship extends GameObject {
 		this.direction = this.heading;
 		this.role = this.player ? ShipRoles['player'] : role;
 		this.fsm = this.player ? null : new FSM(this, this.role.initialState);
-		this.status = this.player ? 'clean' : this.role.initialStatus;
+		this.status = this.role.initialStatus;
 		this.hardpoints = [];
 		this.contacts = [];
 		this.currentTarget = null;
@@ -383,7 +383,7 @@ Ship.prototype.boost = function() {
 };
 	
 Ship.prototype.setTarget = function(ship) {
-	this.target = ship;
+	this.currentTarget = ship;
 };
 	
 Ship.prototype.fireWeapons = function() {
@@ -395,6 +395,7 @@ Ship.prototype.fireWeapons = function() {
 };
 	
 Ship.prototype.takeDamage = function(source) {
+	source.hardpoint.parent.registerHit(this);
 	if (this.shield && this.shield.charge > 0) {
 		this.shield.impact(source);
 	} else if (this.armour && this.armour > 0) {
@@ -405,6 +406,13 @@ Ship.prototype.takeDamage = function(source) {
 	if (this.hullIntegrity <= 0) {
 		this.fsm.transition(FSMState.EXPLODING);
 	}
+};
+
+Ship.prototype.registerHit = function(obj) {
+	if (obj.status !== PilotStatus.WANTED) {
+		this.status = PilotStatus.WANTED;
+	}
+	this.currentTarget = obj;
 };
 
 Ship.prototype.matchTargetVector = function(ship) {
@@ -452,32 +460,35 @@ Ship.prototype.drawHud = function() {
 	var origin = null;
 	environment.viewport.ctx.save();	
 	// draw threat pointers
-	for (var t=0; t < this.threats.length; t++) {
-		var threat = this.threats[t];
-		var angle = angleBetween(this.cx, this.cy, threat.ship.cx, threat.ship.cy);
-		var distance = distanceBetween(this, threat.ship);
-		if (threat.ship.isOnScreen()) {
-			origin = threat.ship.drawOriginCentre;
-			// draw threat ring
-			environment.viewport.ctx.moveTo(origin.x, origin.y);
-			environment.viewport.ctx.beginPath();
-			environment.viewport.ctx.strokeStyle = (this.currentTarget && this.currentTarget === threat.ship) ? 'red' : 'orange';
-			environment.viewport.ctx.arc(origin.x, origin.y, threat.ship.width, 0, Math.PI * 2, false);
-			environment.viewport.ctx.stroke();
-		} else {
-			// show off-screen threat marker
-			origin = this.drawOriginCentre;
-			environment.viewport.ctx.fillStyle =  (this.currentTarget && this.currentTarget === threat.ship) ? 'red' : 'orange';
-			environment.viewport.ctx.font = '24px serif';
-			var symbol_x = origin.x - dir_x(distance, angle);
-			if (symbol_x < 0) symbol_x = 10;
-			if (symbol_x > environment.viewport.width) symbol_x = environment.viewport.width - 10;
+	for (var i=0; i < this.contacts.length; i++) {
+		var ping = this.contacts[i];
+		var angle = angleBetween(this.cx, this.cy, ping.ship.cx, ping.ship.cy);
+		var distance = distanceBetween(this, ping.ship);
+		var threatLevel = ping.target || ping.ship.currentTarget && ping.ship.currentTarget === this ? 2 : ping.threat ? 1 : 0;
+		if (threatLevel > 0) {
+			if (ping.ship.isOnScreen()) {
+				origin = ping.ship.drawOriginCentre;
+				// draw threat ring
+				environment.viewport.ctx.moveTo(origin.x, origin.y);
+				environment.viewport.ctx.beginPath();
+				environment.viewport.ctx.strokeStyle = threatLevel < 2 ? 'orange' : 'red';
+				environment.viewport.ctx.arc(origin.x, origin.y, ping.ship.width, 0, Math.PI * 2, false);
+				environment.viewport.ctx.stroke();
+			} else {
+				// show off-screen threat marker
+				origin = this.drawOriginCentre;
+				environment.viewport.ctx.fillStyle = threatLevel < 2 ? 'orange' : 'red';
+				environment.viewport.ctx.font = '24px serif';
+				var symbol_x = origin.x - dir_x(distance, angle);
+				if (symbol_x < 0) symbol_x = 10;
+				if (symbol_x > environment.viewport.width) symbol_x = environment.viewport.width - 10;
 
-			var symbol_y = origin.y - dir_y(distance, angle);
-			if (symbol_y < 0) symbol_y = 20;
-			if (symbol_y > environment.viewport.height) symbol_y = environment.viewport.height - 10;
-			
-			environment.viewport.ctx.fillText('!', symbol_x, symbol_y);		
+				var symbol_y = origin.y - dir_y(distance, angle);
+				if (symbol_y < 0) symbol_y = 20;
+				if (symbol_y > environment.viewport.height) symbol_y = environment.viewport.height - 10;
+				
+				environment.viewport.ctx.fillText('!', symbol_x, symbol_y);		
+			}
 		}
 	}
 	environment.viewport.ctx.restore();
@@ -705,48 +716,55 @@ var ShipTypes = {
 	python: Python
 }
 
+var PilotStatus = {
+	CLEAN: 'clean',
+	VIGILANTE: 'vigilante',
+	SECURITY: 'security',
+	WANTED: 'wanted'
+}
+
 var ShipRoles = {
 	trader: {
 		roleName: 'Trader',
 		initialState: FSMState.NEUTRAL,
-		initialStatus: 'clean',
-		threatStatus: ['wanted'],
+		initialStatus: PilotStatus.CLEAN,
+		threatStatus: [PilotStatus.WANTED],
 		targetStatus: ['cargo']
 	},
 	miner: {
 		roleName: 'Miner',
 		initialState: FSMState.NEUTRAL,
-		initialStatus: 'clean',
-		threatStatus: ['wanted'],
+		initialStatus: PilotStatus.CLEAN,
+		threatStatus: [PilotStatus.WANTED],
 		targetStatus: ['mineral']
 	},
 	bountyHunter: {
 		roleName: 'Bounty Hunter',
 		initialState: FSMState.HUNT,
-		initialStatus: 'vigilante',
-		threatStatus: ['wanted'],
-		targetStatus: ['wanted']
+		initialStatus: PilotStatus.VIGILANTE,
+		threatStatus: [PilotStatus.WANTED],
+		targetStatus: [PilotStatus.WANTED]
 	},
 	security: {
 		roleName: 'Security Service',
 		initialState: FSMState.HUNT,
-		initialStatus: 'security',
-		threatStatus: ['wanted'],
-		targetStatus: ['wanted']
+		initialStatus: PilotStatus.SECURITY,
+		threatStatus: [PilotStatus.WANTED],
+		targetStatus: [PilotStatus.WANTED]
 	},
 	pirate: {
 		roleName: 'Pirate',
 		initialState: FSMState.HUNT,
-		initialStatus: 'wanted',
-		threatStatus: ['security', 'vigilante'],
-		targetStatus: ['clean', 'wanted']
+		initialStatus: PilotStatus.WANTED,
+		threatStatus: [PilotStatus.SECURITY, PilotStatus.VIGILANTE],
+		targetStatus: [PilotStatus.CLEAN, PilotStatus.WANTED]
 	},
 	player: {
 		// always last in the list
 		roleName: 'Player',
 		initialState: FSMState.PLAYER,
-		initialStatus: 'player',
-		threatStatus: ['wanted'],
+		initialStatus: PilotStatus.CLEAN,
+		threatStatus: [PilotStatus.WANTED],
 		targetStatus: []
 	}
 }
@@ -759,24 +777,24 @@ class Scanner {
 }
 
 Scanner.prototype.scan = function() {
-  if (!this.lastScan || Date.now() - this.lastScan >= this.interval){
+  if (!this.lastScan || Date.now() - this.lastScan >= this.interval) {
     this.ship.contacts = [];
 		var scanLimit = this.ship.maximumWeaponRange * 10;	//todo - use a better scan limit
-    for (var j = 0; j < gameObjects.length; j++) {
-   		var range = distanceBetween(this.ship, gameObjects[j]);
-   		if (gameObjects[j] !== this.ship && range <= scanLimit) {
+    for (var i = 0; i < gameObjects.length; i++) {
+   		var range = distanceBetween(this.ship, gameObjects[i]);
+   		if (gameObjects[i] !== this.ship && range <= scanLimit) {
 				var threat = false;				
 				var target = false;
 				if (this.ship.role) {
-					threat = gameObjects[j].currentTarget === this.ship || this.ship.role.threatStatus.filter(function(t) {
-						return t == gameObjects[j].status;
+					threat = gameObjects[i].currentTarget === this.ship || this.ship.role.threatStatus.filter(function(t) {
+						return t == gameObjects[i].status;
 					}).length > 0 ? true : false;
 					target = this.ship.role.targetStatus.filter(function(t) {
-						return t == gameObjects[j].status;
-					}).length > 0 ? true : false;
+						return t == gameObjects[i].status;
+					}).length > 0 ? true : this.ship.currentTarget === gameObjects[i] ? true : false;
 				}
       	var ping = {
-      		ship: gameObjects[j],
+      		ship: gameObjects[i],
       		threat: threat,
       		target: target,
       		range: range
