@@ -33,7 +33,7 @@ var Background = function() {
 	
 	this.ctx = this.cnv.getContext('2d');	
 	
-	this.imgSrc = null; //'../image/starfield-simple.jpg'; // '../image/starfield-1920x1080.jpg';
+	this.imgSrc = ''; //'../image/starfield-simple.jpg'; // '../image/starfield-1920x1080.jpg';
 	this.image = null;
 
 	this.scrollScale = 0;

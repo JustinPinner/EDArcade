@@ -2,7 +2,7 @@
 
 var debug = false;
 
-var maxNPC = 5;
+var minNPC = 10;
 var gameObjects = [];
 var fps = 30;
 
@@ -14,8 +14,8 @@ var shipName = null;  //TODO: get from user
 var player = new Player(playerName);
 var playerShip = null;
 
-var maxSpawnDistX = 500; //environment.viewport.width * 4;
-var maxSpawnDistY = 500; //environment.viewport.height * 4;
+var maxSpawnDistX = environment.viewport.width * 5;
+var maxSpawnDistY = environment.viewport.height * 5;
 
 function setup() {
   environment.init();
@@ -23,7 +23,7 @@ function setup() {
   playerShip.x = environment.viewport.cx - (playerShip.width / 2);
   playerShip.y = environment.viewport.cy - (playerShip.height / 2);
   gameObjects.push(playerShip);
-  for (var i = 0; i < maxNPC; i++) {
+  for (var i = 0; i < minNPC; i++) {
 		var spawnShipType = ShipTypes[Object.keys(ShipTypes)[Math.floor(rand(Object.keys(ShipTypes).length))]];
     var spawnShipRole = ShipRoles[Object.keys(ShipRoles)[Math.floor(rand(Object.keys(ShipRoles).length - 1))]];
     var newShip = new spawnShipType('NPC' + i, spawnShipRole);
@@ -51,7 +51,11 @@ function refresh() {
     return obj.disposable;
   });
   gameObjects = deadAndAlive[1];
+  var npcCount = 0;
   for (var i = 0; i < gameObjects.length; i++) {
+    if (gameObjects[i].oType === GameObjectTypes.SHIP && gameObjects[i].role !== ShipRoles['player']) {
+      npcCount++;
+    }
     gameObjects[i].updateAndDraw(debug);
     if (gameObjects[i] === playerShip) {
       var uiCoord = document.querySelector(".ui.debug.coord");
@@ -62,11 +66,32 @@ function refresh() {
       if (uiVector) {
         uiVector.innerHTML = "<p>spd:" + (playerShip.speed ? playerShip.speed.toFixed(1) : " ") + " hdg:" + (playerShip.heading ? playerShip.heading.toFixed(1) : " ") + "</p>";
       }
+      var uiStatus = document.querySelector(".ui.debug.status");
+      if (uiStatus) {
+        uiStatus.innerHTML = "<p>status:" + playerShip.status + "</p>";
+      }
+      var uiCondition = document.querySelector(".ui.debug.condition");
+      if (uiCondition) {
+        uiCondition.innerHTML = "<p>shields:" + playerShip.shield.charge + "% armour:" + playerShip.armour + " hull:" + playerShip.hullIntegrity + "%</p>";
+      }
       var uiInputs = document.querySelector(".ui.debug.inputs");
       if (uiInputs) {
         uiInputs.innerHTML = "<p>thrust:" + (playerShip.thrust ? playerShip.thrust.toFixed(1) : " ") + "</p>";
       }      
     }
+  }
+  var uiNpcs = document.querySelector(".ui.debug.npcs");
+  if (uiNpcs) {
+    uiNpcs.innerHTML = "<p>NPCs:" + npcCount + "</p>";
+  }
+  // spawn in new NPC ships if any have been destroyed
+  for (var i = npcCount; i < minNPC; i++) {
+    var spawnShipType = ShipTypes[Object.keys(ShipTypes)[Math.floor(rand(Object.keys(ShipTypes).length))]];
+    var spawnShipRole = ShipRoles[Object.keys(ShipRoles)[Math.floor(rand(Object.keys(ShipRoles).length - 1))]];
+    var newShip = new spawnShipType('NPC' + i, spawnShipRole);
+    newShip.x = rand(maxSpawnDistX, true);
+    newShip.y = rand(maxSpawnDistY, true);
+    gameObjects.push(newShip);
   }
 };
 

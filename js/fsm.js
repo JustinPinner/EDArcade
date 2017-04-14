@@ -232,7 +232,6 @@ var FSM = function(gameObject, currentState) {
 		}
 	}
 	this.transition = function(newState) {
-		//if (this.state === FSMState.NEUTRAL && newState) debugger;
 		if ((this.state.nextState && this.state.nextState.includes(newState)) || newState === FSMState.EXPLODING || newState === FSMState.DIE) {
 			this.state = fsmStates[newState];
 		} else {

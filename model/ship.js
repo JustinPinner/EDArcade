@@ -15,7 +15,7 @@ class Ship extends GameObject {
 		this.direction = this.heading;
 		this.role = this.player ? ShipRoles['player'] : role;
 		this.fsm = this.player ? null : new FSM(this, this.role.initialState);
-		this.status = this.player ? 'clean' : this.role.initialStatus;
+		this.status = this.role.initialStatus;
 		this.hardpoints = [];
 		this.contacts = [];
 		this.currentTarget = null;
@@ -409,6 +409,9 @@ Ship.prototype.takeDamage = function(source) {
 };
 
 Ship.prototype.registerHit = function(obj) {
+	if (obj.status !== PilotStatus.WANTED) {
+		this.status = PilotStatus.WANTED;
+	}
 	this.currentTarget = obj;
 };
 
@@ -713,48 +716,55 @@ var ShipTypes = {
 	python: Python
 }
 
+var PilotStatus = {
+	CLEAN: 'clean',
+	VIGILANTE: 'vigilante',
+	SECURITY: 'security',
+	WANTED: 'wanted'
+}
+
 var ShipRoles = {
 	trader: {
 		roleName: 'Trader',
 		initialState: FSMState.NEUTRAL,
-		initialStatus: 'clean',
-		threatStatus: ['wanted'],
+		initialStatus: PilotStatus.CLEAN,
+		threatStatus: [PilotStatus.WANTED],
 		targetStatus: ['cargo']
 	},
 	miner: {
 		roleName: 'Miner',
 		initialState: FSMState.NEUTRAL,
-		initialStatus: 'clean',
-		threatStatus: ['wanted'],
+		initialStatus: PilotStatus.CLEAN,
+		threatStatus: [PilotStatus.WANTED],
 		targetStatus: ['mineral']
 	},
 	bountyHunter: {
 		roleName: 'Bounty Hunter',
 		initialState: FSMState.HUNT,
-		initialStatus: 'vigilante',
-		threatStatus: ['wanted'],
-		targetStatus: ['wanted']
+		initialStatus: PilotStatus.VIGILANTE,
+		threatStatus: [PilotStatus.WANTED],
+		targetStatus: [PilotStatus.WANTED]
 	},
 	security: {
 		roleName: 'Security Service',
 		initialState: FSMState.HUNT,
-		initialStatus: 'security',
-		threatStatus: ['wanted'],
-		targetStatus: ['wanted']
+		initialStatus: PilotStatus.SECURITY,
+		threatStatus: [PilotStatus.WANTED],
+		targetStatus: [PilotStatus.WANTED]
 	},
 	pirate: {
 		roleName: 'Pirate',
 		initialState: FSMState.HUNT,
-		initialStatus: 'wanted',
-		threatStatus: ['security', 'vigilante'],
-		targetStatus: ['clean', 'wanted']
+		initialStatus: PilotStatus.WANTED,
+		threatStatus: [PilotStatus.SECURITY, PilotStatus.VIGILANTE],
+		targetStatus: [PilotStatus.CLEAN, PilotStatus.WANTED]
 	},
 	player: {
 		// always last in the list
 		roleName: 'Player',
 		initialState: FSMState.PLAYER,
-		initialStatus: 'player',
-		threatStatus: ['wanted'],
+		initialStatus: PilotStatus.CLEAN,
+		threatStatus: [PilotStatus.WANTED],
 		targetStatus: []
 	}
 }
@@ -770,21 +780,21 @@ Scanner.prototype.scan = function() {
   if (!this.lastScan || Date.now() - this.lastScan >= this.interval) {
     this.ship.contacts = [];
 		var scanLimit = this.ship.maximumWeaponRange * 10;	//todo - use a better scan limit
-    for (var j = 0; j < gameObjects.length; j++) {
-   		var range = distanceBetween(this.ship, gameObjects[j]);
-   		if (gameObjects[j] !== this.ship && range <= scanLimit) {
+    for (var i = 0; i < gameObjects.length; i++) {
+   		var range = distanceBetween(this.ship, gameObjects[i]);
+   		if (gameObjects[i] !== this.ship && range <= scanLimit) {
 				var threat = false;				
 				var target = false;
 				if (this.ship.role) {
-					threat = gameObjects[j].currentTarget === this.ship || this.ship.role.threatStatus.filter(function(t) {
-						return t == gameObjects[j].status;
+					threat = gameObjects[i].currentTarget === this.ship || this.ship.role.threatStatus.filter(function(t) {
+						return t == gameObjects[i].status;
 					}).length > 0 ? true : false;
 					target = this.ship.role.targetStatus.filter(function(t) {
-						return t == gameObjects[j].status;
-					}).length > 0 ? true : this.ship.currentTarget === gameObjects[j] ? true : false;
+						return t == gameObjects[i].status;
+					}).length > 0 ? true : this.ship.currentTarget === gameObjects[i] ? true : false;
 				}
       	var ping = {
-      		ship: gameObjects[j],
+      		ship: gameObjects[i],
       		threat: threat,
       		target: target,
       		range: range
