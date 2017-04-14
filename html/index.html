@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Game</title>
+		<script>
+		function sheetLoaded() {
+		  // Do something interesting; the sheet has been loaded
+		}
+		function sheetError() {
+		  alert("An error occurred loading the stylesheet!");
+		}
+		</script>
+		<link href="../css/game.css" rel="stylesheet">
+	</head>
+	<body>
+		<div id="bgdiv">
+			<canvas id="bgcanvas">
+			</canvas>	
+		</div>
+		<div id="mgdiv">
+			<canvas id="mgcanvas">
+			</canvas>	
+		</div>
+		<div id="fgdiv">
+			<canvas id="fgcanvas">
+				Your browser doesn't support the canvas element
+			</canvas>
+		</div>
+		<div id="ui-debug-top">
+			<div class="ui debug coord"></div>
+			<div class="ui debug vector"></div>
+		</div>
+		<div id="ui-debug-bottom">
+			<div class="ui debug inputs"></div>
+		</div>
+		<script type="text/javascript" src="../js/game.min.js"></script>
+	</body>
+</html>
