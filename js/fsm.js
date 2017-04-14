@@ -25,7 +25,7 @@ var fsmStates = {
 		duration: 5000,
 		execute: function(self) {
 			if (self.threats.length > 0) {
-				self.fsm.transition(FSMState.ESCAPE);
+				self.fsm.transition(randInt(10) > 5 ? FSMState.ENGAGE : FSMState.EVADE);
 			} else {
 				var newHeading = randInt(360);
 				var deltaA = angleDifference(self.heading, newHeading);
