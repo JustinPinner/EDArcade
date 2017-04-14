@@ -22,7 +22,6 @@ var fsmStates = {
 	neutral: {
 		mode: FSMState.NEUTRAL,
 		nextState: [FSMState.ENGAGE, FSMState.CHASE, FSMState.EVADE, FSMState.ESCAPE],
-		duration: 5000,
 		execute: function(self) {
 			if (self.threats.length > 0) {
 				self.fsm.transition(randInt(10) > 5 ? FSMState.ENGAGE : FSMState.EVADE);
@@ -49,7 +48,7 @@ var fsmStates = {
 	},
 	engage: {
 		mode: FSMState.ENGAGE,
-		nextState: [FSMState.CHASE, FSMState.EVADE, FSMState.ESCAPE],
+		nextState: [FSMState.CHASE, FSMState.HUNT, FSMState.EVADE, FSMState.ESCAPE],
 		execute: function(self) {
 			if (!self.currentTarget) {
 				self.fsm.transition(FSMState.HUNT);
@@ -233,7 +232,8 @@ var FSM = function(gameObject, currentState) {
 		}
 	}
 	this.transition = function(newState) {
-		if (this.state.nextState.includes(newState) || newState === FSMState.EXPLODING || newState === FSMState.DIE) {
+		//if (this.state === FSMState.NEUTRAL && newState) debugger;
+		if ((this.state.nextState && this.state.nextState.includes(newState)) || newState === FSMState.EXPLODING || newState === FSMState.DIE) {
 			this.state = fsmStates[newState];
 		} else {
 			this.state = this.startState;
