@@ -587,7 +587,7 @@ class Cobra3 extends Ship {
 		this.maxSpeed = 282;
 		this.boostSpeed = 402;
 		this.width = 88;
-		this.height = 54;
+		this.height = 57;
 		this.sprite.width = this.width;
 		this.sprite.height = this.height;
 		this.coordinates = {
@@ -598,7 +598,7 @@ class Cobra3 extends Ship {
 		this.hardpointGeometry = {
 			weapon: {
 				medium: {
-					1: {x: 36, y: 7, z: 1},
+					1: {x: 38, y: 7, z: 1},
 					2: {x: 49, y: 7, z: 1}					
 				},
 				small: {
@@ -608,8 +608,8 @@ class Cobra3 extends Ship {
 			},
 			utility: {
 				small: {
-					1: {x: 17, y: 43, z: -1},
-					2: {x: 70, y: 43, z: -1}
+					1: {x: 7, y: 40, z: -1},
+					2: {x: 80, y: 40, z: -1}
 				}
 			}
 		};
@@ -629,7 +629,7 @@ class Cobra4 extends Ship {
 		this.maxSpeed = 282;
 		this.boostSpeed = 402;
 		this.width = 96;
-		this.height = 66;
+		this.height = 65;
 		this.sprite.width = this.width;
 		this.sprite.height = this.height;
 		this.coordinates = {
@@ -640,19 +640,19 @@ class Cobra4 extends Ship {
 		this.hardpointGeometry = {
 			weapon: {
 				medium: {
-					1: {x: 36, y: 7, z: 1},
-					2: {x: 49, y: 7, z: 1}					
+					1: {x: 41, y: 7, z: 1},
+					2: {x: 55, y: 7, z: 1}
 				},
 				small: {
-					1: {x: 32, y: 15, z: -1},
-					2: {x: 55, y: 15, z: -1},
-					3: {x: 44, y: 19, z: 1}				
+					1: {x: 38, y: 10, z: -1},
+					2: {x: 58, y: 10, z: -1},
+					3: {x: 48, y: 20, z: 1}				
 				}
 			},
 			utility: {
 				small: {
-					1: {x: 17, y: 43, z: -1},
-					2: {x: 70, y: 43, z: -1}
+					1: {x: 16, y: 48, z: -1},
+					2: {x: 79, y: 48, z: -1}
 				}
 			}
 		};
@@ -683,25 +683,25 @@ class Python extends Ship {
 		this.hardpointGeometry = {
 			weapon: {
 				large: { 
-					1: {x: 56, y: 25,	z: -1},
-					2: {x: 48, y: 86, z: -1},
-					3: {x: 67, y: 86,	x: -1}
+					1: {x: 59, y: 26,	z: -1},
+					2: {x: 48, y: 58, z: -1},
+					3: {x: 71, y: 58,	z: -1}
 				},
 				medium: {
-					1: {x: 39, y: 81, z: 1},
-					2: {x: 77, y: 81, z: 1}					
+					1: {x: 46, y: 38, z: 1},
+					2: {x: 73, y: 38, z: 1}					
 				},
 				small: {
-					1: {x: 44, y: 44, z: -1},
-					2: {x: 71, y: 44, z: -1}				
+					1: {x: 38, y: 75, z: 1},
+					2: {x: 80, y: 75, z: 1}				
 				}
 			},
 			utility: {
 				small: {
-					1: {x: 17, y: 43, z: -1},
-					2: {x: 70, y: 43, z: -1},
-					3: {x: 17, y: 43, z: 1,},
-					4: {x: 70, y: 43, z: 1}
+					1: {x: 59, y: 94, z: 1},
+					2: {x: 59, y: 94, z: -1},
+					3: {x: 41, y: 137, z: -1},
+					4: {x: 78, y: 137, z: -1}
 				}
 			}
 		};
