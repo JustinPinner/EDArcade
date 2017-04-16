@@ -23,14 +23,6 @@ function setup() {
   playerShip.x = environment.viewport.cx - (playerShip.width / 2);
   playerShip.y = environment.viewport.cy - (playerShip.height / 2);
   gameObjects.push(playerShip);
-  for (var i = 0; i < minNPC; i++) {
-		var spawnShipType = ShipTypes[Object.keys(ShipTypes)[Math.floor(rand(Object.keys(ShipTypes).length))]];
-    var spawnShipRole = ShipRoles[Object.keys(ShipRoles)[Math.floor(rand(Object.keys(ShipRoles).length - 1))]];
-    var newShip = new spawnShipType('NPC' + i, spawnShipRole);
-    newShip.x = rand(maxSpawnDistX, true);
-    newShip.y = rand(maxSpawnDistY, true);
-    gameObjects.push(newShip);
-	}
 	setInterval(main, 1000/fps);
 };
 
@@ -84,7 +76,7 @@ function refresh() {
   if (uiNpcs) {
     uiNpcs.innerHTML = "<p>NPCs:" + npcCount + "</p>";
   }
-  // spawn in new NPC ships if any have been destroyed
+  // spawn new / maintain min. NPC ships
   for (var i = npcCount; i < minNPC; i++) {
     var spawnShipType = ShipTypes[Object.keys(ShipTypes)[Math.floor(rand(Object.keys(ShipTypes).length))]];
     var spawnShipRole = ShipRoles[Object.keys(ShipRoles)[Math.floor(rand(Object.keys(ShipRoles).length - 1))]];
