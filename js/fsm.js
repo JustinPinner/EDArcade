@@ -19,6 +19,11 @@ const FSMState = {
 }
 
 var fsmStates = {
+	player: {
+		mode: FSMState.PLAYER,
+		nextState: [],
+		execute: function(self) {}
+	},
 	neutral: {
 		mode: FSMState.NEUTRAL,
 		nextState: [FSMState.ENGAGE, FSMState.CHASE, FSMState.EVADE, FSMState.ESCAPE],
@@ -221,9 +226,13 @@ var FSM = function(gameObject, currentState) {
 	this.lastTransitionTime = null;
 	this.execute = function() {
 		if (this.gameObject) {
-			var now = Date.now();
-			if (this.lastTransitionTime && this.state.duration && now - this.lastTransitionTime < this.state.duration) {
-				return;
+			if (this.gameObject.oType === GameObjectTypes.SHIP && distanceBetween(this.gameObject, player.ship) > environment.viewport.width * 20) {
+				this.transition(FSMState.DIE);
+			} else {
+				var now = Date.now();
+				if (this.lastTransitionTime && this.state.duration && now - this.lastTransitionTime < this.state.duration) {
+					return;
+				}
 			}
 			this.state.execute && this.state.execute(this.gameObject);
 		 	if (this.state.duration) {

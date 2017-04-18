@@ -4,7 +4,7 @@ class Effect extends GameObject {
 	constructor(role) {
 		super(GameObjectTypes.EFFECT, role.roleName, role);
 		this.cellAnims = {
-			spriteSheet: '../image/' + this.oName + 'SpriteSheet.png',
+			spriteSheet: '../image/' + this.oName + '.png',
 			frameRate: null,
 			frameWidth: 800,
 			frameHeight: 600,
@@ -18,7 +18,7 @@ class Effect extends GameObject {
 
 var EffectRoles = {
 	shipExplosion: {
-		roleName: 'Explosion',
+		roleName: 'Explosion01_5x5',
 		initialState: FSMState.EFFECT,
 		initialStatus: '',
 		threatStatus: [],
@@ -30,10 +30,10 @@ class ShipExplosionEffect extends Effect {
 	constructor(centre_x, centre_y) {
 		super(EffectRoles.shipExplosion);
 		this.cellAnims.frameRate = 15;
-		this.cellAnims.frameWidth = 800;
-		this.cellAnims.frameHeight = 600;
-		this.cellAnims.frameColumns = 10;
-		this.cellAnims.frameRows = 8;
+		this.cellAnims.frameWidth = 204.8;
+		this.cellAnims.frameHeight = 204.8;
+		this.cellAnims.frameColumns = 5;
+		this.cellAnims.frameRows = 5;
 		this.sprite.image = imageService.loadImage(this.cellAnims.spriteSheet);
 		this.sprite.width = this.cellAnims.frameWidth;
 		this.sprite.height = this.cellAnims.frameHeight;
@@ -50,7 +50,7 @@ class ShipExplosionEffect extends Effect {
 			var origin = this.drawOriginCentre;
 			var cell = (this.cellAnims.lastFrameDrawn * this.cellAnims.frameWidth) / (this.cellAnims.frameWidth * this.cellAnims.frameColumns);
 			var row = Math.floor(cell);
-			var col = (cell - row) * 10;
+			var col = (cell - row) * this.cellAnims.frameColumns;
 			var spriteSheetMap = {
 				x: col * this.cellAnims.frameWidth,
 				y: row * this.cellAnims.frameHeight,
