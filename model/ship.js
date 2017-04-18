@@ -99,7 +99,7 @@ class Ship extends GameObject {
 		return (this.agility / this.mass) * Math.abs(this.thrust) * 10;
 	}
 	get yawRate() {
-		return (this.agility * this.mass) / 100;
+		return this.agility * 5.0;
 	}
 	get maximumWeaponRange() {
 		var range = null;
@@ -351,10 +351,10 @@ Ship.prototype.yaw = function(dir) {
 	var degsToAdd = 0;
 	switch (dir) {
 		case 'cw':
-			degsToAdd = angleDifference(this.heading, this.heading - (this.yawRate * 2));
+			degsToAdd = angleDifference(this.heading, this.heading - this.yawRate);
 			break;
 		case 'ccw':
-			degsToAdd = angleDifference(this.heading, this.heading + (this.yawRate * 2));
+			degsToAdd = angleDifference(this.heading, this.heading + this.yawRate);
 			break;
 	}	
 	this.heading += degsToAdd;
@@ -404,6 +404,11 @@ Ship.prototype.takeDamage = function(source) {
 		this.hullIntegrity -= source.strength * 10;
 	}
 	if (this.hullIntegrity <= 0) {
+		if (this.player) {
+			// nearly game over - detach the player and attach an FSM to handle the final moments
+			this.player = null;
+			this.fsm = new FSM(this, this.role.initialState);
+		}
 		this.fsm.transition(FSMState.EXPLODING);
 	}
 };
