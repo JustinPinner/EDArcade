@@ -714,11 +714,71 @@ class Python extends Ship {
 	}
 }
 
+/*
+	ANACONDA
+*/
+class Anaconda extends Ship {
+	constructor(shipName, role) {	
+		super('Anaconda', shipName, role);
+		this.mass = 400;
+		this.agility = 0.1;
+		this.armour = 945;
+		this.maxSpeed = 183;
+		this.boostSpeed = 244;
+		this.width = 117;
+		this.height = 305;
+		this.sprite.width = this.width;
+		this.sprite.height = this.height;
+		this.coordinates = {
+			x: role instanceof Player ? environment.viewport.cx - (this.width / 2) : rand(maxSpawnDistX, true),
+			y: role instanceof Player ? environment.viewport.cy - (this.height / 2) : rand(maxSpawnDistY, true),
+			z: null
+		};
+		this.hardpointGeometry = {
+			weapon: {
+				huge: {
+					1: {x: 58, y: 72, z: -1}
+				},
+				large: { 
+					1: {x: 56, y: 35,	z: -1},
+					2: {x: 44, y: 84, z: 1},
+					3: {x: 70, y: 84,	z: 1}
+				},
+				medium: {
+					1: {x: 40, y: 25, z: 1},
+					2: {x: 74, y: 25, z: 1},
+					3: {x: 47, y: 245, z: -1},
+					4: {x: 69, y: 245, z: -1}					
+				},
+				small: {
+					1: {x: 37, y: 225, z: 1},
+					2: {x: 78, y: 225, z: 1}				
+				}
+			},
+			utility: {
+				small: {
+					1: {x: 48, y: 207, z: 1},
+					2: {x: 68, y: 207, z: 1},
+					3: {x: 17, y: 266, z: 1},
+					4: {x: 99, y: 266, z: 1},
+					5: {x: 44, y: 84, z: -1},
+					6: {x: 70, y: 84, z: -1},
+					7: {x: 17, y: 266, z: -1},
+					8: {x: 99, y: 266, z: -1}
+				}
+			}
+		};
+		Defaults.Hardpoints.Python.load(this);
+	}
+}
+
+
 var ShipTypes = {
 	sidewinder: Sidewinder,
 	cobra3: Cobra3,
 	cobra4: Cobra4,
-	python: Python
+	python: Python,
+	anaconda: Anaconda
 }
 
 var PilotStatus = {
