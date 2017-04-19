@@ -320,6 +320,16 @@ var Defaults = {
 					parent.hardpoints.push(new UtilityHardpoint(parent, Size.SMALL.value, i));	
 				}
 			}
+		},
+		Type6: {
+			load: function(parent) {
+				for (var i=1; i < 3; i++){
+					parent.hardpoints.push(new WeaponHardpoint(parent, Size.SMALL.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));	
+				}
+				for (var i=1; i < 4; i++){
+					parent.hardpoints.push(new UtilityHardpoint(parent, Size.SMALL.value, i));	
+				}
+			}
 		}
 	}
 }

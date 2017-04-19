@@ -19,7 +19,7 @@ var maxSpawnDistY = environment.viewport.height * 5;
 
 function setup() {
   environment.init();
-  playerShip = new ShipTypes['cobra3'](shipName, player);
+  playerShip = new ShipTypes['type6'](shipName, player);
   playerShip.x = environment.viewport.cx - (playerShip.width / 2);
   playerShip.y = environment.viewport.cy - (playerShip.height / 2);
   gameObjects.push(playerShip);

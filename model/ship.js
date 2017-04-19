@@ -772,13 +772,52 @@ class Anaconda extends Ship {
 	}
 }
 
+/*
+	Type-6
+*/
+class Type6 extends Ship {
+	constructor(shipName, role) {
+		super('Type6', shipName, role);
+		this.mass = 155;
+		this.agility = 0.3;
+		this.armour = 324;
+		this.maxSpeed = 223;
+		this.boostSpeed = 355;
+		this.width = 54;
+		this.height = 101;
+		this.sprite.width = this.width;
+		this.sprite.height = this.height;
+		this.coordinates = {
+			x: role instanceof Player ? environment.viewport.cx - (this.width / 2) : rand(maxSpawnDistX, true),
+			y: role instanceof Player ? environment.viewport.cy - (this.height / 2) : rand(maxSpawnDistY, true),
+			z: 1
+		};
+		this.hardpointGeometry = {
+			weapon: {
+				small: {
+					1: {x: 16, y: 29, z: -1},
+					2: {x: 36, y: 29, z: -1}				
+				}
+			},
+			utility: {
+				small: {
+					1: {x: 26, y: 86, z: 1},
+					2: {x: 8, y: 24, z: -1},
+					3: {x: 45, y: 24, z: -1}
+				}
+			}
+		};
+		Defaults.Hardpoints.Type6.load(this);
+	}
+}
 
 var ShipTypes = {
 	sidewinder: Sidewinder,
 	cobra3: Cobra3,
 	cobra4: Cobra4,
 	python: Python,
-	anaconda: Anaconda
+	anaconda: Anaconda,
+	type6: Type6
 }
 
 var PilotStatus = {
