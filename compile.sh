@@ -3,23 +3,7 @@ rm -rf dist
 
 mkdir -p dist/js
 
-#uglifyjs js/keys.js \
-#js/math2d.js \
-#js/fsm.js \
-#js/imageService.js \
-#js/lib.js \
-#js/perfmon.js \
-#util/polyfill.js \
-#model/environment.js \
-#model/player.js \
-#js/game.js \
-#js/keys.js \
-#js/effect.js \
-#model/gameObject.js \
-#model/ship.js \
-#model/weapon.js
-#-o dist/js/game.min.js -c -m
-
+echo 'js...'
 # until uglifyjs works with all sources
 cat js/lib.js > dist/js/game.js
 cat js/imageService.js >> dist/js/game.js
@@ -40,11 +24,16 @@ babili dist/js/game.js -o dist/js/game.min.js
 
 rm dist/js/game.js
 
+echo 'css...'
 mkdir -p dist/css
 cp css/* dist/css
 
-mkdir -p dist/html
-cp html/index.html dist/html
+echo 'html...'
+mkdir -p dist/play
+cp html/index.html dist/play
 
+echo 'image...'
 mkdir -p dist/image
 cp image/* dist/image
+
+echo 'done!'
