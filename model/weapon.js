@@ -280,7 +280,7 @@ var Defaults = {
 	Hardpoints: {
 		Sidewinder: {
 			load: function(parent) {
-				for (var i=1; i < 3; i++){
+				for (var i=1; i<3; i++){
 					parent.hardpoints.push(new WeaponHardpoint(parent, Size.SMALL.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
 					parent.hardpoints.push(new UtilityHardpoint(parent, Size.SMALL.value, i));
 				}
@@ -289,7 +289,7 @@ var Defaults = {
 		Cobra: {
 			3: {
 				load: function(parent) {
-					for (var i=1; i < 3; i++){
+					for (var i=1; i<3; i++){
 						parent.hardpoints.push(new WeaponHardpoint(parent, Size.SMALL.value, i));
 						parent.hardpoints.push(new WeaponHardpoint(parent, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
 						parent.hardpoints.push(new UtilityHardpoint(parent, Size.SMALL.value, i));
@@ -298,10 +298,10 @@ var Defaults = {
 			},
 			4: {
 				load: function(parent) {
-					for (var i=1; i < 4; i++){
+					for (var i=1; i<4; i++){
 						parent.hardpoints.push(new WeaponHardpoint(parent, Size.SMALL.value, i));				
 					}
-					for (var i=1; i < 3; i++){
+					for (var i=1; i<3; i++){
 						parent.hardpoints.push(new WeaponHardpoint(parent, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
 						parent.hardpoints.push(new UtilityHardpoint(parent, Size.SMALL.value, i));
 					}									
@@ -310,14 +310,53 @@ var Defaults = {
 		},
 		Python: {
 			load: function(parent) {
-				for (var i=1; i < 4; i++){
+				for (var i=1; i<4; i++){
 					parent.hardpoints.push(new WeaponHardpoint(parent, Size.LARGE.value, i));	
 				}
-				for (var i=1; i < 3; i++){
+				for (var i=1; i<3; i++){
 					parent.hardpoints.push(new WeaponHardpoint(parent, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));				
 				}
-				for (var i=1; i < 5; i++){
+				for (var i=1; i<5; i++){
 					parent.hardpoints.push(new UtilityHardpoint(parent, Size.SMALL.value, i));	
+				}
+			}
+		},
+		Anaconda: {
+			load: function(parent) {
+				parent.hardpoints.push(new WeaponHardpoint(parent, Size.HUGE.value, 1));
+				for (var i=1; i<4; i++){
+					parent.hardpoints.push(new WeaponHardpoint(parent, Size.LARGE.value, i));				
+				}
+				for (var i=1; i<3; i++){
+					parent.hardpoints.push(new WeaponHardpoint(parent, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));				
+				}
+				for (var i=3; i<5; i++){
+					parent.hardpoints.push(new WeaponHardpoint(parent, Size.MEDIUM.value, i));				
+				}
+				for (var i=1; i<3; i++){
+					parent.hardpoints.push(new WeaponHardpoint(parent, Size.SMALL.value, i));				
+				}
+				for (var i=1; i<9; i++){
+					parent.hardpoints.push(new UtilityHardpoint(parent, Size.SMALL.value, i));	
+				}
+			}
+		},
+		Type6: {
+			load: function(parent) {
+				for (var i=1; i<3; i++){
+					parent.hardpoints.push(new WeaponHardpoint(parent, Size.SMALL.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));	
+				}
+				for (var i=1; i < 4; i++){
+					parent.hardpoints.push(new UtilityHardpoint(parent, Size.SMALL.value, i));	
+				}
+			}
+		},
+		Viper3: {
+			load: function(parent) {
+				for (var i=1; i<3; i++){
+					parent.hardpoints.push(new WeaponHardpoint(parent, Size.SMALL.value, i));
+					parent.hardpoints.push(new WeaponHardpoint(parent, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
+					parent.hardpoints.push(new UtilityHardpoint(parent, Size.SMALL.value, i));
 				}
 			}
 		}
