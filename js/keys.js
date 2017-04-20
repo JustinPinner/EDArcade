@@ -3,16 +3,21 @@ window.addEventListener('keydown', handleKeyDown, false);
 window.addEventListener('keyup', handleKeyUp, false);
 
 var Keys = {
-	UP: 38,		// up arrow
-	DOWN: 40,	// down arrow
-	LEFT: 37,	// left arrow
-	RIGHT: 39,	// right arrow
-	BOOST: 16,	// l-shift
-	THRUST: 32,	// space
-  FIRE: 13, // enter
-	FLIGHTASSIST: 90,	// z
-  STOP: 8,  // backspace / delete
-  DEBUGBREAK: 27 // esc
+	ARROWUP: 'ARROWUP',
+  W: 'KEYW',
+  ARROWDOWN: 'ARROWDOWN',
+	S: 'KEYS',
+  ARROWLEFT: 'ARROWLEFT',
+	A: 'KEYA',
+  ARROWRIGHT: 'ARROWRIGHT',
+	D: 'KEYD',
+  BOOST: 'SHIFTLEFT',
+	THRUST: 'SPACE',
+  SHIFTRIGHT: 'SHIFTRIGHT',
+  FIRE: 'ENTER',
+	FLIGHTASSIST: 'KEYZ',
+  STOP: 'BACKSPACE',
+  DEBUGBREAK: 'ESCAPE'
 }
 
 var keyUp = false;
@@ -27,20 +32,24 @@ var keyStop = false;
 var keyDebugBreak = false;
 
 function handleKeyDown(e) {
-  switch (e.keyCode) {
-    case Keys.UP:
+  switch (e.code.toUpperCase()) {
+    case Keys.ARROWUP:
+    case Keys.W:
       keyUp = true;
       e.preventDefault();
       break;
-    case Keys.DOWN:
+    case Keys.ARROWDOWN:
+    case Keys.S:
       keyDown = true;
       e.preventDefault();
       break;
-    case Keys.LEFT:
+    case Keys.ARROWLEFT:
+    case Keys.A:
       keyLeft = true;
       e.preventDefault();
       break;
-    case Keys.RIGHT:
+    case Keys.ARROWRIGHT:
+    case Keys.D:
       keyRight = true;
       e.preventDefault();
       break;
@@ -57,6 +66,7 @@ function handleKeyDown(e) {
       e.preventDefault();
       break;  
     case Keys.THRUST:
+    case Keys.SHIFTRIGHT: 
       keyThrust = true;
       e.preventDefault();
       break;
@@ -72,20 +82,24 @@ function handleKeyDown(e) {
 }
 
 function handleKeyUp(e) {
-  switch (e.keyCode) {
-    case Keys.UP:
+  switch (e.code.toUpperCase()) {
+    case Keys.ARROWUP:
+    case Keys.W:
       keyUp = false;
       e.preventDefault();
       break;
-    case Keys.DOWN:
+    case Keys.ARROWDOWN:
+    case Keys.S:
       keyDown = false;
       e.preventDefault();
       break;
-    case Keys.LEFT:
+    case Keys.ARROWLEFT:
+    case Keys.A:
       keyLeft = false;
       e.preventDefault();
       break;
-    case Keys.RIGHT:
+    case Keys.ARROWRIGHT:
+    case Keys.D:
       keyRight = false;
       e.preventDefault();
       break;
@@ -102,6 +116,7 @@ function handleKeyUp(e) {
       e.preventDefault();
       break;  
     case Keys.THRUST:
+    case Keys.SHIFTRIGHT:
       keyThrust = false;
       e.preventDefault();
       break;
