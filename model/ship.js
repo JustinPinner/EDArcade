@@ -771,7 +771,6 @@ class Anaconda extends Ship {
 		Defaults.Hardpoints.Anaconda.load(this);
 	}
 }
-
 /*
 	Type-6
 */
@@ -810,6 +809,48 @@ class Type6 extends Ship {
 		Defaults.Hardpoints.Type6.load(this);
 	}
 }
+/*
+	Viper 3
+*/
+class Viper3 extends Ship {
+	constructor(shipName, role) {
+		super('Viper3', shipName, role);
+		this.mass = 50;
+		this.agility = 0.4;
+		this.armour = 126;
+		this.maxSpeed = 315;
+		this.boostSpeed = 394;
+		this.width = 48;
+		this.height = 56;
+		this.sprite.width = this.width;
+		this.sprite.height = this.height;
+		this.coordinates = {
+			x: role instanceof Player ? environment.viewport.cx - (this.width / 2) : rand(maxSpawnDistX, true),
+			y: role instanceof Player ? environment.viewport.cy - (this.height / 2) : rand(maxSpawnDistY, true),
+			z: 1
+		};
+		this.hardpointGeometry = {
+			weapon: {
+				small: {
+					1: {x: 18, y: 7, z: 1},
+					2: {x: 27, y: 7, z: 1}				
+				},
+				medium: {
+					1: {x: 17, y: 23, z: -1},
+					2: {x: 29, y: 23, z: -1}
+				}
+			},
+			utility: {
+				small: {
+					1: {x: 22.5, y: 45, z: 1},
+					2: {x: 22.5, y: 45, z: -1}
+				}
+			}
+		};
+		Defaults.Hardpoints.Viper3.load(this);
+
+	}
+}
 
 var ShipTypes = {
 	sidewinder: Sidewinder,
@@ -817,7 +858,8 @@ var ShipTypes = {
 	cobra4: Cobra4,
 	python: Python,
 	anaconda: Anaconda,
-	type6: Type6
+	type6: Type6,
+	viper3: Viper3
 }
 
 var PilotStatus = {
