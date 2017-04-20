@@ -768,7 +768,7 @@ class Anaconda extends Ship {
 				}
 			}
 		};
-		Defaults.Hardpoints.Python.load(this);
+		Defaults.Hardpoints.Anaconda.load(this);
 	}
 }
 
