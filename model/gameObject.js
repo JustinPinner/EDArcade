@@ -22,8 +22,6 @@ class GameObject {
 			z: null
 		};
 		this.geometry = null;
-		// this.width = null;
-		// this.height = null;
 		this._vx = 0;
 		this._vy = 0;
 		this.heading = null;

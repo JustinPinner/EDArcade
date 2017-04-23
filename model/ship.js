@@ -20,13 +20,6 @@ class Ship extends GameObject {
 		this.scanner = new Scanner(this);
 		this.shield = new Shield(this);
 		this.hullIntegrity = 100;
-		// this.mass = shipType.mass;
-		// this.agility = shipType.agility;
-		// this.armour = shipType.armour;
-		// this.maxSpeed = shipType.maxSpeed;
-		// this.boostSpeed = shipType.boostSpeed;
-		// this.width = shipType.width;
-		// this.height = shipType.height;
 		this.geometry = {
 			width: this.shipType.width,
 			height: this.shipType.height
