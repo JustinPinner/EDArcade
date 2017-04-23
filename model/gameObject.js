@@ -21,8 +21,7 @@ class GameObject {
 			y: null,
 			z: null
 		};
-		this.width = null;
-		this.height = null;
+		this.geometry = null;
 		this._vx = 0;
 		this._vy = 0;
 		this.heading = null;
@@ -53,10 +52,10 @@ class GameObject {
 		return this.coordinates.y;
 	}
 	get cx() {
-		return this.coordinates.x + this.width / 2;
+		return this.coordinates.x + (this.geometry ? (this.geometry.width / 2) : 0);
 	}
 	get cy() {
-		return this.coordinates.y + this.height / 2;
+		return this.coordinates.y + (this.geometry ? (this.geometry.height / 2) : 0);
 	}
 	get vx() {
 		return parseFloat(this._vx.toFixed(1));
@@ -105,9 +104,9 @@ GameObject.prototype.collisionDetect = function(x, y) {
 		return obj.oType === GameObjectTypes.SHIP && 
 			obj !== self.hardpoint.parent &&
 			x >= obj.x &&
-			x <= obj.x + obj.width &&
+			x <= obj.x + obj.geometry.width &&
 			y >= obj.y &&
-			y <= obj.y + obj.height;
+			y <= obj.y + obj.geometry.height;
 	});
 	if (hitObjects.length > 0) {
 		hitObjects[0].takeDamage(this);
@@ -119,7 +118,7 @@ GameObject.prototype.collisionDetect = function(x, y) {
 GameObject.prototype.takeDamage = function(source) {};
 
 GameObject.prototype.isOnScreen = function(debug) {
-	return environment.viewport.contains(this.x, this.y, this.width, this.height);	
+	return environment.viewport.contains(this.x, this.y, this.geometry.width, this.geometry.height);	
 };
 
 GameObject.prototype.draw = function(debug) {
@@ -129,10 +128,10 @@ GameObject.prototype.draw = function(debug) {
 	environment.viewport.ctx.translate(this.drawOrigin.x, this.drawOrigin.y);
 	environment.viewport.ctx.rotate(degreesToRadians(this.heading + 90));
 	if (this.sprite && this.sprite.image) {
-	  environment.viewport.ctx.drawImage(this.sprite.image, -this.width / 2, -this.height / 2, this.width, this.height);
+	  environment.viewport.ctx.drawImage(this.sprite.image, -this.geometry.width / 2, -this.geometry.height / 2, this.geometry.width, this.geometry.height);
 	} else {
 	  environment.viewport.ctx.fillStyle = this.colour ? this.colour : '#ffffff';
-	  environment.viewport.ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+	  environment.viewport.ctx.fillRect(-this.geometry.width / 2, -this.geometry.height / 2, this.geometry.width, this.geometry.height);
 	}
 	environment.viewport.ctx.restore();
 };

@@ -6,23 +6,32 @@
 class Ship extends GameObject {
 	constructor(shipType, shipName, role) {
 		super(GameObjectTypes.SHIP, shipName, player);
-		this.shipName = shipName ? shipName : shipType + this.id;
 		this.shipType = shipType;
 		this.player = role instanceof Player ? role : null;
 		this.flightAssist = this.player ? false : true;
 		this.heading = this.player ? 270 : rand(359);
 		this.thrust = 0;
 		this.direction = this.heading;
-		this.role = this.player ? ShipRoles['player'] : role;
+		this.role = this.player ? ShipRoles.PLAYER : role;
 		this.fsm = this.player ? null : new FSM(this, this.role.initialState);
 		this.status = this.role.initialStatus;
-		this.hardpoints = [];
 		this.contacts = [];
 		this.currentTarget = null;
 		this.scanner = new Scanner(this);
 		this.shield = new Shield(this);
 		this.hullIntegrity = 100;
-		this.sprite.image = imageService.loadImage('../image/' + this.shipType + '.png');
+		this.geometry = {
+			width: this.shipType.width,
+			height: this.shipType.height
+		};
+		this.coordinates = {
+			x: this.player ? environment.viewport.cx - (this.geometry.width / 2) : rand(maxSpawnDistX, true),
+			y: this.player ? environment.viewport.cy - (this.geometry.height / 2) : rand(maxSpawnDistY, true),
+			z: null
+		};
+		this.sprite.image = imageService.loadImage('../image/' + this.shipType.name + '.png');
+		this.sprite.width = this.geometry.width;
+		this.sprite.height = this.geometry.height;
 		this.cellAnims = {
 			shieldStrike: {
 				src: null,
@@ -45,6 +54,9 @@ class Ship extends GameObject {
 				frameRate: null
 			}
 		};
+		this.hardpoints = [];
+		this.hardpointGeometry = shipType.hardpointGeometry;
+		this.shipType.loadHardpoints(this);
 		if (this.player) player.ship = this;
 	}
 	/* 
@@ -59,8 +71,8 @@ class Ship extends GameObject {
 	get drawOrigin() {
 		var originCentre = this.drawOriginCentre;
 		return {
-			x: originCentre.x - (this.width / 2),
-			y: originCentre.y - (this.height / 2)
+			x: originCentre.x - (this.geometry.width / 2),
+			y: originCentre.y - (this.geometry.height / 2)
 		}
 	}
 	get threats() {
@@ -96,10 +108,10 @@ class Ship extends GameObject {
 		return this.maximumWeaponRange * 3;
 	}
 	get accelerationRate() {
-		return (this.agility / this.mass) * Math.abs(this.thrust) * 10;
+		return (this.shipType.agility / this.shipType.mass) * Math.abs(this.thrust) * 10;
 	}
 	get yawRate() {
-		return this.agility * 5.0;
+		return this.shipType.agility * 5.0;
 	}
 	get maximumWeaponRange() {
 		var range = null;
@@ -189,7 +201,7 @@ Ship.prototype.accelerate = function() {
 	// speed limiter
 	var apply_dx = true;
 	var apply_dy = true;
-	var maxLimit = this.maxSpeed / fps;
+	var maxLimit = this.shipType.maxSpeed / fps;
 	var minLimit = maxLimit * -1;
 
 	if (dx > 0 && this.vx > 0 && (this.vx + dx > maxLimit)) {
@@ -244,8 +256,8 @@ Ship.prototype.isOnScreen = function(debug) {
 	return environment.viewport.contains(
 		this.x - (debug ? this.maximumWeaponRange : 0), 
 		this.y - (debug ? this.maximumWeaponRange : 0), 
-		this.width + (debug ? this.maximumWeaponRange : 0), 
-		this.height + (debug ? this.maximumWeaponRange : 0)
+		this.geometry.width + (debug ? this.maximumWeaponRange : 0), 
+		this.geometry.height + (debug ? this.maximumWeaponRange : 0)
 	);
 };
 
@@ -335,15 +347,15 @@ Ship.prototype.allStop = function() {
 	
 Ship.prototype.npcAccelerate = function() {	
 	this.speed += this.accelerationRate;
-	if (this.speed > this.maxSpeed) {
-		this.speed = this.maxSpeed;
+	if (this.speed > this.shipType.maxSpeed) {
+		this.speed = this.shipType.maxSpeed;
 	}
 };
 	
 Ship.prototype.decelerate = function() {
 	this.speed -= this.accelerationRate;
-	if (this.speed < -this.maxSpeed) {
-		this.speed = -this.maxSpeed;
+	if (this.speed < -this.shipType.maxSpeed) {
+		this.speed = -this.shipType.maxSpeed;
 	}
 };
 	
@@ -398,8 +410,8 @@ Ship.prototype.takeDamage = function(source) {
 	source.hardpoint.parent.registerHit(this);
 	if (this.shield && this.shield.charge > 0) {
 		this.shield.impact(source);
-	} else if (this.armour && this.armour > 0) {
-		this.armour -= source.strength * 10;
+	} else if (this.shipType.armour && this.shipType.armour > 0) {
+		this.shipType.armour -= source.strength * 10;
 	} else if (this.hullIntegrity && this.hullIntegrity > 0) {
 		this.hullIntegrity -= source.strength * 10;
 	}
@@ -437,9 +449,9 @@ Ship.prototype.draw = function(debug) {
 	environment.viewport.ctx.translate(origin.x, origin.y);
 	environment.viewport.ctx.rotate(degreesToRadians(this.heading + 90));
 	try {
-	  environment.viewport.ctx.drawImage(this.sprite.image, -this.width / 2, -this.height / 2, this.width, this.height);
+	  environment.viewport.ctx.drawImage(this.sprite.image, -this.geometry.width / 2, -this.geometry.height / 2, this.geometry.width, this.geometry.height);
 	} catch(e) {
-	  environment.viewport.ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+	  environment.viewport.ctx.fillRect(-this.geometry.width / 2, -this.geometry.height / 2, this.geometry.width, this.geometry.height);
 	}
 	environment.viewport.ctx.restore();
 	
@@ -477,7 +489,7 @@ Ship.prototype.drawHud = function() {
 				environment.viewport.ctx.moveTo(origin.x, origin.y);
 				environment.viewport.ctx.beginPath();
 				environment.viewport.ctx.strokeStyle = threatLevel < 2 ? 'orange' : 'red';
-				environment.viewport.ctx.arc(origin.x, origin.y, ping.ship.width, 0, Math.PI * 2, false);
+				environment.viewport.ctx.arc(origin.x, origin.y, ping.ship.geometry.width, 0, Math.PI * 2, false);
 				environment.viewport.ctx.stroke();
 			} else {
 				// show off-screen threat marker
@@ -542,27 +554,17 @@ Ship.prototype.drawDebug = function() {
 	environment.viewport.ctx.restore();
 }
 
-/*
-	SIDEWINDER
-*/
-class Sidewinder extends Ship {
-	constructor(shipName, role) {
-		super('Sidewinder', shipName, role);
-		this.mass = 25;
-		this.agility = 0.8;
-		this.armour = 108;
-		this.maxSpeed = 220;
-		this.boostSpeed = 321;
-		this.width = 44;
-		this.height = 30;
-		this.coordinates = {
-			x: role instanceof Player ? environment.viewport.cx - (this.width / 2) : rand(maxSpawnDistX, true),
-			y: role instanceof Player ? environment.viewport.cy - (this.height / 2) : rand(maxSpawnDistY, true),
-			z: null
-		};
-		this.sprite.width = this.width;
-		this.sprite.height = this.height;
-		this.hardpointGeometry = {
+const ShipTypes = {
+	SIDEWINDER: {
+		name: 'Sidewinder',
+		mass: 25,
+		agility: 0.8,
+		armour: 108,
+		maxSpeed: 220,
+		boostSpeed: 321,
+		width: 44,
+		height: 30,
+		hardpointGeometry: {
 			weapon: {
 				small: {
 					1: {x: 17, y: 8, z: 1},
@@ -575,32 +577,24 @@ class Sidewinder extends Ship {
 					2: {x: 35, y: 21,	z: -1}
 				}
 			}
-		};
-		Defaults.Hardpoints.Sidewinder.load(this);
-	}
-};
-
-/*
-	COBRA III
-*/
-class Cobra3 extends Ship {
-	constructor(shipName, role) {
-		super('Cobra3', shipName, role);
-		this.mass = 180;
-		this.agility = 0.6;
-		this.armour = 216;
-		this.maxSpeed = 282;
-		this.boostSpeed = 402;
-		this.width = 88;
-		this.height = 57;
-		this.sprite.width = this.width;
-		this.sprite.height = this.height;
-		this.coordinates = {
-			x: role instanceof Player ? environment.viewport.cx - (this.width / 2) : rand(maxSpawnDistX, true),
-			y: role instanceof Player ? environment.viewport.cy - (this.height / 2) : rand(maxSpawnDistY, true),
-			z: 1
-		};
-		this.hardpointGeometry = {
+		},
+		loadHardpoints: function(self) {
+			for (var i = 1; i < 3; i++) {
+				self.hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
+				self.hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));
+			}
+		}
+	},
+	COBRA3: {
+		name: 'Cobra3',
+		mass: 180,
+		agility: 0.6,
+		armour: 216,
+		maxSpeed: 282,
+		boostSpeed: 402,
+		width: 88,
+		height: 57,
+		hardpointGeometry: {
 			weapon: {
 				medium: {
 					1: {x: 38, y: 7, z: 1},
@@ -617,32 +611,25 @@ class Cobra3 extends Ship {
 					2: {x: 80, y: 40, z: -1}
 				}
 			}
-		};
-		Defaults.Hardpoints.Cobra['3'].load(this);
-	}
-};
-
-/*
-	COBRA IV
-*/
-class Cobra4 extends Ship {
-	constructor(shipName, role) {
-		super('Cobra4', shipName, role);
-		this.mass = 180;
-		this.agility = 0.6;
-		this.armour = 216;
-		this.maxSpeed = 282;
-		this.boostSpeed = 402;
-		this.width = 96;
-		this.height = 65;
-		this.sprite.width = this.width;
-		this.sprite.height = this.height;
-		this.coordinates = {
-			x: role instanceof Player ? environment.viewport.cx - (this.width / 2) : rand(maxSpawnDistX, true),
-			y: role instanceof Player ? environment.viewport.cy - (this.height / 2) : rand(maxSpawnDistY, true),
-			z: null
-		};
-		this.hardpointGeometry = {
+		},
+		loadHardpoints: function(self) {
+			for (var i = 1; i < 3; i++){
+				self.hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i));
+				self.hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
+				self.hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));
+			}
+		}
+	},
+	COBRA4: {
+		name: 'Cobra4',
+		mass: 180,
+		agility: 0.6,
+		armour: 216,
+		maxSpeed: 282,
+		boostSpeed: 402,
+		width: 96,
+		height: 65,
+		hardpointGeometry: {
 			weapon: {
 				medium: {
 					1: {x: 41, y: 7, z: 1},
@@ -660,32 +647,27 @@ class Cobra4 extends Ship {
 					2: {x: 79, y: 48, z: -1}
 				}
 			}
-		};
-		Defaults.Hardpoints.Cobra['4'].load(this);
-	}
-};
-
-/*
-	PYTHON
-*/
-class Python extends Ship {
-	constructor(shipName, role) {
-		super('Python', shipName, role);
-		this.mass = 350;
-		this.agility = 0.6;
-		this.armour = 468;
-		this.maxSpeed = 234;
-		this.boostSpeed = 305;
-		this.width = 116;
-		this.height = 175;
-		this.sprite.width = this.width;
-		this.sprite.height = this.height;
-		this.coordinates = {
-			x: role instanceof Player ? environment.viewport.cx - (this.width / 2) : rand(maxSpawnDistX, true),
-			y: role instanceof Player ? environment.viewport.cy - (this.height / 2) : rand(maxSpawnDistY, true),
-			z: null
-		};
-		this.hardpointGeometry = {
+		},
+		loadHardpoints: function(self) {
+			for (var i = 1; i < 4; i++){
+				self.hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i));				
+			}
+			for (var i = 1; i < 3; i++){
+				self.hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
+				self.hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));
+			}												
+		}		
+	},
+	PYTHON: {
+		name: 'Python',
+		mass: 350,
+		agility: 0.6,
+		armour: 468,
+		maxSpeed: 234,
+		boostSpeed: 305,
+		width: 116,
+		height: 175,
+		hardpointGeometry: {
 			weapon: {
 				large: { 
 					1: {x: 59, y: 26,	z: -1},
@@ -709,32 +691,29 @@ class Python extends Ship {
 					4: {x: 78, y: 137, z: -1}
 				}
 			}
-		};
-		Defaults.Hardpoints.Python.load(this);
-	}
-}
-
-/*
-	ANACONDA
-*/
-class Anaconda extends Ship {
-	constructor(shipName, role) {	
-		super('Anaconda', shipName, role);
-		this.mass = 400;
-		this.agility = 0.1;
-		this.armour = 945;
-		this.maxSpeed = 183;
-		this.boostSpeed = 244;
-		this.width = 117;
-		this.height = 305;
-		this.sprite.width = this.width;
-		this.sprite.height = this.height;
-		this.coordinates = {
-			x: role instanceof Player ? environment.viewport.cx - (this.width / 2) : rand(maxSpawnDistX, true),
-			y: role instanceof Player ? environment.viewport.cy - (this.height / 2) : rand(maxSpawnDistY, true),
-			z: null
-		};
-		this.hardpointGeometry = {
+		},
+		loadHardpoints: function(self) {
+			for (var i = 1; i < 4; i++){
+				self.hardpoints.push(new WeaponHardpoint(self, Size.LARGE.value, i));	
+			}
+			for (var i = 1; i < 3; i++){
+				self.hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));				
+			}
+			for (var i = 1; i < 5; i++){
+				self.hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));	
+			}
+		}		
+	},
+	ANACONDA: {
+		name: 'Anaconda',
+		mass: 400,
+		agility: 0.1,
+		armour: 945,
+		maxSpeed: 183,
+		boostSpeed: 244,
+		width: 117,
+		height: 305,
+		hardpointGeometry: {
 			weapon: {
 				huge: {
 					1: {x: 58, y: 72, z: -1}
@@ -767,31 +746,36 @@ class Anaconda extends Ship {
 					8: {x: 99, y: 266, z: -1}
 				}
 			}
-		};
-		Defaults.Hardpoints.Anaconda.load(this);
-	}
-}
-/*
-	Type-6
-*/
-class Type6 extends Ship {
-	constructor(shipName, role) {
-		super('Type6', shipName, role);
-		this.mass = 155;
-		this.agility = 0.3;
-		this.armour = 324;
-		this.maxSpeed = 223;
-		this.boostSpeed = 355;
-		this.width = 54;
-		this.height = 101;
-		this.sprite.width = this.width;
-		this.sprite.height = this.height;
-		this.coordinates = {
-			x: role instanceof Player ? environment.viewport.cx - (this.width / 2) : rand(maxSpawnDistX, true),
-			y: role instanceof Player ? environment.viewport.cy - (this.height / 2) : rand(maxSpawnDistY, true),
-			z: 1
-		};
-		this.hardpointGeometry = {
+		},
+		loadHardpoints: function(self) {
+			self.hardpoints.push(new WeaponHardpoint(self, Size.HUGE.value, 1));
+			for (var i = 1; i < 4; i++){
+				self.hardpoints.push(new WeaponHardpoint(self, Size.LARGE.value, i));				
+			}
+			for (var i = 1; i < 3; i++){
+				self.hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));				
+			}
+			for (var i = 3; i < 5; i++){
+				self.hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i));				
+			}
+			for (var i = 1; i < 3; i++){
+				self.hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i));				
+			}
+			for (var i = 1; i < 9; i++){
+				self.hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));	
+			}
+		}
+	},
+	TYPE6: {
+		name: 'Type6',
+		mass: 155,
+		agility: 0.3,
+		armour: 324,
+		maxSpeed: 223,
+		boostSpeed: 355,
+		width: 54,
+		height: 101,
+		hardpointGeometry: {
 			weapon: {
 				small: {
 					1: {x: 16, y: 29, z: -1},
@@ -805,31 +789,26 @@ class Type6 extends Ship {
 					3: {x: 45, y: 24, z: -1}
 				}
 			}
-		};
-		Defaults.Hardpoints.Type6.load(this);
-	}
-}
-/*
-	Viper 3
-*/
-class Viper3 extends Ship {
-	constructor(shipName, role) {
-		super('Viper3', shipName, role);
-		this.mass = 50;
-		this.agility = 0.4;
-		this.armour = 126;
-		this.maxSpeed = 315;
-		this.boostSpeed = 394;
-		this.width = 48;
-		this.height = 56;
-		this.sprite.width = this.width;
-		this.sprite.height = this.height;
-		this.coordinates = {
-			x: role instanceof Player ? environment.viewport.cx - (this.width / 2) : rand(maxSpawnDistX, true),
-			y: role instanceof Player ? environment.viewport.cy - (this.height / 2) : rand(maxSpawnDistY, true),
-			z: 1
-		};
-		this.hardpointGeometry = {
+		},
+		loadHardpoints: function(self) {
+			for (var i = 1; i < 3; i++){
+				self.hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));	
+			}
+			for (var i = 1; i < 4; i++){
+				self.hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));	
+			}
+		}
+	},
+	VIPER3: {
+		name: 'Viper3',
+		mass: 50,
+		agility: 0.4,
+		armour: 126,
+		maxSpeed: 315,
+		boostSpeed: 394,
+		width: 48,
+		height: 56,
+		hardpointGeometry: {
 			weapon: {
 				small: {
 					1: {x: 18, y: 7, z: 1},
@@ -846,20 +825,15 @@ class Viper3 extends Ship {
 					2: {x: 22.5, y: 45, z: -1}
 				}
 			}
-		};
-		Defaults.Hardpoints.Viper3.load(this);
-
+		},
+		loadHardpoints: function(self) {
+			for (var i = 1; i < 3; i++){
+				self.hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i));
+				self.hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
+				self.hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));
+			}
+		}
 	}
-}
-
-var ShipTypes = {
-	sidewinder: Sidewinder,
-	cobra3: Cobra3,
-	cobra4: Cobra4,
-	python: Python,
-	anaconda: Anaconda,
-	type6: Type6,
-	viper3: Viper3
 }
 
 var PilotStatus = {
@@ -869,43 +843,48 @@ var PilotStatus = {
 	WANTED: 'wanted'
 }
 
+var NonPilotStatus = {
+	CARGO: 'cargo',
+	MINERAL: 'mineral'
+}
+
 var ShipRoles = {
-	trader: {
+	TRADER: {
 		roleName: 'Trader',
 		initialState: FSMState.NEUTRAL,
 		initialStatus: PilotStatus.CLEAN,
 		threatStatus: [PilotStatus.WANTED],
-		targetStatus: ['cargo']
+		targetStatus: [NonPilotStatus.CARGO]
 	},
-	miner: {
+	MINER: {
 		roleName: 'Miner',
 		initialState: FSMState.NEUTRAL,
 		initialStatus: PilotStatus.CLEAN,
 		threatStatus: [PilotStatus.WANTED],
-		targetStatus: ['mineral']
+		targetStatus: [NonPilotStatus.MINERAL]
 	},
-	bountyHunter: {
+	BOUNTYHUNTER: {
 		roleName: 'Bounty Hunter',
 		initialState: FSMState.HUNT,
 		initialStatus: PilotStatus.VIGILANTE,
 		threatStatus: [PilotStatus.WANTED],
 		targetStatus: [PilotStatus.WANTED]
 	},
-	security: {
+	SECURITY: {
 		roleName: 'Security Service',
 		initialState: FSMState.HUNT,
 		initialStatus: PilotStatus.SECURITY,
 		threatStatus: [PilotStatus.WANTED],
 		targetStatus: [PilotStatus.WANTED]
 	},
-	pirate: {
+	PIRATE: {
 		roleName: 'Pirate',
 		initialState: FSMState.HUNT,
 		initialStatus: PilotStatus.WANTED,
 		threatStatus: [PilotStatus.SECURITY, PilotStatus.VIGILANTE],
 		targetStatus: [PilotStatus.CLEAN, PilotStatus.WANTED]
 	},
-	player: {
+	PLAYER: {
 		// always last in the list
 		roleName: 'Player',
 		initialState: FSMState.PLAYER,

@@ -19,9 +19,9 @@ var maxSpawnDistY = environment.viewport.height * 5;
 
 function setup() {
   environment.init();
-  playerShip = new ShipTypes['cobra3'](shipName, player);
-  playerShip.x = environment.viewport.cx - (playerShip.width / 2);
-  playerShip.y = environment.viewport.cy - (playerShip.height / 2);
+  playerShip = new Ship(ShipTypes.COBRA3, shipName, player);
+  playerShip.x = environment.viewport.cx - (playerShip.geometry.width / 2);
+  playerShip.y = environment.viewport.cy - (playerShip.geometry.height / 2);
   gameObjects.push(playerShip);
 	setInterval(main, 1000/fps);
 };
@@ -80,7 +80,7 @@ function refresh() {
   for (var i = npcCount; i < minNPC; i++) {
     var spawnShipType = ShipTypes[Object.keys(ShipTypes)[Math.floor(rand(Object.keys(ShipTypes).length))]];
     var spawnShipRole = ShipRoles[Object.keys(ShipRoles)[Math.floor(rand(Object.keys(ShipRoles).length - 1))]];
-    var newShip = new spawnShipType('NPC' + i, spawnShipRole);
+    var newShip = new Ship(spawnShipType, 'NPC' + i, spawnShipRole);
     newShip.x = rand(maxSpawnDistX, true);
     newShip.y = rand(maxSpawnDistY, true);
     gameObjects.push(newShip);
