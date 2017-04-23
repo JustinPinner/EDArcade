@@ -39,8 +39,10 @@ class ShipExplosionEffect extends Effect {
 		this.sprite.height = this.cellAnims.frameHeight;
 		this.x = centre_x - (this.cellAnims.frameWidth / 2);
 		this.y = centre_y - (this.cellAnims.frameHeight / 2);
-		this.width = this.sprite.width;
-		this.height = this.sprite.height;
+		this.geometry = {
+			width: this.sprite.width,
+			height: this.sprite.height
+		};
 		this.fsm = new FSM(this, FSMState.EFFECT);
 		this.updateAndDraw = function() {
 			this.updatePosition();
@@ -66,8 +68,8 @@ class ShipExplosionEffect extends Effect {
 				spriteSheetMap.height,
 				0, 
 				0, 
-				this.width, 
-				this.height);
+				this.geometry.width, 
+				this.geometry.height);
 			environment.viewport.ctx.restore();
 			this.cellAnims.lastFrameDrawn = this.cellAnims.lastFrameDrawn === this.cellAnims.frameColumns * this.cellAnims.frameRows ? 0 : this.cellAnims.lastFrameDrawn += 1;
 			if (this.complete()) this.fsm.transition(FSMState.DIE);

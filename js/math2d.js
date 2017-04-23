@@ -38,18 +38,18 @@ function rotatePoint(cx, cy, x, y, degrees) {
 
 function scaleBox(obj, scale) {
   if (scale) {
-    var ws = obj.width * scale;
-    var hs = obj.height * scale;
+    var ws = obj.geometry.width * scale;
+    var hs = obj.geometry.height * scale;
     return {
       width: ws,
       height: hs,
-      x: obj.x + (obj.width / 2) - (ws / 2),
-      y: obj.y + (obj.height / 2) - (hs / 2)
+      x: obj.x + (obj.geometry.width / 2) - (ws / 2),
+      y: obj.y + (obj.geometry.height / 2) - (hs / 2)
     };
   } else {
     return {
-      width: obj.width,
-      height: obj.height,
+      width: obj.geometry.width,
+      height: obj.geometry,height,
       x: obj.x,
       y: obj.y
     };
