@@ -1,4 +1,4 @@
-// model/gameObject.js
+
 const GameObjectTypes = {
 	SHIP: 'ship',
 	ASTEROID: 'asteroid',

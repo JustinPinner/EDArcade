@@ -1,36 +1,34 @@
-// model/weapon.js
 
 const Size = {
-  SMALL: {value: 1, name: 'Small', code: 'S'}, 
-  MEDIUM: {value: 2, name: 'Medium', code: 'M'}, 
-  LARGE: {value: 3, name: 'Large', code: 'L'},
-  HUGE: {value: 4, name: 'Huge', code: 'H'} 
+  SMALL: {value: 1, name: 'SMALL', code: 'S'}, 
+  MEDIUM: {value: 2, name: 'MEDIUM', code: 'M'}, 
+  LARGE: {value: 3, name: 'LARGE', code: 'L'},
+  HUGE: {value: 4, name: 'HUGE', code: 'H'} 
 };
 
 const WeaponTypes = {
-	ENERGY: 'energy',
-	PROJECTILE: 'projectile'
+	ENERGY: 'ENERGY',
+	PROJECTILE: 'PROJECTILE'
 }
 
 const LaserTypes = {
-	PULSE: 'pulse',
-	BEAM: 'beam'
+	PULSE: 'PULSE',
+	BEAM: 'BEAM'
 }
 
 const DamageTypes = {
-	POINT: 'point',
-	AREA: 'area'
+	POINT: 'POINT',
+	AREA: 'AREA'
 }
 
 const HardpointTypes = {
-	WEAPON: 'weapon',
-	UTILITY: 'utility'
+	WEAPON: 'WEAPON',
+	UTILITY: 'UTILITY'
 }
 
 const HardpointMountTypes = {
-	FIXED: 'fixed',
-	GIMBAL: 'gimbal',
-	TURRET: 'turret'
+	FIXED: 'FIXED',
+	TURRET: 'TURRET'
 }
 
 class Weapon {
@@ -135,7 +133,7 @@ Munition.prototype.updateAndDraw = function(debug) {
 
 class LaserBeam extends Munition {
 	constructor(type, size, hardpoint) {
-		super(WeaponTypes.ENERGY, DamageTypes.POINT, MunitionRoles['beam']);
+		super(WeaponTypes.ENERGY, DamageTypes.POINT, MunitionRoles.BEAM);
 		this.geometry = {
 			width: LaserBeams[type][size].width,
 			height: LaserBeams[type][size].length
@@ -146,12 +144,38 @@ class LaserBeam extends Munition {
 		this.coordinates.x = this.hardpoint.coordinates.x;
 		this.coordinates.y = this.hardpoint.coordinates.y;
 		this.coordinates.z = this.hardpoint.coordinates.z;
+		this.hdg = null;
 		this.collisionDetectionPoint = {
 			x: this.x + dir_x(this.height, this.heading),
 			y: this.y + dir_y(this.height, this.heading)
 		}
-		this.heading = hardpoint.parent.heading;
 		this.speed = 100;
+	}
+	get heading() {
+		switch(this.hardpoint.weapon.mount) {
+			case HardpointMountTypes.FIXED: 
+				this.hdg = this.hardpoint.parent.heading;
+				return this.hdg;
+				break;
+			case HardpointMountTypes.TURRET:
+				if (this.hdg) {
+				 	return this.hdg;
+					break;
+				}
+				if (this.hardpoint.parent.currentTarget) {
+					var angle = angleBetween(this.hardpoint.x, this.hardpoint.y, this.hardpoint.parent.currentTarget.cx, this.hardpoint.parent.currentTarget.cy);
+					this.hdg = (angle + 180) - 360;
+					return this.hdg;
+					break;
+				}
+			default:
+				this.hdg = this.hardpoint.parent.heading;
+				return this.hdg;
+				break;
+		}
+	}
+	set heading(val) {
+		return;
 	}
 }
 
@@ -176,37 +200,49 @@ LaserBeam.prototype.draw = function(debug) {
 	environment.viewport.ctx.lineWidth = normalWidth;
 }
 
-var Lasers = {
+const Lasers = {
 	1: {
-		pulse: {
-			fixed: {
+		PULSE: {
+			FIXED: {
 				name: 'Fixed pulse laser (size 1)',
 				range: 500,
 				rof: 3.8,
 				damage: 3
+			},
+			TURRET: {
+				name: 'Turreted pulse laser (size 1)',
+				range: 500,
+				rof: 2.5,
+				damage: 1.7				
 			}
 		}
 	},
 	2: {
-		pulse: {
-			fixed: {
+		PULSE: {
+			FIXED: {
 				name: 'Fixed pulse laser (size 2)',
-				range: 500,
-				rof: 3.4,
+				range: 600,
+				rof: 4.0,
 				damage: 4
+			},
+			TURRET: {
+				name: 'Turreted pulse laser (size 2)',
+				range: 600,
+				rof: 2.7,
+				damage: 1.8								
 			}
 		}
 	}
 }
 
-var MunitionRoles = {
-	beam: {
+const MunitionRoles = {
+	BEAM: {
 		initialState: FSMState.LOADED
 	}
 }
 
-var LaserBeams = {
-	pulse: {
+const LaserBeams = {
+	PULSE: {
 		1: {
 			width: 2,
 			length: 200,
@@ -222,12 +258,14 @@ var LaserBeams = {
 	}	
 }
 
+
+
 class Hardpoint {
 	constructor(parent, type, size, index) {
 		this.parent = parent;
 		this.type = type;
 		this.size = size;
-		this.sizeName = size == 1 ? 'small' : size == 2 ? 'medium' : size == 3 ? 'large' : 'huge';
+		this.sizeName = size == 1 ? Size.SMALL.name : size == 2 ? Size.MEDIUM.name : size == 3 ? Size.LARGE.name : Size.HUGE.name;
 		this.index = index;
 	}
 	get x() {

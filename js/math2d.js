@@ -1,4 +1,3 @@
-// math2d.js
 
 function distanceBetween(objA, objB) {
   var dx = objA.cx - objB.cx;

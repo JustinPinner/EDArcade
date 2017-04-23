@@ -1,5 +1,3 @@
-// model/ship.js
-
 /*
 	Generic ship constructor
 */
@@ -565,14 +563,14 @@ const ShipTypes = {
 		width: 44,
 		height: 30,
 		hardpointGeometry: {
-			weapon: {
-				small: {
+			WEAPON: {
+				SMALL: {
 					1: {x: 17, y: 8, z: 1},
 					2: {x: 26, y: 8, z: 1}				
 				}
 			},
-			utility: {
-				small: {
+			UTILITY: {
+				SMALL: {
 					1: {x: 8, y: 21, z: -1},
 					2: {x: 35, y: 21,	z: -1}
 				}
@@ -595,18 +593,18 @@ const ShipTypes = {
 		width: 88,
 		height: 57,
 		hardpointGeometry: {
-			weapon: {
-				medium: {
+			WEAPON: {
+				MEDIUM: {
 					1: {x: 38, y: 7, z: 1},
 					2: {x: 49, y: 7, z: 1}					
 				},
-				small: {
+				SMALL: {
 					1: {x: 32, y: 15, z: -1},
 					2: {x: 55, y: 15, z: -1}				
 				}
 			},
-			utility: {
-				small: {
+			UTILITY: {
+				SMALL: {
 					1: {x: 7, y: 40, z: -1},
 					2: {x: 80, y: 40, z: -1}
 				}
@@ -614,8 +612,8 @@ const ShipTypes = {
 		},
 		loadHardpoints: function(self) {
 			for (var i = 1; i < 3; i++){
-				self.hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i));
-				self.hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
+				self.hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
+				self.hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i));
 				self.hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));
 			}
 		}
@@ -630,19 +628,19 @@ const ShipTypes = {
 		width: 96,
 		height: 65,
 		hardpointGeometry: {
-			weapon: {
-				medium: {
+			WEAPON: {
+				MEDIUM: {
 					1: {x: 41, y: 7, z: 1},
 					2: {x: 55, y: 7, z: 1}
 				},
-				small: {
+				SMALL: {
 					1: {x: 38, y: 10, z: -1},
 					2: {x: 58, y: 10, z: -1},
 					3: {x: 48, y: 20, z: 1}				
 				}
 			},
-			utility: {
-				small: {
+			UTILITY: {
+				SMALL: {
 					1: {x: 16, y: 48, z: -1},
 					2: {x: 79, y: 48, z: -1}
 				}
@@ -668,23 +666,23 @@ const ShipTypes = {
 		width: 116,
 		height: 175,
 		hardpointGeometry: {
-			weapon: {
-				large: { 
+			WEAPON: {
+				LARGE: { 
 					1: {x: 59, y: 26,	z: -1},
 					2: {x: 48, y: 58, z: -1},
 					3: {x: 71, y: 58,	z: -1}
 				},
-				medium: {
+				MEDIUM: {
 					1: {x: 46, y: 38, z: 1},
 					2: {x: 73, y: 38, z: 1}					
 				},
-				small: {
+				SMALL: {
 					1: {x: 38, y: 75, z: 1},
 					2: {x: 80, y: 75, z: 1}				
 				}
 			},
-			utility: {
-				small: {
+			UTILITY: {
+				SMALL: {
 					1: {x: 59, y: 94, z: 1},
 					2: {x: 59, y: 94, z: -1},
 					3: {x: 41, y: 137, z: -1},
@@ -714,28 +712,28 @@ const ShipTypes = {
 		width: 117,
 		height: 305,
 		hardpointGeometry: {
-			weapon: {
-				huge: {
+			WEAPON: {
+				HUGE: {
 					1: {x: 58, y: 72, z: -1}
 				},
-				large: { 
+				LARGE: { 
 					1: {x: 56, y: 35,	z: -1},
 					2: {x: 44, y: 84, z: 1},
 					3: {x: 70, y: 84,	z: 1}
 				},
-				medium: {
+				MEDIUM: {
 					1: {x: 40, y: 25, z: 1},
 					2: {x: 74, y: 25, z: 1},
 					3: {x: 47, y: 245, z: -1},
 					4: {x: 69, y: 245, z: -1}					
 				},
-				small: {
+				SMALL: {
 					1: {x: 37, y: 225, z: 1},
 					2: {x: 78, y: 225, z: 1}				
 				}
 			},
-			utility: {
-				small: {
+			UTILITY: {
+				SMALL: {
 					1: {x: 48, y: 207, z: 1},
 					2: {x: 68, y: 207, z: 1},
 					3: {x: 17, y: 266, z: 1},
@@ -776,14 +774,14 @@ const ShipTypes = {
 		width: 54,
 		height: 101,
 		hardpointGeometry: {
-			weapon: {
-				small: {
+			WEAPON: {
+				SMALL: {
 					1: {x: 16, y: 29, z: -1},
 					2: {x: 36, y: 29, z: -1}				
 				}
 			},
-			utility: {
-				small: {
+			UTILITY: {
+				SMALL: {
 					1: {x: 26, y: 86, z: 1},
 					2: {x: 8, y: 24, z: -1},
 					3: {x: 45, y: 24, z: -1}
@@ -809,18 +807,18 @@ const ShipTypes = {
 		width: 48,
 		height: 56,
 		hardpointGeometry: {
-			weapon: {
-				small: {
+			WEAPON: {
+				SMALL: {
 					1: {x: 18, y: 7, z: 1},
 					2: {x: 27, y: 7, z: 1}				
 				},
-				medium: {
+				MEDIUM: {
 					1: {x: 17, y: 23, z: -1},
 					2: {x: 29, y: 23, z: -1}
 				}
 			},
-			utility: {
-				small: {
+			UTILITY: {
+				SMALL: {
 					1: {x: 22.5, y: 45, z: 1},
 					2: {x: 22.5, y: 45, z: -1}
 				}
