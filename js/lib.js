@@ -1,5 +1,3 @@
-// lib.js
-
 /**
  * Partitions the elements into two groups: those for which the iterator returns
  * true, and those for which it returns false.

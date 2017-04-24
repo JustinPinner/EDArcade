@@ -1,4 +1,3 @@
-// model/player.js
 
 var Player = function(name) {
 	this.name = 'Cmdr ' + name ? name : 'Jameson';

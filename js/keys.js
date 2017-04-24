@@ -1,4 +1,4 @@
-// js/keys.js
+
 window.addEventListener('keydown', handleKeyDown, false);
 window.addEventListener('keyup', handleKeyUp, false);
 

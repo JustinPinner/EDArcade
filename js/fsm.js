@@ -1,4 +1,4 @@
-// js/fsm.js
+
 const FSMState = {
 	PLAYER: 'player',
 	NEUTRAL: 'neutral',
