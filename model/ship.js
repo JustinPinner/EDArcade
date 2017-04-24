@@ -54,8 +54,27 @@ class Ship extends GameObject {
 		};
 		this.hardpoints = [];
 		this.hardpointGeometry = shipType.hardpointGeometry;
-		this.shipType.loadHardpoints(this);
-		if (this.player) player.ship = this;
+		this.randomiseWeaponHardpoints = function(self) {
+			for (var sizeGroup in this.hardpointGeometry[HardpointTypes.WEAPON]) {
+				for (var slot in this.hardpointGeometry[HardpointTypes.WEAPON][sizeGroup]) {
+			    var loadSlot = randInt(2) > 0;
+			    if (loadSlot) {
+				    var i = Number(slot);
+				    var sz = Size[sizeGroup].value;
+				    var mnt = HardpointMountTypes[Object.keys(HardpointMountTypes)[Math.floor(rand(Object.keys(HardpointMountTypes).length))]];
+				    var wpn = WeaponTypes[Object.keys(WeaponTypes)[Math.floor(rand(Object.keys(WeaponTypes).length))]];
+				    var hpt = new WeaponHardpoint(self, sz, i, wpn, mnt, sz);
+				    self.hardpoints.push(hpt);
+				  }
+				}
+			}	    
+		};
+		if (this.player){
+			this.shipType.loadHardpoints(this);
+			player.ship = this;
+		} else {
+			this.randomiseWeaponHardpoints(this);
+		}
 	}
 	/* 
 			getters
@@ -452,17 +471,7 @@ Ship.prototype.draw = function(debug) {
 	  environment.viewport.ctx.fillRect(-this.geometry.width / 2, -this.geometry.height / 2, this.geometry.width, this.geometry.height);
 	}
 	environment.viewport.ctx.restore();
-	
-	// draw centre mark
-	environment.viewport.ctx.moveTo(origin.x, origin.y);
-	environment.viewport.ctx.beginPath();
-	environment.viewport.ctx.strokeStyle = 'blue';
-	environment.viewport.ctx.arc(origin.x, origin.y, 2, 0, Math.PI * 2, false);
-	environment.viewport.ctx.stroke();
-  
-  for (var i = 0; i < this.hardpoints.length; i++) {
-  	this.hardpoints[i].draw();
-  }
+	  
   if (this.player && this.threats) {
   	this.drawHud();
   }
@@ -512,6 +521,12 @@ Ship.prototype.drawHud = function() {
 Ship.prototype.drawDebug = function() {
 	var origin = this.drawOriginCentre;
 	environment.viewport.ctx.save();	
+	// draw centre mark
+	environment.viewport.ctx.moveTo(origin.x, origin.y);
+	environment.viewport.ctx.beginPath();
+	environment.viewport.ctx.strokeStyle = 'blue';
+	environment.viewport.ctx.arc(origin.x, origin.y, 2, 0, Math.PI * 2, false);
+	environment.viewport.ctx.stroke();
 	// draw momentum vector
 	environment.viewport.ctx.beginPath();
 	environment.viewport.ctx.moveTo(origin.x, origin.y);
@@ -550,6 +565,11 @@ Ship.prototype.drawDebug = function() {
   environment.viewport.ctx.stroke();
 
 	environment.viewport.ctx.restore();
+
+  for (var i = 0; i < this.hardpoints.length; i++) {
+  	this.hardpoints[i].draw();
+  }
+
 }
 
 const ShipTypes = {

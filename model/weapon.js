@@ -6,7 +6,7 @@ const Size = {
   HUGE: {value: 4, name: 'HUGE', code: 'H'} 
 };
 
-const WeaponTypes = {
+const WeaponClasses = {
 	ENERGY: 'ENERGY',
 	PROJECTILE: 'PROJECTILE'
 }
@@ -75,6 +75,10 @@ class PulseLaser extends LaserWeapon {
 	}
 }
 
+const WeaponTypes = {
+	PULSELASER: PulseLaser
+}
+
 class Munition extends GameObject {
 	constructor(type, effect, role) {
 		super(GameObjectTypes.MUNITION, type, role);
@@ -133,7 +137,7 @@ Munition.prototype.updateAndDraw = function(debug) {
 
 class LaserBeam extends Munition {
 	constructor(type, size, hardpoint) {
-		super(WeaponTypes.ENERGY, DamageTypes.POINT, MunitionRoles.BEAM);
+		super(WeaponClasses.ENERGY, DamageTypes.POINT, MunitionRoles.BEAM);
 		this.geometry = {
 			width: LaserBeams[type][size].width,
 			height: LaserBeams[type][size].length
@@ -207,7 +211,7 @@ const Lasers = {
 				name: 'Fixed pulse laser (size 1)',
 				range: 500,
 				rof: 3.8,
-				damage: 3
+				damage: 3.0
 			},
 			TURRET: {
 				name: 'Turreted pulse laser (size 1)',
@@ -223,13 +227,45 @@ const Lasers = {
 				name: 'Fixed pulse laser (size 2)',
 				range: 600,
 				rof: 4.0,
-				damage: 4
+				damage: 4.0
 			},
 			TURRET: {
 				name: 'Turreted pulse laser (size 2)',
 				range: 600,
 				rof: 2.7,
 				damage: 1.8								
+			}
+		}
+	},
+	3: {
+		PULSE: {
+			FIXED: {
+				name: 'Fixed pulse laser (size 3)',
+				range: 700,
+				rof: 4.2,
+				damage: 5
+			},
+			TURRET: {
+				name: 'Turreted pulse laser (size 3)',
+				range: 700,
+				rof: 2.9,
+				damage: 2.0								
+			}
+		}
+	},
+	4: {
+		PULSE: {
+			FIXED: {
+				name: 'Fixed pulse laser (size 4)',
+				range: 800,
+				rof: 4.4,
+				damage: 5.2
+			},
+			TURRET: {
+				name: 'Turreted pulse laser (size 4)',
+				range: 800,
+				rof: 3.1,
+				damage: 2.42							
 			}
 		}
 	}
@@ -254,6 +290,18 @@ const LaserBeams = {
 			length: 300,
 			colour: '#ff3300',
 			strength: 4			
+		},
+		3: {
+			width: 4,
+			length: 400,
+			colour: '#ff3300',
+			strength: 5			
+		},
+		4: {
+			width: 5,
+			length: 500,
+			colour: '#ff3300',
+			strength: 6			
 		}
 	}	
 }
