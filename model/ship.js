@@ -472,7 +472,7 @@ Ship.prototype.draw = function(debug) {
 	}
 	environment.viewport.ctx.restore();
 	  
-  if (this.player && this.threats) {
+  if (this.player && this.contacts.length > 0) {
   	this.drawHud();
   }
   if (debug) {
@@ -489,30 +489,29 @@ Ship.prototype.drawHud = function() {
 		var angle = angleBetween(this.cx, this.cy, ping.ship.cx, ping.ship.cy);
 		var distance = distanceBetween(this, ping.ship);
 		var threatLevel = ping.target || ping.ship.currentTarget && ping.ship.currentTarget === this ? 2 : ping.threat ? 1 : 0;
-		if (threatLevel > 0) {
-			if (ping.ship.isOnScreen()) {
-				origin = ping.ship.drawOriginCentre;
-				// draw threat ring
-				environment.viewport.ctx.moveTo(origin.x, origin.y);
-				environment.viewport.ctx.beginPath();
-				environment.viewport.ctx.strokeStyle = threatLevel < 2 ? 'orange' : 'red';
-				environment.viewport.ctx.arc(origin.x, origin.y, ping.ship.geometry.width, 0, Math.PI * 2, false);
-				environment.viewport.ctx.stroke();
-			} else {
-				// show off-screen threat marker
-				origin = this.drawOriginCentre;
-				environment.viewport.ctx.fillStyle = threatLevel < 2 ? 'orange' : 'red';
-				environment.viewport.ctx.font = '24px serif';
-				var symbol_x = origin.x - dir_x(distance, angle);
-				if (symbol_x < 0) symbol_x = 10;
-				if (symbol_x > environment.viewport.width) symbol_x = environment.viewport.width - 10;
+		if (ping.ship.isOnScreen() && threatLevel > 0) {
+			origin = ping.ship.drawOriginCentre;
+			// draw threat ring
+			environment.viewport.ctx.moveTo(origin.x, origin.y);
+			environment.viewport.ctx.beginPath();
+			environment.viewport.ctx.strokeStyle = threatLevel < 2 ? 'orange' : 'red';
+			environment.viewport.ctx.arc(origin.x, origin.y, ping.ship.geometry.width, 0, Math.PI * 2, false);
+			environment.viewport.ctx.stroke();
+		} else if (!ping.ship.isOnScreen()) {
+			// show off-screen marker
+			origin = this.drawOriginCentre;
+			environment.viewport.ctx.fillStyle = threatLevel < 2 ? (threatLevel < 1 ? 'gray' : 'orange') : 'red';
+			environment.viewport.ctx.font = '24px serif';
+			var symbol = threatLevel < 1 ? '[]' : '!';
+			var symbol_x = origin.x - dir_x(distance, angle);
+			if (symbol_x < 0) symbol_x = 10;
+			if (symbol_x > environment.viewport.width) symbol_x = environment.viewport.width - 10;
 
-				var symbol_y = origin.y - dir_y(distance, angle);
-				if (symbol_y < 0) symbol_y = 20;
-				if (symbol_y > environment.viewport.height) symbol_y = environment.viewport.height - 10;
-				
-				environment.viewport.ctx.fillText('!', symbol_x, symbol_y);		
-			}
+			var symbol_y = origin.y - dir_y(distance, angle);
+			if (symbol_y < 0) symbol_y = 20;
+			if (symbol_y > environment.viewport.height) symbol_y = environment.viewport.height - 10;
+			
+			environment.viewport.ctx.fillText(symbol, symbol_x, symbol_y);		
 		}
 	}
 	environment.viewport.ctx.restore();
@@ -922,8 +921,11 @@ class Scanner {
 Scanner.prototype.scan = function() {
   if (!this.lastScan || Date.now() - this.lastScan >= this.interval) {
     this.ship.contacts = [];
+		var nonMunitions = gameObjects.filter(function(obj)	{
+			return !(obj instanceof Munition);
+		});
 		var scanLimit = this.ship.maximumWeaponRange * 10;	//todo - use a better scan limit
-    for (var i = 0; i < gameObjects.length; i++) {
+    for (var i = 0; i < nonMunitions.length; i++) {
    		var range = distanceBetween(this.ship, gameObjects[i]);
    		if (gameObjects[i] !== this.ship && range <= scanLimit) {
 				var threat = false;				

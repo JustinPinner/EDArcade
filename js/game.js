@@ -19,10 +19,15 @@ var maxSpawnDistY = environment.viewport.height * 5;
 
 function setup() {
   environment.init();
+  // pre-load larger images
+  imageService.loadImage('../image/Explosion01_5x5.png');
+  imageService.loadImage('../image/star-tile-transparent.png');
+  // create player's ship
   playerShip = new Ship(ShipTypes.COBRA3, shipName, player);
   playerShip.x = environment.viewport.cx - (playerShip.geometry.width / 2);
   playerShip.y = environment.viewport.cy - (playerShip.geometry.height / 2);
   gameObjects.push(playerShip);
+  // all systems go!
 	setInterval(main, 1000/fps);
 };
 
