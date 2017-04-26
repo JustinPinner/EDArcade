@@ -156,16 +156,13 @@ class LaserBeam extends Munition {
 		this.speed = 100;
 	}
 	get heading() {
+		if (this.hdg) return this.hdg;
 		switch(this.hardpoint.weapon.mount) {
 			case HardpointMountTypes.FIXED: 
 				this.hdg = this.hardpoint.parent.heading;
 				return this.hdg;
 				break;
 			case HardpointMountTypes.TURRET:
-				if (this.hdg) {
-				 	return this.hdg;
-					break;
-				}
 				if (this.hardpoint.parent.currentTarget) {
 					var angle = angleBetween(this.hardpoint.x, this.hardpoint.y, this.hardpoint.parent.currentTarget.cx, this.hardpoint.parent.currentTarget.cy);
 					this.hdg = (angle + 180) - 360;
