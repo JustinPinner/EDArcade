@@ -504,12 +504,12 @@ Ship.prototype.drawHud = function() {
 			environment.viewport.ctx.font = '24px serif';
 			var symbol = threatLevel < 1 ? '[]' : '!';
 			var symbol_x = origin.x - dir_x(distance, angle);
-			if (symbol_x < 0) symbol_x = 10;
-			if (symbol_x > environment.viewport.width) symbol_x = environment.viewport.width - 10;
+			if (symbol_x < 0) symbol_x = ScreenBorder.HORIZONTAL;
+			if (symbol_x > environment.viewport.width) symbol_x = environment.viewport.width - ScreenBorder.HORIZONTAL;
 
 			var symbol_y = origin.y - dir_y(distance, angle);
-			if (symbol_y < 0) symbol_y = 20;
-			if (symbol_y > environment.viewport.height) symbol_y = environment.viewport.height - 10;
+			if (symbol_y < 0) symbol_y = ScreenBorder.VERTICAL;
+			if (symbol_y > environment.viewport.height) symbol_y = environment.viewport.height - ScreenBorder.VERTICAL;
 			
 			environment.viewport.ctx.fillText(symbol, symbol_x, symbol_y);		
 		}
