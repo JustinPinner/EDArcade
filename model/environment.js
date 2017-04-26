@@ -1,5 +1,10 @@
 // model/environment.js
 
+const ScreenBorder = {
+	VERTICAL: 40,
+	HORIZONTAL: 40
+};
+
 var systemGeometry = {
 	width: window.innerWidth, 
 	height: window.innerHeight
