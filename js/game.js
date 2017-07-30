@@ -31,14 +31,6 @@ function setup() {
 	setInterval(main, 1000/fps);
 };
 
-function randInt(max) {
-  return Math.floor(rand(max));
-};
-
-function rand(max, incNegatives) {
-  return (Math.random() * max) * (incNegatives ? (Math.random() * 2 > 1 ? -1 : 1) : 1);
-};
-
 function refresh() {
   if (!environment.isReady()) {
     return;
@@ -86,8 +78,8 @@ function refresh() {
     var spawnShipType = ShipTypes[Object.keys(ShipTypes)[Math.floor(rand(Object.keys(ShipTypes).length))]];
     var spawnShipRole = ShipRoles[Object.keys(ShipRoles)[Math.floor(rand(Object.keys(ShipRoles).length - 1))]];
     var newShip = new Ship(spawnShipType, 'NPC' + i, spawnShipRole);
-    newShip.x = rand(maxSpawnDistX, true);
-    newShip.y = rand(maxSpawnDistY, true);
+    newShip.x = playerShip.x + rand(maxSpawnDistX, incNegatives = true);
+    newShip.y = playerShip.y + rand(maxSpawnDistY, incNegatives = true);
     gameObjects.push(newShip);
   }
 };

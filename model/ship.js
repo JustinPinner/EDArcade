@@ -160,10 +160,11 @@ Ship.prototype.updateAndDraw = function(debug) {
 		this.draw(debug);
 	} else {
 		this.npcUpdate();
-    if (this.isOnScreen(debug)) {
-    	this.draw(debug);
-    }
-  }
+		if (this.isOnScreen(debug)) {
+			this.draw(debug);
+		}
+	}
+	this.collisionDetect();
 };
 
 Ship.prototype.npcUpdate = function () {

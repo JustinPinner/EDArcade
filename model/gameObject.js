@@ -99,16 +99,19 @@ GameObject.prototype.updatePosition = function() {
 }
 
 GameObject.prototype.collisionDetect = function(x, y) {
-	var self = this;
+	var self = this,
+			x = x || self.x,
+			y = y || self.y;
 	var hitObjects = gameObjects.filter(function(obj) {
 		return obj.oType === GameObjectTypes.SHIP && 
-			obj !== self.hardpoint.parent &&
+			obj !== self &&
 			x >= obj.x &&
 			x <= obj.x + obj.geometry.width &&
 			y >= obj.y &&
 			y <= obj.y + obj.geometry.height;
 	});
 	if (hitObjects.length > 0) {
+		debugger;
 		hitObjects[0].takeDamage(this);
 		self.takeDamage(hitObjects[0]);
 	}

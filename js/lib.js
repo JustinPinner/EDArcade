@@ -22,3 +22,11 @@ Array.prototype.partition = function(iterator, context) {
  
   return [trueCollection, falseCollection];
 };
+
+function randInt(max) {
+  return Math.floor(rand(max));
+};
+
+function rand(max, incNegatives = false) {
+  return (Math.random() * max) * (incNegatives ? (Math.random() * 2 > 1 ? -1 : 1) : 1);
+};
