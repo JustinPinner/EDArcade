@@ -34,6 +34,7 @@ class GameObject {
 			image: null
 		};
 		this.cellAnims = {};
+		this.phaserObj = null;
 	}
 	// getters
 	get objectType() {
@@ -78,6 +79,9 @@ class GameObject {
 	get coordinatesRotated() {
 		return rotatePoint(this.cx, this.cy, this.x, this.y, this.heading);
 	}
+	get phaserObject() {
+		return this.phaserObj;
+	}
 	// setters
 	set x(val) {
 		this.coordinates.x = val;
@@ -90,6 +94,9 @@ class GameObject {
 	}
 	set vy(val) {
 		this._vy = parseFloat(val);
+	}
+	set phaserObject(obj) {
+		this.phaserObj = obj;
 	}		
 }
 

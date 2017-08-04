@@ -23,8 +23,8 @@ class Ship extends GameObject {
 			height: this.shipType.height
 		};
 		this.coordinates = {
-			x: this.player ? environment.viewport.cx - (this.geometry.width / 2) : rand(maxSpawnDistX, true),
-			y: this.player ? environment.viewport.cy - (this.geometry.height / 2) : rand(maxSpawnDistY, true),
+			x: this.phaserObject ? this.phaserObject.sprite.x : null,
+			y: this.phaserObject ? this.phaserObject.sprite.y : null,
 			z: null
 		};
 		this.sprite.image = imageService.loadImage('../image/' + this.shipType.name + '.png');
@@ -128,7 +128,7 @@ class Ship extends GameObject {
 		return (this.shipType.agility / this.shipType.mass) * Math.abs(this.thrust) * 10;
 	}
 	get yawRate() {
-		return this.shipType.agility * 5.0;
+		return this.shipType.agility * 30;
 	}
 	get maximumWeaponRange() {
 		var range = null;
@@ -175,18 +175,6 @@ Ship.prototype.npcUpdate = function () {
 };
 	
 Ship.prototype.playerUpdate = function() {
-	if (keyUp) {
-		this.increaseThrust();
-	}
-	if (keyDown) {
-		this.decreaseThrust();
-	}
-	if (keyLeft) {
-		this.yaw('ccw');
-	}
-	if (keyRight) {
-		this.yaw('cw');
-	}
 	if (keyBoost) {
 		this.boost();
 	}
@@ -380,19 +368,12 @@ Ship.prototype.yaw = function(dir) {
 	var degsToAdd = 0;
 	switch (dir) {
 		case 'cw':
-			degsToAdd = angleDifference(this.heading, this.heading - this.yawRate);
+			this.phaserObject.body.rotateRight(this.yawRate);
 			break;
 		case 'ccw':
-			degsToAdd = angleDifference(this.heading, this.heading + this.yawRate);
+			this.phaserObject.body.rotateLeft(this.yawRate);
 			break;
 	}	
-	this.heading += degsToAdd;
-	if (this.heading > 359) {
-		this.heading -= 359;
-	}
-	if (this.heading < 0) {
-		this.heading += 359;
-	}
 };
 	
 Ship.prototype.syncHardpoints = function() {
