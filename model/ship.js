@@ -167,10 +167,10 @@ Ship.prototype.updateAndDraw = function(debug) {
 };
 
 Ship.prototype.npcUpdate = function () {
-  if (this.fsm) {
-	  this.updateMomentum();
+	if (this.fsm) {
+		this.updateMomentum();
 		this.updatePosition();
-	  this.fsm.execute();
+		this.fsm.execute();
 	}
 };
 	
@@ -199,36 +199,12 @@ Ship.prototype.playerUpdate = function() {
 };
 
 Ship.prototype.accelerate = function() {
-	var rate = this.thrust * 0.01;
-	var dx = dir_x(rate, this.heading);
-	var dy = dir_y(rate, this.heading);	
-	
-	// speed limiter
-	var apply_dx = true;
-	var apply_dy = true;
-	var maxLimit = this.shipType.maxSpeed / fps;
-	var minLimit = maxLimit * -1;
-
-	if (dx > 0 && this.vx > 0 && (this.vx + dx > maxLimit)) {
-		apply_dx = false;
-	}
-	if (dx < 0 && this.vx < 0 && (this.vx + dx < minLimit)) {
-		apply_dx = false;
-	}
-	if (dy > 0 && this.vy > 0 && (this.vy + dy > maxLimit)) {
-		apply_dy = false;
-	}
-	if (dy < 0 && this.vy < 0 && (this.vy + dy < minLimit)) {
-		apply_dy = false;
-	}
-
-	if (apply_dx) {
-		this.vx += dx;
-	}
-	if (apply_dy) {
-		this.vy += dy;
-	}
+	this.phaserObject.body.thrust(this.thrust);
 };
+
+Ship.prototype.decelerate = function() {
+	this.phaserObject.body.reverse(this.thrust);
+};	
 
 Ship.prototype.updateMomentum = function() {
 	var dA = angleDifference(this.heading, this.direction);
@@ -357,13 +333,6 @@ Ship.prototype.npcAccelerate = function() {
 	}
 };
 	
-Ship.prototype.decelerate = function() {
-	this.speed -= this.accelerationRate;
-	if (this.speed < -this.shipType.maxSpeed) {
-		this.speed = -this.shipType.maxSpeed;
-	}
-};
-	
 Ship.prototype.yaw = function(dir) {
 	var degsToAdd = 0;
 	switch (dir) {
@@ -372,6 +341,9 @@ Ship.prototype.yaw = function(dir) {
 			break;
 		case 'ccw':
 			this.phaserObject.body.rotateLeft(this.yawRate);
+			break;
+		case 'stop':
+			this.phaserObject.body.setZeroRotation();
 			break;
 	}	
 };

@@ -90,10 +90,18 @@ class GameObject {
 		this.coordinates.y = val;
 	}
 	set vx(val) {
-		this._vx = parseFloat(val);
+		const floatVal = parseFloat(val);
+		if (this.phaserObject) {
+			this.phaserObject.body.velocity.x = floatVal;
+		}
+		this._vx = floatVal;
 	}
 	set vy(val) {
-		this._vy = parseFloat(val);
+		const floatVal = parseFloat(val);
+		if (this.phaserObject) {
+			this.phaserObject.body.velocity.y = floatVal;
+		}
+		this._vy = floatVal;
 	}
 	set phaserObject(obj) {
 		this.phaserObj = obj;

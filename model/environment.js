@@ -1,5 +1,9 @@
 // model/environment.js
 
+const YAWLEFT = 'ccw';
+const YAWRIGHT = 'cw';
+const YAWSTOP = 'stop';
+
 const ScreenBorder = {
 	VERTICAL: 40,
 	HORIZONTAL: 40
