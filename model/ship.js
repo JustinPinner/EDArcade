@@ -4,59 +4,35 @@
 class Ship extends GameObject {
 	constructor(shipType, shipName, role) {
 		super(GameObjectTypes.SHIP, shipName, player);
-		this.shipType = shipType;
-		this.player = role instanceof Player ? role : null;
-		this.flightAssist = this.player ? false : true;
-		this.heading = this.player ? 270 : rand(359);
-		this.thrust = 0;
-		this.direction = this.heading;
-		this.role = this.player ? ShipRoles.PLAYER : role;
-		this.fsm = this.player ? null : new FSM(this, this.role.initialState);
-		this.status = this.role.initialStatus;
-		this.contacts = [];
-		this.currentTarget = null;
-		this.scanner = new Scanner(this);
-		this.shield = new Shield(this);
-		this.hullIntegrity = 100;
-		this.geometry = {
-			width: this.shipType.width,
-			height: this.shipType.height
-		};
-		this.coordinates = {
-			x: this.player ? environment.viewport.cx - (this.geometry.width / 2) : rand(maxSpawnDistX, true),
-			y: this.player ? environment.viewport.cy - (this.geometry.height / 2) : rand(maxSpawnDistY, true),
-			z: null
-		};
-		this.sprite.image = imageService.loadImage('../image/' + this.shipType.name + '.png');
-		this.sprite.width = this.geometry.width;
-		this.sprite.height = this.geometry.height;
-		this.cellAnims = {
-			shieldStrike: {
-				src: null,
-				frames: null,
-				frameRate: null
-			},
-			hullStrike: {
-				src: null,
-				frames: null,
-				frameRate: null
-			},
-			boostEngage: {
-				src: null,
-				frames: null,
-				frameRate: null
-			},
-			explode: {
-				src: null,
-				frames: null,
-				frameRate: null
-			}
-		};
-		this.hardpoints = [];
-		this.hardpointGeometry = shipType.hardpointGeometry;
+		this._model = shipType;
+		this._player = role instanceof Player ? role : null;
+		this._flightAssist = this.player ? false : true;
+		this._heading = this.player ? 270 : rand(359);
+		this._thrust = 0;
+		this._direction = this.heading;
+		this._role = this.player ? ShipRoles.PLAYER : role;
+		this._fsm = this.player ? null : new FSM(this, this.role.initialState);
+		this._status = this.role.initialStatus;
+		this._contacts = [];
+		this._currentTarget = null;
+		this._scanner = new Scanner(this);
+		this._shield = new Shield(this);
+		this._hullIntegrity = 100;
+		// this.geometry = {
+		// 	width: shipType.width,
+		// 	height: shipType.height
+		// };
+		this._coordinates = new Point2d(
+			this._player ? environment.viewport.cx - (this._model.width / 2) : rand(maxSpawnDistX, true),
+			this._player ? environment.viewport.cy - (this._model.height / 2) : rand(maxSpawnDistY, true)	
+		);		
+		this._sprite = new Sprite(0, 0, shipType.width, shipType.height, shipType.name, shipType.cells);
+		this._sprite.loadImage();		
+		this._hardpoints = [];
+		this._hardpointGeometry = shipType.hardpointGeometry;
 		this.randomiseWeaponHardpoints = function(self) {
-			for (var sizeGroup in this.hardpointGeometry[HardpointTypes.WEAPON]) {
-				for (var slot in this.hardpointGeometry[HardpointTypes.WEAPON][sizeGroup]) {
+			for (var sizeGroup in this._hardpointGeometry[HardpointTypes.WEAPON]) {
+				for (var slot in this._hardpointGeometry[HardpointTypes.WEAPON][sizeGroup]) {
 			    var loadSlot = randInt(2) > 0;
 			    if (loadSlot) {
 				    var i = Number(slot);
@@ -64,14 +40,14 @@ class Ship extends GameObject {
 				    var mnt = HardpointMountTypes[Object.keys(HardpointMountTypes)[Math.floor(rand(Object.keys(HardpointMountTypes).length))]];
 				    var wpn = WeaponTypes[Object.keys(WeaponTypes)[Math.floor(rand(Object.keys(WeaponTypes).length))]];
 				    var hpt = new WeaponHardpoint(self, sz, i, wpn, mnt, sz);
-				    self.hardpoints.push(hpt);
+				    self._hardpoints.push(hpt);
 				  }
 				}
 			}	    
 		};
-		if (this.player){
-			this.shipType.loadHardpoints(this);
-			player.ship = this;
+		if (this._player){
+			this._model.loadHardpoints(this);
+			this._player.ship = this;
 		} else {
 			this.randomiseWeaponHardpoints(this);
 		}
@@ -79,17 +55,29 @@ class Ship extends GameObject {
 	/* 
 			getters
 	*/
+	get model() {
+		return this._model;
+	}
+	get scanner() {
+		return this._scanner;
+	}
+	get shield() {
+		return this._shield;
+	}
+	get coordinates() {
+		return this._coordinates;
+	}
 	get drawOriginCentre() {
-		return {
-			x: this.player ? environment.viewport.cx : this.cx + -environment.viewport.x,
-			y: this.player ? environment.viewport.cy : this.cy + -environment.viewport.y
-		};	
+		return new Point2d(
+			this._player ? environment.viewport.cx : this.centre.x + -environment.viewport.x,
+			this._player ? environment.viewport.cy : this.centre.y + -environment.viewport.y
+		);	
 	}
 	get drawOrigin() {
 		var originCentre = this.drawOriginCentre;
 		return {
-			x: originCentre.x - (this.geometry.width / 2),
-			y: originCentre.y - (this.geometry.height / 2)
+			x: originCentre.x - (this.model.width / 2),
+			y: originCentre.y - (this.model.height / 2)
 		}
 	}
 	get threats() {
@@ -125,10 +113,10 @@ class Ship extends GameObject {
 		return this.maximumWeaponRange * 3;
 	}
 	get accelerationRate() {
-		return (this.shipType.agility / this.shipType.mass) * Math.abs(this.thrust) * 10;
+		return (this.model.agility / this.model.mass) * Math.abs(this.thrust) * 10;
 	}
 	get yawRate() {
-		return this.shipType.agility * 5.0;
+		return this.model.agility * 5.0;
 	}
 	get maximumWeaponRange() {
 		var range = null;
@@ -146,7 +134,7 @@ class Ship extends GameObject {
 		return range;
 	}
 	get speed() {
-		return Math.abs(this.vx + this.vy) * fps;
+		return Math.abs(this.velocity.x + this.velocity.y) * fps;
 	}
 	/* 
 			setters
@@ -219,7 +207,7 @@ Ship.prototype.accelerate = function() {
 	// speed limiter
 	var apply_dx = true;
 	var apply_dy = true;
-	var maxLimit = this.shipType.maxSpeed / fps;
+	var maxLimit = this.model.maxSpeed / fps;
 	var minLimit = maxLimit * -1;
 
 	if (dx > 0 && this.vx > 0 && (this.vx + dx > maxLimit)) {
@@ -274,8 +262,8 @@ Ship.prototype.isOnScreen = function(debug) {
 	return environment.viewport.contains(
 		this.x - (debug ? this.maximumWeaponRange : 0), 
 		this.y - (debug ? this.maximumWeaponRange : 0), 
-		this.geometry.width + (debug ? this.maximumWeaponRange : 0), 
-		this.geometry.height + (debug ? this.maximumWeaponRange : 0)
+		this.model.width + (debug ? this.maximumWeaponRange : 0), 
+		this.model.height + (debug ? this.maximumWeaponRange : 0)
 	);
 };
 
@@ -365,15 +353,15 @@ Ship.prototype.allStop = function() {
 	
 Ship.prototype.npcAccelerate = function() {	
 	this.speed += this.accelerationRate;
-	if (this.speed > this.shipType.maxSpeed) {
-		this.speed = this.shipType.maxSpeed;
+	if (this.speed > this.model.maxSpeed) {
+		this.speed = this.model.maxSpeed;
 	}
 };
 	
 Ship.prototype.decelerate = function() {
 	this.speed -= this.accelerationRate;
-	if (this.speed < -this.shipType.maxSpeed) {
-		this.speed = -this.shipType.maxSpeed;
+	if (this.speed < -this.model.maxSpeed) {
+		this.speed = -this.model.maxSpeed;
 	}
 };
 	
@@ -428,8 +416,8 @@ Ship.prototype.takeDamage = function(source) {
 	source.hardpoint.parent.registerHit(this);
 	if (this.shield && this.shield.charge > 0) {
 		this.shield.impact(source);
-	} else if (this.shipType.armour && this.shipType.armour > 0) {
-		this.shipType.armour -= source.strength * 10;
+	} else if (this.model.armour && this.model.armour > 0) {
+		this.model.armour -= source.strength * 10;
 	} else if (this.hullIntegrity && this.hullIntegrity > 0) {
 		this.hullIntegrity -= source.strength * 10;
 	}
@@ -467,9 +455,9 @@ Ship.prototype.draw = function(debug) {
 	environment.viewport.ctx.translate(origin.x, origin.y);
 	environment.viewport.ctx.rotate(degreesToRadians(this.heading + 90));
 	try {
-	  environment.viewport.ctx.drawImage(this.sprite.image, -this.geometry.width / 2, -this.geometry.height / 2, this.geometry.width, this.geometry.height);
+	  environment.viewport.ctx.drawImage(this.sprite.image, -this.model.width / 2, -this.model.height / 2, this.model.width, this.model.height);
 	} catch(e) {
-	  environment.viewport.ctx.fillRect(-this.geometry.width / 2, -this.geometry.height / 2, this.geometry.width, this.geometry.height);
+	  environment.viewport.ctx.fillRect(-this.model.width / 2, -this.model.height / 2, this.model.width, this.model.height);
 	}
 	environment.viewport.ctx.restore();
 	  
@@ -496,7 +484,7 @@ Ship.prototype.drawHud = function() {
 			environment.viewport.ctx.moveTo(origin.x, origin.y);
 			environment.viewport.ctx.beginPath();
 			environment.viewport.ctx.strokeStyle = threatLevel < 2 ? 'orange' : 'red';
-			environment.viewport.ctx.arc(origin.x, origin.y, ping.ship.geometry.width, 0, Math.PI * 2, false);
+			environment.viewport.ctx.arc(origin.x, origin.y, ping.ship.model.width, 0, Math.PI * 2, false);
 			environment.viewport.ctx.stroke();
 		} else if (!ping.ship.isOnScreen()) {
 			// show off-screen marker
@@ -596,12 +584,34 @@ const ShipTypes = {
 				}
 			}
 		},
+		cells: {
+			shieldStrike: {
+				src: null,
+				frames: null,
+				frameRate: null
+			},
+			hullStrike: {
+				src: null,
+				frames: null,
+				frameRate: null
+			},
+			boostEngage: {
+				src: null,
+				frames: null,
+				frameRate: null
+			},
+			explode: {
+				src: null,
+				frames: null,
+				frameRate: null
+			}
+		},
 		loadHardpoints: function(self) {
 			for (var i = 1; i < 3; i++) {
-				self.hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
-				self.hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));
+				self._hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
+				self._hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));
 			}
-		}
+		}		
 	},
 	COBRA3: {
 		name: 'Cobra3',
@@ -630,11 +640,12 @@ const ShipTypes = {
 				}
 			}
 		},
+		cells: {},
 		loadHardpoints: function(self) {
 			for (var i = 1; i < 3; i++){
-				self.hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
-				self.hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i));
-				self.hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));
+				self._hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
+				self._hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i));
+				self._hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));
 			}
 		}
 	},
@@ -666,13 +677,14 @@ const ShipTypes = {
 				}
 			}
 		},
+		cells: {},
 		loadHardpoints: function(self) {
 			for (var i = 1; i < 4; i++){
-				self.hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i));				
+				self._hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i));				
 			}
 			for (var i = 1; i < 3; i++){
-				self.hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
-				self.hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));
+				self._hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
+				self._hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));
 			}												
 		}		
 	},
@@ -710,15 +722,16 @@ const ShipTypes = {
 				}
 			}
 		},
+		cells: {},
 		loadHardpoints: function(self) {
 			for (var i = 1; i < 4; i++){
-				self.hardpoints.push(new WeaponHardpoint(self, Size.LARGE.value, i));	
+				self._hardpoints.push(new WeaponHardpoint(self, Size.LARGE.value, i));	
 			}
 			for (var i = 1; i < 3; i++){
-				self.hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));				
+				self._hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));				
 			}
 			for (var i = 1; i < 5; i++){
-				self.hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));	
+				self._hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));	
 			}
 		}		
 	},
@@ -765,22 +778,23 @@ const ShipTypes = {
 				}
 			}
 		},
+		cells: {},
 		loadHardpoints: function(self) {
-			self.hardpoints.push(new WeaponHardpoint(self, Size.HUGE.value, 1));
+			self._hardpoints.push(new WeaponHardpoint(self, Size.HUGE.value, 1));
 			for (var i = 1; i < 4; i++){
-				self.hardpoints.push(new WeaponHardpoint(self, Size.LARGE.value, i));				
+				self._hardpoints.push(new WeaponHardpoint(self, Size.LARGE.value, i));				
 			}
 			for (var i = 1; i < 3; i++){
-				self.hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));				
+				self._hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));				
 			}
 			for (var i = 3; i < 5; i++){
-				self.hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i));				
+				self._hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i));				
 			}
 			for (var i = 1; i < 3; i++){
-				self.hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i));				
+				self._hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i));				
 			}
 			for (var i = 1; i < 9; i++){
-				self.hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));	
+				self._hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));	
 			}
 		}
 	},
@@ -808,12 +822,13 @@ const ShipTypes = {
 				}
 			}
 		},
+		cells: {},
 		loadHardpoints: function(self) {
 			for (var i = 1; i < 3; i++){
-				self.hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));	
+				self._hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));	
 			}
 			for (var i = 1; i < 4; i++){
-				self.hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));	
+				self._hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));	
 			}
 		}
 	},
@@ -844,11 +859,12 @@ const ShipTypes = {
 				}
 			}
 		},
+		cells: {},
 		loadHardpoints: function(self) {
 			for (var i = 1; i < 3; i++){
-				self.hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i));
-				self.hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
-				self.hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));
+				self._hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i));
+				self._hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
+				self._hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));
 			}
 		}
 	}

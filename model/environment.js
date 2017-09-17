@@ -13,157 +13,103 @@ var systemGeometry = {
 /*
 	Fixed background image
 */
-var Background = function() {
-	this.isReady = function() {
-		return this.image !== null;
+class Background extends Canvas2D {
+	constructor(x, y, width, height, selector) {
+		super(x, y, width, height, selector || '#bgcanvas');
 	}
-	
-	this.width = systemGeometry.width;
-	this.height = systemGeometry.height;
-	this.x = 0;
-	this.y = 0;
+}
 
-	this.div = document.querySelector('#bgdiv');
-	this.div.style.left = this.x.toString() + 'px';
-	this.div.style.top = this.y.toString() + 'px';
-	this.div.style.width = this.width.toString() + 'px';
-	this.div.style.height = this.height.toString() + 'px';
-	this.div.style.backgroundColor = '#000000';
+Background.prototype.init = function(fillImage) {
+	this.__proto__.init(fillImage, function() {
+		environment.background.draw();}			
+	);
+}
 
-	this.cnv = document.querySelector('#bgcanvas');
-	this.cnv.style.left = this.x.toString() + 'px';
-	this.cnv.style.top = this.y.toString() + 'px';
-	this.cnv.width = this.width;
-	this.cnv.height = this.height;
-	
-	this.ctx = this.cnv.getContext('2d');	
-	
-	this.imgSrc = ''; //'../image/starfield-simple.jpg'; // '../image/starfield-1920x1080.jpg';
-	this.image = null;
-
-	this.scrollScale = 0;
-
-	this.clear = function() {	
-		this.ctx.clearRect(0, 0, this.cnv.width, this.cnv.height);
-	};
-
-	this.init = function() {
-		this.image = imageService.loadImage(this.imgSrc, function() {
-			environment.background.draw();			
-		});
-	};
-
-	this.draw = function() {
-		this.clear();
-		this.ctx.drawImage(this.image, 0, 0, this.cnv.width, this.cnv.height);	
-		this.image.removeEventListener('load', environment.background.draw, false);	
-	};
-
+Background.prototype.draw = function() {
+	this.__proto__.draw();
+	this._image.removeEventListener('load', environment.background.draw, false);		
 }
 
 /*
 	Scrolling starfield overlay
 */
-var Midground = function() {
-	this.isReady = function() {
-		return this.image !== null;
-	};
+class Midground extends Canvas2D {
+	constructor(x, y, width, height, selector) {
+		super(x, y, width, height, selector || '#mgcanvas');
+		this._scrollScale = 0.75;
+	}
+}
 
-	this.width = systemGeometry.width;
-	this.height = systemGeometry.height;
-	this.x = 0;
-	this.y = 0;
+Midground.prototype.init = function(fillImage) {
+	this.__proto__.init(fillImage || '../image/star-tile-transparent.png');
+}
 
-	this.div = document.querySelector('#mgdiv');
-	this.div.style.left = this.x.toString() + 'px';
-	this.div.style.top = this.y.toString() + 'px';
-	this.div.style.width = this.width.toString() + 'px';
-	this.div.style.height = this.height.toString() + 'px';
-	this.div.style.background = 'transparent';
-
-	this.cnv = document.querySelector('#mgcanvas');
-	this.cnv.style.left = this.x.toString() + 'px';
-	this.cnv.style.top = this.y.toString() + 'px';
-	this.cnv.width = this.width;
-	this.cnv.height = this.height;
-	
-	this.ctx = this.cnv.getContext('2d');	
-	
-	this.imgSrc = '../image/star-tile-transparent.png';
-	this.image = null;
-
-	this.scrollScale = 0.75;
-
-	this.clear = function() {	
-		this.ctx.clearRect(0, 0, this.width, this.height);
-	};
-
-	this.init = function() {
-		this.image = imageService.loadImage('../image/star-tile-transparent.png');
-	};
-
-	this.draw = function(scrollData) {
-		// scroll direction is opposide of ship direction		
-		var newX = scrollData.vx != 0 ? this.x - scrollData.vx * this.scrollScale : this.x;
-		var newY = scrollData.vy != 0 ? this.y - scrollData.vy * this.scrollScale : this.y;
-		this.x = newX >= this.width ? 0 : (newX < 0 ? this.width : newX);
-		this.y = newY >= this.height ? 0 : (newY < 0 ? this.height : newY);
-		this.clear();
+Midground.prototype.draw = function(scrollData) {
+	if (!this.ready) return;
+	// scroll direction is opposide of ship direction		
+	var newX = scrollData.vx != 0 ? this._coordinates.x - scrollData.vx * this.scrollScale : this._coordinates.x;
+	var newY = scrollData.vy != 0 ? this._coordinates.y - scrollData.vy * this.scrollScale : this._coordinates.y;
+	this._coordinates.x = newX >= this._width ? 0 : (newX < 0 ? this._width : newX);
+	this._coordinates.y = newY >= this._height ? 0 : (newY < 0 ? this._height : newY);
+	this.clear();
+	if (this._image) {
 		// draw the background
-		this.ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+		this._context.drawImage(this._image, this._coordinates.x, this._coordinates.y, this._width, this._height);
 		// top-left
-		this.ctx.drawImage(this.image, this.x - this.width, this.y - this.height, this.width, this.height);
+		this._context.drawImage(this._image, this._coordinates.x - this._width, this._coordinates.y - this._height, this._width, this._height);
 		// top
-		this.ctx.drawImage(this.image, this.x, this.y - this.height, this.width, this.height);
+		this._context.drawImage(this._image, this._coordinates.x, this._coordinates.y - this._height, this._width, this._height);
 		// top-right
-		this.ctx.drawImage(this.image, this.x + this.width, this.y - this.height, this.width, this.height);
+		this._context.drawImage(this._image, this._coordinates.x + this._width, this._coordinates.y - this._height, this._width, this._height);
 		// right
-		this.ctx.drawImage(this.image, this.x + this.width, this.y, this.width, this.height);
+		this._context.drawImage(this._image, this._coordinates.x + this._width, this._coordinates.y, this._width, this._height);
 		// bottom-right
-		this.ctx.drawImage(this.image, this.x + this.width, this.y + this.height, this.width, this.height);
+		this._context.drawImage(this._image, this._coordinates.x + this._width, this._coordinates.y + this._height, this._width, this._height);
 		// bottom
-		this.ctx.drawImage(this.image, this.x, this.y + this.height, this.width, this.height);		
+		this._context.drawImage(this._image, this._coordinates.x, this._coordinates.y + this._height, this._width, this._height);		
 		// botom-left
-		this.ctx.drawImage(this.image, this.x - this.width, this.y + this.height, this.width, this.height);
+		this._context.drawImage(this._image, this._coordinates.x - this._width, this._coordinates.y + this._height, this._width, this._height);
 		// left
-		this.ctx.drawImage(this.image, this.x - this.width, this.y, this.width, this.height);		
-	};
+		this._context.drawImage(this._image, this._coordinates.x - this._width, this._coordinates.y, this._width, this._height);		
+	}
 }
 
 /*
 	Player viewport (foreground)
 */
 var Viewport = function() {
-	this.width = systemGeometry.width;
-	this.height = systemGeometry.height;
+	this._width = systemGeometry.width;
+	this._height = systemGeometry.height;
 
 	// x and y will be virtual coordinates based on the player's location
-	this.x = 0;
-	this.y = 0;
+	this._coordinates = new Point2d(0, 0);
+	// this.x = 0;
+	// this.y = 0;
 	
 	// the viewport is always anchored at 0,0
-	this.cx = this.width / 2;
-	this.cy = this.height / 2;
+	this._centre = new Point2d(this._width / 2, this._height / 2);
+	//this.cx = this.width / 2;
+	//this.cy = this.height / 2;
 
 	this.div = document.querySelector('#fgdiv');
-	this.div.style.width = this.width.toString() + 'px';
-	this.div.style.height = this.height.toString() + 'px';
+	this.div.style.width = this._width.toString() + 'px';
+	this.div.style.height = this._height.toString() + 'px';
 	this.div.style.left = '0px';
 	this.div.style.top = '0px';
 
 	this.cnv = document.querySelector("#fgcanvas");
-	this.cnv.width = this.width;
-	this.cnv.height = this.height;
+	this.cnv.width = this._width;
+	this.cnv.height = this._height;
 
 	this.ctx = this.cnv.getContext('2d');
 
 	this.clear = function() {
-		this.ctx.clearRect(0, 0, this.width, this.height);
+		this.ctx.clearRect(this._coordinates.x, this._coordinates.y, this._width, this._height);
 	};
 	
 	this.scroll = function(scrollData) {
-		this.x += scrollData.vx;
-		this.y += scrollData.vy;
+		this._coordinates.x += scrollData.vx;
+		this._coordinates.y += scrollData.vy;
 		environment.midground.draw(scrollData);
 	};
 	
@@ -171,8 +117,8 @@ var Viewport = function() {
 		// Xo + Wo >= Xs && Yo + Ho >= Ys
 		// Xo <= Xs + Ws && Yo <= Ys + Hs
 
-		return (x + width >= this.x && y + height >= this.y) &&
-	 		(x <= this.x + this.width && y <= this.y + this.height)
+		return (x + width >= this._coordinates.x && y + height >= this._coordinates.y) &&
+	 		(x <= this._coordinates.x + this._width && y <= this._coordinates.y + this._height)
 	};
 };
 
@@ -181,11 +127,46 @@ var Viewport = function() {
 */
 var GameEnv = function() {
 	this.background = new Background();
+	// size and style background wrapper div
+	var bgWrapper = document.querySelector('#bgdiv');
+	if (bgWrapper) {
+		bgWrapper.style.left = this.background.coordinates.x.toString() + 'px';
+		bgWrapper.style.top = this.background.coordinates.y.toString() + 'px';
+		bgWrapper.style.width = this.background.width.toString() + 'px';
+		bgWrapper.style.height = this.background.height.toString() + 'px';
+		bgWrapper.style.backgroundColor = '#000000';
+	}
+	// size background container element to match canvas dimensions
+	var bgCanvasElement = document.querySelector(this.background.selector);
+	if (bgCanvasElement) {
+		bgCanvasElement.style.left = this.background.coordinates.x.toString() + 'px';
+		bgCanvasElement.style.top = this.background.coordinates.y.toString() + 'px';
+		bgCanvasElement.width = this.background.width;
+		bgCanvasElement.height = this.background.height;
+	}
+	
 	this.midground = new Midground();
+	var mgWrapper = document.querySelector('#mgdiv');
+	if (mgWrapper) {
+		mgWrapper.style.left = this.midground.coordinates.x.toString() + 'px';
+		mgWrapper.style.top = this.midground.coordinates.y.toString() + 'px';
+		mgWrapper.style.width = this.midground.width.toString() + 'px';
+		mgWrapper.style.height = this.midground.height.toString() + 'px';
+		mgWrapper.style.background = 'transparent';	
+	}
+	// size mid-ground container element to match canvas dimensions
+	var mgCanvasElement = document.querySelector(this.midground.selector);
+	if (mgCanvasElement) {
+		mgCanvasElement.style.left = this.midground.coordinates.x.toString() + 'px';
+		mgCanvasElement.style.top = this.midground.coordinates.y.toString() + 'px';
+		mgCanvasElement.width = this.midground.width;
+		mgCanvasElement.height = this.midground.height;
+	}
+
 	this.viewport = new Viewport(this);
 
 	this.isReady = function() {
-		return this.background.isReady() && this.midground.isReady();
+		return this.background.ready && this.midground.ready;
 	};
 
 	this.init = function() {

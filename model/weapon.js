@@ -132,7 +132,7 @@ Munition.prototype.updateAndDraw = function(debug) {
 	this.updatePosition();
 	this.draw();
 	this.collisionDetect(this.x + dir_x(this.geometry.height, this.heading), this.y + dir_y(this.geometry.height, this.heading), scale);
-  this.fsm.execute();
+	this.fsm.execute();
 }
 
 class LaserBeam extends Munition {

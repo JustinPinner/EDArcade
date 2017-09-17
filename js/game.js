@@ -24,8 +24,12 @@ function setup() {
   imageService.loadImage('../image/star-tile-transparent.png');
   // create player's ship
   playerShip = new Ship(ShipTypes.COBRA3, shipName, player);
-  playerShip.x = environment.viewport.cx - (playerShip.geometry.width / 2);
-  playerShip.y = environment.viewport.cy - (playerShip.geometry.height / 2);
+  playerShip.coord = new Point2d(
+    environment.viewport.cx - (playerShip.model.width / 2),
+    environment.viewport.cy - (playerShip.model.height / 2)
+  )
+  // playerShip.x = environment.viewport.cx - (playerShip.model.width / 2);
+  // playerShip.y = environment.viewport.cy - (playerShip.model.height / 2);
   gameObjects.push(playerShip);
   // all systems go!
 	setInterval(main, 1000/fps);
@@ -49,7 +53,7 @@ function refresh() {
     if (gameObjects[i] === playerShip) {
       var uiCoord = document.querySelector(".ui.debug.coord");
       if (uiCoord) {
-        uiCoord.innerHTML = "<p>x:" + (playerShip.x ? playerShip.x.toFixed(1) : " ") + " y:" + (playerShip.y ? playerShip.y.toFixed(1) : " ") + "</p>";
+        uiCoord.innerHTML = "<p>x:" + (playerShip.coordinates.x ? playerShip.coordinates.x.toFixed(1) : " ") + " y:" + (playerShip.coordinates.y ? playerShip.coordinates.y.toFixed(1) : " ") + "</p>";
       }
       var uiVector = document.querySelector(".ui.debug.vector");
       if (uiVector) {
