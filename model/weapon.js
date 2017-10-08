@@ -56,6 +56,9 @@ class LaserWeapon extends Weapon {
 		this._damage = Lasers[size][category][mount].damage;
 		this._rateOfFire = Lasers[size][category][mount].rof;
 	}
+	get range() {
+		return this._range;
+	}
 }
 
 LaserWeapon.prototype.fire = function() {
@@ -65,7 +68,7 @@ LaserWeapon.prototype.fire = function() {
 	}
 	this._lastFiredTime = Date.now();
 	var beam = new LaserBeam(this._category, this._size, this._parent);
-	gameObjects.push(beam);
+	game.objects.push(beam);
 	beam.fsm.transition(FSMState.LAUNCH);
 }
 
@@ -99,6 +102,9 @@ class Munition extends GameObject {
 	get effect() {
 		return this._munitionEffect;
 	}
+	get fsm() {
+		return this._fsm;
+	}
 	get role() {
 		return this._munitionRole;
 	}
@@ -111,8 +117,8 @@ class Munition extends GameObject {
 //TODO: check hierarchies for munition
 Munition.prototype.collisionDetect = function(x, y, scale) {
 	var self = this;
-	var hitObjects = gameObjects.filter(function(obj) {
-		if (obj.oType !== this._type && obj !== self.hardpoint.parent) {
+	var hitObjects = game.objects.filter(function(obj) {
+		if (obj.type !== this._type && obj !== self._hardpoint.parent) {
 			var impactBox = scaleBox(obj, scale);
 			return x >= impactBox.x &&
 				x <= impactBox.x + impactBox.width &&
@@ -132,8 +138,8 @@ Munition.prototype.updateAndDraw = function(debug) {
 	var scale = 0.75;
 	this.updatePosition();
 	this.draw();
-	this.collisionDetect(this.x + dir_x(this.geometry.height, this.heading), this.y + dir_y(this.geometry.height, this.heading), scale);
-	this.fsm.execute();
+	this.collisionDetect(this._coordinates.x + dir_x(this._geometry.height, this._heading), this._coordinates.y + dir_y(this._geometry.height, this._heading), scale);
+	this._fsm.execute();
 }
 
 class LaserBeam extends Munition {
@@ -177,6 +183,12 @@ class LaserBeam extends Munition {
 				break;
 		}
 	}
+	get shooter() {
+		return this._hardpoint.parent;
+	}
+	get strength() {
+		return this._strength;
+	}
 	set heading(val) {
 		return;
 	}
@@ -191,12 +203,12 @@ LaserBeam.prototype.draw = function(debug) {
 	if (!this.isOnScreen(debug)) {
 		return;
 	}
-	var x = -game.viewport.x + this.coordinates.x,
-		y = -game.viewport.y + this.coordinates.y;
+	var x = -game.viewport.coordinates.x + this._coordinates.x,
+		y = -game.viewport.coordinates.y + this._coordinates.y;
 	var normalWidth = game.viewport.context.lineWidth;		
 	game.viewport.context.beginPath();
 	game.viewport.context.moveTo(x, y);
-	game.viewport.context.lineTo(x + dir_x(this._speed, this._heading), y + dir_y(this._speed, this._heading));
+	game.viewport.context.lineTo(x + dir_x(this._speed, this.heading), y + dir_y(this._speed, this.heading));
 	game.viewport.context.strokeStyle = this._colour ? this._colour : '#ffffff';
 	game.viewport.context.lineWidth = this._geometry.width;
 	game.viewport.context.stroke();
@@ -385,6 +397,12 @@ class WeaponHardpoint extends Hardpoint {
 		this._weapon = weaponClass ? new weaponClass(this, weaponMount, weaponSize) : null;
 		this._loaded = this.weapon ? true : false;
 	}
+	get weapon() {
+		return this._weapon;
+	}
+	get parent() {
+		return this._parent;
+	}
 }
 
 class UtilityHardpoint extends Hardpoint {
@@ -392,6 +410,9 @@ class UtilityHardpoint extends Hardpoint {
 		super(parent, HardpointTypes.UTILITY, size, index);
 		this._module = module;
 		this._loaded = module ? true : false;
+	}
+	get module() {
+		return this._module;
 	}
 }
 

@@ -29,10 +29,10 @@ var fsmStates = {
 		nextState: [FSMState.ENGAGE, FSMState.CHASE, FSMState.EVADE, FSMState.ESCAPE],
 		execute: function(self) {
 			if (self.threats.length > 0) {
-				self.fsm.transition(randInt(10) > 5 ? FSMState.ENGAGE : FSMState.EVADE);
+				self._fsm.transition(randInt(10) > 5 ? FSMState.ENGAGE : FSMState.EVADE);
 			} else {
 				var newHeading = randInt(360);
-				var deltaA = angleDifference(self.heading, newHeading);
+				var deltaA = angleDifference(self._heading, newHeading);
 		  	if (deltaA < 0) self.yaw('ccw');
 			 	if (deltaA > 0) self.yaw('cw');
 			 	var newSpeed = randInt(self.maxSpeed);
@@ -47,7 +47,7 @@ var fsmStates = {
 		execute: function(self) {		  
 	    if (!self.currentTarget && self.threats.length > 0) {
 	    	self.currentTarget = self.threats[0].ship;
-		    self.fsm.transition(FSMState.CHASE);
+		    self._fsm.transition(FSMState.CHASE);
 	    }
 		}
 	},
@@ -56,12 +56,12 @@ var fsmStates = {
 		nextState: [FSMState.CHASE, FSMState.HUNT, FSMState.EVADE, FSMState.ESCAPE],
 		execute: function(self) {
 			if (!self.currentTarget) {
-				self.fsm.transition(FSMState.HUNT);
+				self._fsm.transition(FSMState.HUNT);
 				return;
 			}
 			var combatSpeedRange = {
-				min: self.maxSpeed * 0.4,
-				max: self.maxSpeed * 0.6
+				min: self._maxSpeed * 0.4,
+				max: self._maxSpeed * 0.6
 			}
 			if (self.speed < combatSpeedRange.min) {
 				self.increaseThrust();
@@ -69,26 +69,26 @@ var fsmStates = {
 				self.decreaseThrust();
 			}
 	    
-	    var aTmin = angleBetween(self.cx, self.cy, self.currentTarget.x, self.currentTarget.y);
-	    var aTmax = angleBetween(self.cx, self.cy, self.currentTarget.x + self.currentTarget.width, self.currentTarget.y + self.currentTarget.height);
+	    var aTmin = angleBetween(self.centre.x, self.centre.y, self.currentTarget.x, self.currentTarget.y);
+	    var aTmax = angleBetween(self.centre.x, self.centre.y, self.currentTarget.x + self.currentTarget.width, self.currentTarget.y + self.currentTarget.height);
 
-		  var deltaMin = angleDifference(self.heading, aTmin);
-		  var deltaMax = angleDifference(self.heading, aTmax);
+		  var deltaMin = angleDifference(self._heading, aTmin);
+		  var deltaMax = angleDifference(self._heading, aTmax);
 
 		  if (Math.abs(deltaMax - deltaMin) >= 5) {
 		  	if (deltaMax - deltaMin < 0) self.yaw('ccw');
 		  	if (deltaMax - deltaMin > 0) self.yaw('cw');
 		  }
 
-	    var dT = distanceBetween(self, self.currentTarget);
+	    var dT = distanceBetweenObjects(self, self.currentTarget);
 	    if (dT <= self.maximumWeaponRange) {
 			  self.fireWeapons();
 	    }
 	    if (dT > self.engageRadius) {
-	    	self.fsm.transition(FSMState.CHASE);
+	    	self._fsm.transition(FSMState.CHASE);
 	    }
 	    if (dT <= self.maximumWeaponRange * 0.3 || self.isInFrontOf(self.currentTarget)) {
-	    	self.fsm.transition(FSMState.EVADE);
+	    	self._fsm.transition(FSMState.EVADE);
 	    }
 		}
 	},
@@ -96,14 +96,14 @@ var fsmStates = {
 		mode: FSMState.CHASE,
 		nextState: [FSMState.ENGAGE, FSMState.EVADE, FSMState.ESCAPE, FSMState.HUNT],
 		execute: function(self) {
-	    if (!self.currentTarget) self.fsm.transition(FSMState.HUNT);
+	    if (!self.currentTarget) self._fsm.transition(FSMState.HUNT);
 	    
-	    var dT = distanceBetween(self, self.currentTarget);
-	    var aTmin = angleBetween(self.cx, self.cy, self.currentTarget.x, self.currentTarget.y);
-	    var aTmax = angleBetween(self.cx, self.cy, self.currentTarget.x + self.currentTarget.width, self.currentTarget.y + self.currentTarget.height);
+	    var dT = distanceBetweenObjects(self, self.currentTarget);
+	    var aTmin = angleBetween(self.centre.x, self.centre.y, self.currentTarget.x, self.currentTarget.y);
+	    var aTmax = angleBetween(self.centre.x, self.centre.y, self.currentTarget.x + self.currentTarget.width, self.currentTarget.y + self.currentTarget.height);
 
-		  var deltaMin = angleDifference(self.heading, aTmin);
-		  var deltaMax = angleDifference(self.heading, aTmax);
+		  var deltaMin = angleDifference(self._heading, aTmin);
+		  var deltaMax = angleDifference(self._heading, aTmax);
 
 		  if (Math.abs(deltaMax - deltaMin) >= 5) {
 		  	if (deltaMax - deltaMin < 0) self.yaw('ccw');
@@ -126,19 +126,19 @@ var fsmStates = {
 		nextState: [FSMState.CHASE, FSMState.ENGAGE, FSMState.ESCAPE, FSMState.HUNT, FSMState.NEUTRAL],
 		execute: function(self) {
 			if (!self.currentTarget) {
-				self.fsm.transition(self.role.initialState);
+				self._fsm.transition(self._role.initialState);
 				return;
 			}
-			if (distanceBetween(self, self.currentTarget) >= self.engageRadius) {
-				self.fsm.transition(FSMState.CHASE);
+			if (distanceBetweenObjects(self, self.currentTarget) >= self.engageRadius) {
+				self._fsm.transition(FSMState.CHASE);
 				return;
 			}
-	    var aE = angleBetween(self.cx, self.cy, -self.currentTarget.cx , -self.currentTarget.cy);
-	    var deltaA = angleDifference(self.heading, aE);
+	    var aE = angleBetween(self.centre.x, self.centre.y, -self.currentTarget.centre.x , -self.currentTarget.centre.y);
+	    var deltaA = angleDifference(self._heading, aE);
 		  if (deltaA < 0) self.yaw('ccw');
 		  if (deltaA > 0) self.yaw('cw');
 			self.increaseThrust();
-			self.fsm.transition(FSMState.ESCAPE);
+			self._fsm.transition(FSMState.ESCAPE);
 		}		
 	},
 	escape: {
@@ -155,12 +155,12 @@ var fsmStates = {
 				return 0;
 			});
 			if (threats.length > 0) {
-		    var angleThreat = angleBetween(self.cx, self.cy, threats[0].ship.cx, threats[0].ship.cy);
-			  var escapeVector = angleDifference(self.heading, angleThreat) + 180 - 360;
+		    var angleThreat = angleBetween(self.centre.x, self.centre.y, threats[0].ship.centre.x, threats[0].ship.centre.y);
+			  var escapeVector = angleDifference(self._heading, angleThreat) + 180 - 360;
 		  	(escapeVector < 0) ? self.yaw('ccw') : self.yaw('cw');
 				self.increaseThrust();
 			} else {
-				self.fsm.transition(FSMState.NEUTRAL);
+				self._fsm.transition(FSMState.NEUTRAL);
 			}
 		}		
 	},
@@ -170,17 +170,16 @@ var fsmStates = {
 		duration: 3000,
 		execute: function(self) {
 			var explosion = new ShipExplosionEffect(self.drawOriginCentre.x, self.drawOriginCentre.y);
-			explosion.vx = self.vx;
-			explosion.vy = self.vy;
-			gameObjects.push(explosion);
-			self.fsm.transition(FSMState.DIE);			
+			explosion.velocity = self._velocity
+			game.objects.push(explosion);
+			self._fsm.transition(FSMState.DIE);			
 		}
 	},
 	die: {
 		mode: FSMState.DIE,
 		nextState: [],
 		execute: function(self) {
-			self.disposable = true;
+			self._disposable = true;
 		}		
 	},
 	munitionLoaded: {
@@ -194,19 +193,19 @@ var fsmStates = {
 		mode: FSMState.LAUNCH,
 		nextState: [FSMState.INFLIGHT],
 		execute: function(self) {
-			self.vx = dir_x(self.speed, self.heading);
-			self.vy = dir_y(self.speed, self.heading);
-			self.fsm.transition(FSMState.INFLIGHT);
+			self._velocity.x = dir_x(self._speed, self._heading);
+			self._velocity.y = dir_y(self._speed, self._heading);
+			self._fsm.transition(FSMState.INFLIGHT);
 		}
 	},
 	munitionInFlight: {
 		mode: FSMState.INFLIGHT,
 		nextState: [FSMState.IMPACT],
 		execute: function(self) {
-			self.vx = dir_x(self.speed, self.heading);
-			self.vy = dir_y(self.speed, self.heading);
-			if(distanceBetween(self, self.hardpoint.parent) > environment.viewport.width * 5) {
-				self.fsm.transition(FSMState.DIE);
+			self._velocity.x = dir_x(self._speed, self._heading);
+			self._velocity.y = dir_y(self._speed, self._heading);
+			if(distanceBetweenObjects(self, self._hardpoint.parent) > game.viewport.width * 5) {
+				self._fsm.transition(FSMState.DIE);
 			}
 		}
 	},
@@ -226,7 +225,7 @@ var FSM = function(gameObject, currentState) {
 	this.lastTransitionTime = null;
 	this.execute = function() {
 		if (this.gameObject) {
-			if (this.gameObject.oType === GameObjectTypes.SHIP && distanceBetween(this.gameObject, player.ship) > environment.viewport.width * 20) {
+			if (this.gameObject.oType === GameObjectTypes.SHIP && distanceBetweenObjects(this.gameObject, player.ship) > environment.viewport.width * 20) {
 				this.transition(FSMState.DIE);
 			} else {
 				var now = Date.now();

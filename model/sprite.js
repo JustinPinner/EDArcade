@@ -1,18 +1,33 @@
 class Sprite {
     constructor(x, y, width, height, name, cells) {
-        this.coord = new Point2d(x, y);
-        this.w = width;
-        this.h = height;
-        this.name = name;
-        this.loadedImage = null;
-        this.cells = cells || {};
+        this._coordinates = new Point2d(x, y);
+        this._width = width;
+        this._height = height;
+        this._name = name;
+        this._loadedImage = null;
+        this._cells = cells || {};
+    }
+    get coordinates() {
+        return this._coordinates;
+    }
+    get width() {
+        return this._width;
+    }
+    get height() {
+        return this._height;
+    }
+    get cells() {
+        return this._cells;
+    }
+    get image() {
+        return this._loadedImage;
     }
 
-    get image() {
-        return this.loadedImage;
+    set cells(obj) {
+        this._cells = obj;
     }
 }
 
 Sprite.prototype.loadImage = function() {
-    this.loadedImage = imageService.loadImage('../image/' + this.name + '.png');
+    this._loadedImage = imageService.loadImage('../image/' + this._name + '.png');
 }

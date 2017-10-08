@@ -132,7 +132,9 @@ class Ship extends GameObject {
 		return range;
 	}
 	get speed() {
-		return Math.abs(this.velocity.x + this.velocity.y) * fps;
+		const currentPos = this.centre;
+		const nextPos = new Point2d(currentPos.x + this._velocity.x, currentPos.y + this._velocity.y);	
+		return Math.abs(distanceBetweenPoints(currentPos, nextPos) * fps);
 	}
 	get role() {
 		return this._role;
@@ -430,8 +432,8 @@ Ship.prototype.fireWeapons = function() {
 	
 Ship.prototype.takeDamage = function(source) {
 	// what hit us?
-	if (source.type === 'munition') {
-		source.hardpoint.parent.registerHit(this);
+	if (source.type !== 'ship') {
+		source.shooter.registerHit(this);
 		if (this._shield && this._shield.charge > 0) {
 			this._shield.impact(source);
 		} else if (this._model.armour && this._model.armour > 0) {
@@ -452,7 +454,7 @@ Ship.prototype.takeDamage = function(source) {
 
 Ship.prototype.registerHit = function(obj) {
 	if (obj.status !== PilotStatus.WANTED) {
-		this.status = PilotStatus.WANTED;
+		this._status = PilotStatus.WANTED;
 	}
 	this._currentTarget = obj;
 };
@@ -501,7 +503,7 @@ Ship.prototype.drawHud = function() {
 	for (var i=0; i < this._contacts.length; i++) {
 		var ping = this._contacts[i];
 		var angle = angleBetween(this._coordinates.x, this._coordinates.y, ping.ship.centre.x, ping.ship.centre.y);
-		var distance = distanceBetween(this, ping.ship);
+		var distance = distanceBetweenObjects(this, ping.ship);
 		var threatLevel = ping.target || ping.ship.currentTarget && ping.ship.currentTarget === this ? 2 : ping.threat ? 1 : 0;
 		if (ping.ship.isOnScreen() && threatLevel > 0) {
 			origin = ping.ship.drawOriginCentre;
@@ -546,7 +548,7 @@ Ship.prototype.drawDebug = function() {
 	// draw momentum vector
 	game.viewport.context.beginPath();
 	game.viewport.context.moveTo(origin.x, origin.y);
-	game.viewport.context.lineTo(origin.x + dir_x(this._speed, this._direction), origin.y + dir_y(this._speed, this._direction));
+	game.viewport.context.lineTo(origin.x + dir_x(this.speed, this._direction), origin.y + dir_y(this.speed, this._direction));
 	game.viewport.context.strokeStyle = "blue";
 	game.viewport.context.stroke();
 	// draw direction marker
@@ -564,7 +566,7 @@ Ship.prototype.drawDebug = function() {
 	// draw speed marker
 	game.viewport.context.beginPath();
 	game.viewport.context.moveTo(origin.x, origin.y);
-	game.viewport.context.lineTo(origin.x - dir_x(this._speed, this._heading), origin.y - dir_y(this._speed, this.heading));
+	game.viewport.context.lineTo(origin.x - dir_x(this.speed, this._heading), origin.y - dir_y(this.speed, this.heading));
 	game.viewport.context.strokeStyle = "red";
 	game.viewport.context.stroke();
 	// draw thrust marker
@@ -971,7 +973,7 @@ Scanner.prototype.scan = function() {
 		});
 		var scanLimit = this.ship.maximumWeaponRange * 10;	//todo - use a better scan limit
     for (var i = 0; i < nonMunitions.length; i++) {
-   		var range = distanceBetween(this.ship, game.objects[i]);
+   		var range = distanceBetweenObjects(this.ship, game.objects[i]);
    		if (game.objects[i] !== this.ship && range <= scanLimit) {
 				var threat = false;				
 				var target = false;

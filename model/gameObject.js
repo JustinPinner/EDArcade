@@ -11,7 +11,7 @@ var nextObjId = 0;
 
 class GameObject {
 	constructor(type, name, role) {
-		this._disp = false;
+		this._disposable = false;
 		this._id = nextObjId += 1;
 		this._type = type;
 		this._name = name;
@@ -49,12 +49,12 @@ class GameObject {
 	}
 	get drawOriginCentre() {
 		return {
-			x: this.centre.x + -environment.viewport.x,
-			y: this.centre.y + -environment.viewport.y
+			x: this.centre.x + -game.viewport.x,
+			y: this.centre.y + -game.viewport.y
 		};
 	}
 	get coordinatesRotated() {
-		return rotatePoint(this.cx, this.cy, this.x, this.y, this.heading);
+		return rotatePoint(this.centre.x, this.centre.y, this._coordinates.x, this._coordinates.y, this._heading);
 	}
 	get geometry() {
 		return {
@@ -64,6 +64,9 @@ class GameObject {
 	}
 	get colour() {
 		return this._colour;
+	}
+	get disposable() {
+		return this._disposable;
 	}
 	// setters
 	set coordinates(point2d) {
@@ -81,6 +84,9 @@ class GameObject {
 	set colour(colourVal) {
 		this._colour = colourVal;
 	}		
+	set disposable(disp) {
+		this._disposable = disp;
+	}
 }
 
 GameObject.prototype.updatePosition = function() {

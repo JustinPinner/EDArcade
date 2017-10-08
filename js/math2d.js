@@ -11,10 +11,16 @@ Point2d.prototype.y = function() {
   return this.y;
 }
 
-function distanceBetween(objA, objB) {
-  var dx = objA.cx - objB.cx;
-  var dy = objA.cy - objB.cy;
+function distanceBetweenObjects(objA, objB) {
+  var dx = objA.centre.x - objB.centre.x;
+  var dy = objA.centre.y - objB.centre.y;
   return Math.sqrt((dx * dx) + (dy * dy));
+}
+
+function distanceBetweenPoints(pointA, pointB) {
+  var dx = pointA.x - pointB.x;
+  var dy = pointA.y - pointB.y;
+  return Math.sqrt((dx * dx) + (dy * dy));  
 }
 
 function angleBetween(x1, y1, x2, y2) {
@@ -54,8 +60,8 @@ function scaleBox(obj, scale) {
     return {
       width: ws,
       height: hs,
-      x: obj.x + (obj.geometry.width / 2) - (ws / 2),
-      y: obj.y + (obj.geometry.height / 2) - (hs / 2)
+      x: obj.coordinates.x + (obj.geometry.width / 2) - (ws / 2),
+      y: obj.coordinates.y + (obj.geometry.height / 2) - (hs / 2)
     };
   } else {
     return {
