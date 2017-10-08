@@ -33,38 +33,38 @@ const HardpointMountTypes = {
 
 class Weapon {
 	constructor(parent, type, size) {
-		this.parent = parent;
-		this.type = type;
-		this.size = size;
-		this.lft = null;
-		this.rateOfFire = 0;
+		this._parent = parent;
+		this._type = type;
+		this._size = size;
+		this._lastFiredTime = null;
+		this._rateOfFire = 0;
 	}
 	get lastFiredTime() {
-		return this.lft;
+		return this._lastFiredTime;
 	}
 	set lastFiredTime(val) {
-		this.lft = val;
+		this._lastFiredTime = val;
 	}
 }
 
 class LaserWeapon extends Weapon {
 	constructor(parent, mount, category, size) {
-		super(parent, WeaponTypes.ENERGY, size);
-		this.mount = mount;
-		this.category = category;
-		this.range = Lasers[size][category][mount].range;
-		this.damage = Lasers[size][category][mount].damage;
-		this.rateOfFire = Lasers[size][category][mount].rof;
+		super(parent, WeaponClasses.ENERGY, size);
+		this._mount = mount;
+		this._category = category;
+		this._range = Lasers[size][category][mount].range;
+		this._damage = Lasers[size][category][mount].damage;
+		this._rateOfFire = Lasers[size][category][mount].rof;
 	}
 }
 
 LaserWeapon.prototype.fire = function() {
 	var now = Date.now();
-	if (this.lastFiredTime && this.rateOfFire && now - this.lastFiredTime < 1000 / this.rateOfFire) {
+	if (this._lastFiredTime && this._rateOfFire && now - this._lastFiredTime < 1000 / this._rateOfFire) {
 		return;
 	}
-	this.lastFiredTime = Date.now();
-	var beam = new LaserBeam(this.category, this.size, this.parent);
+	this._lastFiredTime = Date.now();
+	var beam = new LaserBeam(this._category, this._size, this._parent);
 	gameObjects.push(beam);
 	beam.fsm.transition(FSMState.LAUNCH);
 }
@@ -82,36 +82,37 @@ const WeaponTypes = {
 class Munition extends GameObject {
 	constructor(type, effect, role) {
 		super(GameObjectTypes.MUNITION, type, role);
-		this.munitionType = type;
-		this.munitionEffect = effect;
-		this.munitionRole = role;
-		this.coordinates = {
+		this._munitionType = type;
+		this._munitionEffect = effect;
+		this._munitionRole = role;
+		this._coordinates = {
 			x: null,
 			y: null,
 			z: null
 		};
-		this.fsm = new FSM(this, role.initialState);
+		this._fsm = new FSM(this, role.initialState);
 	}
 	// getters
 	get type() {
-		return this.munitionType;
+		return this._munitionType;
 	}
 	get effect() {
-		return this.munitionEffect;
+		return this._munitionEffect;
 	}
 	get role() {
-		return this.munitionRole;
+		return this._munitionRole;
 	}
 	// setters
 	set role(val) {
-		this.munitionRole = val;
+		this._munitionRole = val;
 	}
 }
 
+//TODO: check hierarchies for munition
 Munition.prototype.collisionDetect = function(x, y, scale) {
 	var self = this;
 	var hitObjects = gameObjects.filter(function(obj) {
-		if (obj.oType !== this.oType && obj !== self.hardpoint.parent) {
+		if (obj.oType !== this._type && obj !== self.hardpoint.parent) {
 			var impactBox = scaleBox(obj, scale);
 			return x >= impactBox.x &&
 				x <= impactBox.x + impactBox.width &&
@@ -138,40 +139,41 @@ Munition.prototype.updateAndDraw = function(debug) {
 class LaserBeam extends Munition {
 	constructor(type, size, hardpoint) {
 		super(WeaponClasses.ENERGY, DamageTypes.POINT, MunitionRoles.BEAM);
-		this.geometry = {
+		this._geometry = {
 			width: LaserBeams[type][size].width,
 			height: LaserBeams[type][size].length
 		};
-		this.colour = LaserBeams[type][size].colour;
-		this.strength = LaserBeams[type][size].strength;
-		this.hardpoint = hardpoint;
-		this.coordinates.x = this.hardpoint.coordinates.x;
-		this.coordinates.y = this.hardpoint.coordinates.y;
-		this.coordinates.z = this.hardpoint.coordinates.z;
-		this.hdg = null;
-		this.collisionDetectionPoint = {
-			x: this.x + dir_x(this.height, this.heading),
-			y: this.y + dir_y(this.height, this.heading)
+		this._colour = LaserBeams[type][size].colour;
+		this._strength = LaserBeams[type][size].strength;
+		this._hardpoint = hardpoint;
+		this._coordinates = new Point2d(this._hardpoint.coordinates.x, this._hardpoint.coordinates.y);
+		this._heading = null;
+		this._collisionDetectionPoint = {
+			x: this._coordinates.x + dir_x(this._height, this._heading),
+			y: this._coordinates.y + dir_y(this._height, this._heading)
 		}
-		this.speed = 100;
+		this._speed = 100;
 	}
 	get heading() {
-		if (this.hdg) return this.hdg;
-		switch(this.hardpoint.weapon.mount) {
+		if (this._heading) return this._heading;
+		switch(this._hardpoint.weapon.mount) {
 			case HardpointMountTypes.FIXED: 
-				this.hdg = this.hardpoint.parent.heading;
-				return this.hdg;
+				this._heading = this._hardpoint.parent.heading;
+				return this._heading;
 				break;
 			case HardpointMountTypes.TURRET:
-				if (this.hardpoint.parent.currentTarget) {
-					var angle = angleBetween(this.hardpoint.x, this.hardpoint.y, this.hardpoint.parent.currentTarget.cx, this.hardpoint.parent.currentTarget.cy);
-					this.hdg = (angle + 180) - 360;
-					return this.hdg;
+				if (this._hardpoint.parent.currentTarget) {
+					var angle = angleBetween(this._hardpoint.coordinates.x, 
+						this._hardpoint.coordinates.y, 
+						this._hardpoint.parent.currentTarget.centre.x, 
+						this._hardpoint.parent.currentTarget.centre.y);
+					this._heading = (angle + 180) - 360;
+					return this._heading;
 					break;
 				}
 			default:
-				this.hdg = this.hardpoint.parent.heading;
-				return this.hdg;
+				this._heading = this._hardpoint.parent.heading;
+				return this._heading;
 				break;
 		}
 	}
@@ -189,16 +191,16 @@ LaserBeam.prototype.draw = function(debug) {
 	if (!this.isOnScreen(debug)) {
 		return;
 	}
-	var x = -environment.viewport.x + this.coordinates.x,
-			y = -environment.viewport.y + this.coordinates.y;
-	var normalWidth = environment.viewport.ctx.lineWidth;		
-	environment.viewport.ctx.beginPath();
-	environment.viewport.ctx.moveTo(x, y);
-	environment.viewport.ctx.lineTo(x + dir_x(this.speed, this.heading), y + dir_y(this.speed, this.heading));
-	environment.viewport.ctx.strokeStyle = this.colour ? this.colour : '#ffffff';
-	environment.viewport.ctx.lineWidth = this.geometry.width;
-	environment.viewport.ctx.stroke();
-	environment.viewport.ctx.lineWidth = normalWidth;
+	var x = -game.viewport.x + this.coordinates.x,
+		y = -game.viewport.y + this.coordinates.y;
+	var normalWidth = game.viewport.context.lineWidth;		
+	game.viewport.context.beginPath();
+	game.viewport.context.moveTo(x, y);
+	game.viewport.context.lineTo(x + dir_x(this._speed, this._heading), y + dir_y(this._speed, this._heading));
+	game.viewport.context.strokeStyle = this._colour ? this._colour : '#ffffff';
+	game.viewport.context.lineWidth = this._geometry.width;
+	game.viewport.context.stroke();
+	game.viewport.context.lineWidth = normalWidth;
 }
 
 const Lasers = {
@@ -307,11 +309,23 @@ const LaserBeams = {
 
 class Hardpoint {
 	constructor(parent, type, size, index) {
-		this.parent = parent;
-		this.type = type;
-		this.size = size;
-		this.sizeName = size == 1 ? Size.SMALL.name : size == 2 ? Size.MEDIUM.name : size == 3 ? Size.LARGE.name : Size.HUGE.name;
-		this.index = index;
+		this._parent = parent;
+		this._type = type;
+		this._size = size;
+		this._sizeName = size == 1 ? Size.SMALL.name : size == 2 ? Size.MEDIUM.name : size == 3 ? Size.LARGE.name : Size.HUGE.name;
+		this._index = index;
+		this._geometry = this._parent.hardpointGeometry[this._type][this._sizeName][this._index];
+		this._coordinates = new Point2d(this._parent.coordinates.x + this._geometry.x, this._parent.coordinates.y + this._geometry.y);
+	}
+	/* Getters */
+	get type() {
+		return this._type;
+	}
+	get sizeName() {
+		return this._sizeName;
+	}
+	get index() {
+		return this._index;
 	}
 	get x() {
 		return this.coordinatesWithRotation.x;
@@ -320,7 +334,7 @@ class Hardpoint {
 		return this.coordinatesWithRotation.y;
 	}
 	get z() {
-		return this.parent.hardpointGeometry[this.type][this.sizeName][this.index].z;
+		return this._geometry.z;
 	}
 	get coordinates() {
 		return {
@@ -330,45 +344,54 @@ class Hardpoint {
 		};	
 	}
 	get coordinatesWithRotation() {
-		var x = this.parent.x + this.geometry.x,
-				y = this.parent.y + this.geometry.y;
-		return rotatePoint(this.parent.cx, this.parent.cy, x, y, this.parent.heading + 90); 
+		return rotatePoint(this._parent.centre.x, 
+			this._parent.centre.y, 
+			this._coordinates.x, 
+			this._coordinates.y, 
+			this._parent.heading + 90); 
 	}
 	get geometry() {
-		var g = this.parent.hardpointGeometry[this.type][this.sizeName][this.index];
 		return {
-			x: g.x,
-			y: g.y,
-			z: g.z
+			x: this._geometry.x,
+			y: this._geometry.y,
+			z: this._geometry.z
 		};
+	}
+	/* Setters */
+	set coordinates(point2d) {
+		this._coordinates = point2d;
 	}
 }
 
 Hardpoint.prototype.draw = function() {
-	var x = -environment.viewport.x + this.parent.x + this.geometry.x,
-			y = -environment.viewport.y + this.parent.y + this.geometry.y,
-			z = this.geometry.z,
-			r = rotatePoint(-environment.viewport.x + this.parent.cx, -environment.viewport.y + this.parent.cy, x, y, this.parent.heading + 90);
-	environment.viewport.ctx.moveTo(r.x, r.y);
-	environment.viewport.ctx.beginPath();
-	environment.viewport.ctx.strokeStyle = (this.z == 1 ? 'yellow' : 'orange');
-	environment.viewport.ctx.arc(r.x, r.y, 2, 0, Math.PI * 2, false);
-	environment.viewport.ctx.stroke();
+	var x = -game.viewport.x + this._parent.coordinates.x + this.geometry.x,
+		y = -game.viewport.y + this._parent.coordinates.y + this.geometry.y,
+		z = this._geometry.z,
+		r = rotatePoint(-game.viewport.x + this._parent.centre.x, -game.viewport.y + this._parent.centre.y, x, y, this._parent.heading + 90);
+	game.viewport.context.moveTo(r.x, r.y);
+	game.viewport.context.beginPath();
+	game.viewport.context.strokeStyle = (this.z == 1 ? 'yellow' : 'orange');
+	game.viewport.context.arc(r.x, r.y, 2, 0, Math.PI * 2, false);
+	game.viewport.context.stroke();
+}
+
+Hardpoint.prototype.loaded = function() {
+	return this._loaded;
 }
 
 class WeaponHardpoint extends Hardpoint {
 	constructor(parent, size, index, weaponClass, weaponMount, weaponSize) {
 		super(parent, HardpointTypes.WEAPON, size, index);
-		this.weapon = weaponClass ? new weaponClass(this, weaponMount, weaponSize) : null;
-		this.loaded = this.weapon ? true : false;
+		this._weapon = weaponClass ? new weaponClass(this, weaponMount, weaponSize) : null;
+		this._loaded = this.weapon ? true : false;
 	}
 }
 
 class UtilityHardpoint extends Hardpoint {
 	constructor(parent, size, index, module) {
 		super(parent, HardpointTypes.UTILITY, size, index);
-		this.loaded = module ? true : false;
-		this.module = module;
+		this._module = module;
+		this._loaded = module ? true : false;
 	}
 }
 

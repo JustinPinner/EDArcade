@@ -23,6 +23,7 @@ class GameObject {
 		this._heading = null;
 		this._direction = null;
 		this._sprite = null;
+		this._colour = null;
 	}
 	// getters
 	get type() {
@@ -38,7 +39,7 @@ class GameObject {
 		return this._coordinates;
 	}
 	get centre() {
-		return this._coordinates && new Point(
+		return this._coordinates && new Point2d(
 			this._coordinates.x + (this._geometry ? (this._geometry.width / 2) : 0),
 			this._coordinates.y + (this._geometry ? (this._geometry.height / 2) : 0)
 		);
@@ -55,6 +56,15 @@ class GameObject {
 	get coordinatesRotated() {
 		return rotatePoint(this.cx, this.cy, this.x, this.y, this.heading);
 	}
+	get geometry() {
+		return {
+			width: this._model ? this._model.width : 0,
+			height: this._model ? this._model.height : 0
+		};
+	}
+	get colour() {
+		return this._colour;
+	}
 	// setters
 	set coordinates(point2d) {
 		this._coordinates = point2d;
@@ -67,6 +77,9 @@ class GameObject {
 	}
 	set name(name) {
 		this._name = name;
+	}
+	set colour(colourVal) {
+		this._colour = colourVal;
 	}		
 }
 
@@ -79,8 +92,8 @@ GameObject.prototype.collisionDetect = function(x, y) {
 	var self = this,
 		x = x || self._coordinates.x,
 		y = y || self._coordinates.y;
-	var hitObjects = gameObjects.filter(function(obj) {
-		return obj.oType === GameObjectTypes.SHIP && 
+	var hitObjects = game.objects.filter(function(obj) {
+		return obj.type === GameObjectTypes.SHIP && 
 			obj !== self &&
 			x >= obj.coordinates.x &&
 			x <= obj.coordinates.x + obj.geometry.width &&
@@ -88,7 +101,7 @@ GameObject.prototype.collisionDetect = function(x, y) {
 			y <= obj.coordinates.y + obj.geometry.height;
 	});
 	if (hitObjects.length > 0) {
-		debugger;
+		//debugger;
 		hitObjects[0].takeDamage(this);
 		self.takeDamage(hitObjects[0]);
 	}
@@ -98,20 +111,20 @@ GameObject.prototype.collisionDetect = function(x, y) {
 GameObject.prototype.takeDamage = function(source) {};
 
 GameObject.prototype.isOnScreen = function(debug) {
-	return environment.viewport.contains(this._coordinates.x, this._coordinates.y, this._geometry.width, this._geometry.height);	
+	return game.viewport.contains(this._coordinates.x, this._coordinates.y, this._geometry.width, this._geometry.height);	
 };
 
 GameObject.prototype.draw = function(debug) {
 	if (!this.isOnScreen(debug)) return;
 
-	environment.viewport.ctx.save();
-	environment.viewport.ctx.translate(this.drawOrigin.x, this.drawOrigin.y);
-	environment.viewport.ctx.rotate(degreesToRadians(this.heading + 90));
-	if (this.sprite && this.sprite.image) {
-	  environment.viewport.ctx.drawImage(this.sprite.image, -this.geometry.width / 2, -this.geometry.height / 2, this.geometry.width, this.geometry.height);
+	game.viewport.context.save();
+	game.viewport.context.translate(this.drawOriginCentre.x, this.drawOriginCentre.y);
+	game.viewport.context.rotate(degreesToRadians(this._heading + 90));
+	if (this._sprite && this._sprite.image) {
+	  game.viewport.context.drawImage(this._sprite.image, -this._geometry.width / 2, -this._geometry.height / 2, this._geometry.width, this._geometry.height);
 	} else {
-	  environment.viewport.ctx.fillStyle = this.colour ? this.colour : '#ffffff';
-	  environment.viewport.ctx.fillRect(-this.geometry.width / 2, -this.geometry.height / 2, this.geometry.width, this.geometry.height);
+	  game.viewport.context.fillStyle = this._colour ? this._colour : '#ffffff';
+	  game.viewport.context.fillRect(-this._geometry.width / 2, -this._geometry.height / 2, this._geometry.width, this._geometry.height);
 	}
-	environment.viewport.ctx.restore();
+	game.viewport.context.restore();
 };
