@@ -225,7 +225,7 @@ var FSM = function(gameObject, currentState) {
 	this.lastTransitionTime = null;
 	this.execute = function() {
 		if (this.gameObject) {
-			if (this.gameObject.oType === GameObjectTypes.SHIP && distanceBetweenObjects(this.gameObject, player.ship) > environment.viewport.width * 20) {
+			if (this.gameObject.type === GameObjectTypes.SHIP && distanceBetweenObjects(this.gameObject, game.playerShip) > game.viewport.width * 20) {
 				this.transition(FSMState.DIE);
 			} else {
 				var now = Date.now();

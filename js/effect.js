@@ -40,9 +40,10 @@ class ShipExplosionEffect extends Effect {
 			this._fsm.execute();
 		};
 		this.draw = function() {
-			var origin = this.drawOriginCentre;
-			var cell = (this._sprite.cells.lastFrameDrawn || 0 * this._sprite.cells.frameWidth) / (this._sprite.cells.frameWidth * this._sprite.cells.frameColumns);
-			var row = Math.floor(cell);
+			// TODO: fix drawOriginCentre for effects
+			var origin = this._coordinates;
+			var cell = ((this._sprite.cells.lastFrameDrawn || 0) * this._sprite.cells.frameWidth) / (this._sprite.cells.frameWidth * this._sprite.cells.frameColumns);
+			var row = Math.floor((this._sprite.cells.lastFrameDrawn || 0) / this._sprite.cells.frameColumns);
 			var col = (cell - row) * this._sprite.cells.frameColumns;
 			var spriteSheetMap = {
 				x: col * this._sprite.cells.frameWidth,
@@ -50,18 +51,15 @@ class ShipExplosionEffect extends Effect {
 				width: this._sprite.cells.frameWidth,
 				height: this._sprite.cells.frameHeight
 			};
-			game.viewport.context.save();
-			game.viewport.context.translate(this._coordinates.x, this._coordinates.y);
 			game.viewport.context.drawImage(this._sprite.image, 
 				spriteSheetMap.x, 
 				spriteSheetMap.y, 
 				spriteSheetMap.width, 
 				spriteSheetMap.height,
-				0, 
-				0, 
+				this._coordinates.x, 
+				this._coordinates.y, 
 				this._geometry.width, 
 				this._geometry.height);
-			game.viewport.context.restore();
 			this._sprite.cells.lastFrameDrawn = this._sprite.cells.lastFrameDrawn === this._sprite.cells.frameColumns * this._sprite.cells.frameRows ? 0 : this._sprite.cells.lastFrameDrawn += 1;
 			if (this.complete()) this._fsm.transition(FSMState.DIE);
 		};
