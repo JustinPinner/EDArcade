@@ -62,12 +62,12 @@ class LaserWeapon extends Weapon {
 }
 
 LaserWeapon.prototype.fire = function() {
-	var now = Date.now();
+	const now = Date.now();
 	if (this._lastFiredTime && this._rateOfFire && now - this._lastFiredTime < 1000 / this._rateOfFire) {
 		return;
 	}
 	this._lastFiredTime = Date.now();
-	var beam = new LaserBeam(this._category, this._size, this._parent);
+	const beam = new LaserBeam(this._category, this._size, this._parent);
 	game.objects.push(beam);
 	beam.fsm.transition(FSMState.LAUNCH);
 }
@@ -116,10 +116,10 @@ class Munition extends GameObject {
 
 //TODO: check hierarchies for munition
 Munition.prototype.collisionDetect = function(x, y, scale) {
-	var self = this;
-	var hitObjects = game.objects.filter(function(obj) {
+	const self = this;
+	const hitObjects = game.objects.filter(function(obj) {
 		if (obj.type !== this._type && obj !== self._hardpoint.parent) {
-			var impactBox = scaleBox(obj, scale);
+			const impactBox = scaleBox(obj, scale);
 			return x >= impactBox.x &&
 				x <= impactBox.x + impactBox.width &&
 				y >= impactBox.y &&
@@ -135,7 +135,7 @@ Munition.prototype.collisionDetect = function(x, y, scale) {
 }
 
 Munition.prototype.updateAndDraw = function(debug) {
-	var scale = 0.75;
+	const scale = 0.75;
 	this.updatePosition();
 	this.draw();
 	this.collisionDetect(this._coordinates.x + dir_x(this._geometry.height, this._heading), this._coordinates.y + dir_y(this._geometry.height, this._heading), scale);
@@ -169,7 +169,7 @@ class LaserBeam extends Munition {
 				break;
 			case HardpointMountTypes.TURRET:
 				if (this._hardpoint.parent.currentTarget) {
-					var angle = angleBetween(this._hardpoint.coordinates.x, 
+					const angle = angleBetween(this._hardpoint.coordinates.x, 
 						this._hardpoint.coordinates.y, 
 						this._hardpoint.parent.currentTarget.centre.x, 
 						this._hardpoint.parent.currentTarget.centre.y);
@@ -203,9 +203,9 @@ LaserBeam.prototype.draw = function(debug) {
 	if (!this.isOnScreen(debug)) {
 		return;
 	}
-	var x = -game.viewport.coordinates.x + this._coordinates.x,
+	const x = -game.viewport.coordinates.x + this._coordinates.x,
 		y = -game.viewport.coordinates.y + this._coordinates.y;
-	var normalWidth = game.viewport.context.lineWidth;		
+	const normalWidth = game.viewport.context.lineWidth;		
 	game.viewport.context.beginPath();
 	game.viewport.context.moveTo(x, y);
 	game.viewport.context.lineTo(x + dir_x(this._speed, this.heading), y + dir_y(this._speed, this.heading));
