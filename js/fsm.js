@@ -246,26 +246,26 @@ class FSM {
 }
 
 FSM.prototype.execute = function() {
-	if (this.gameObject) {
-		if (this.gameObject.type === GameObjectTypes.SHIP && distanceBetweenObjects(this.gameObject, game.playerShip) > game.viewport.width * 20) {
+	if (this._gameObject) {
+		if (this._gameObject.type === GameObjectTypes.SHIP && distanceBetweenObjects(this._gameObject, game.playerShip) > game.viewport.width * 20) {
 			this.transition(FSMState.DIE);
 		} else {
 			const now = Date.now();
-			if (this.lastTransitionTime && this.state.duration && now - this.lastTransitionTime < this.state.duration) {
+			if (this._lastTransitionTime && this._state.duration && now - this._lastTransitionTime < this._state.duration) {
 				return;
 			}
 		}
-		this.state.execute && this.state.execute(this.gameObject);
-		 if (this.state.duration) {
-			 this.lastTransitionTime = Date.now();
+		this._state.execute && this._state.execute(this._gameObject);
+		 if (this._state.duration) {
+			 this._lastTransitionTime = Date.now();
 		 }
 	}
 }
 
 FSM.prototype.transition = function(newState) {
-	if ((this.state.nextState && this.state.nextState.includes(newState)) || newState === FSMState.EXPLODING || newState === FSMState.DIE) {
-		this.state = fsmStates[newState];
+	if ((this._state.nextState && this._state.nextState.includes(newState)) || newState === FSMState.EXPLODING || newState === FSMState.DIE) {
+		this._state = fsmStates[newState];
 	} else {
-		this.state = this.startState;
+		this._state = this._startState;
 	}
 }
