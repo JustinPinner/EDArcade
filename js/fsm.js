@@ -218,32 +218,54 @@ const fsmStates = {
 	}
 }
 
-var FSM = function(gameObject, currentState) {
-	this.gameObject = gameObject;
-	this.state = fsmStates[currentState];
-	this.startState = currentState;
-	this.lastTransitionTime = null;
-	this.execute = function() {
-		if (this.gameObject) {
-			if (this.gameObject.type === GameObjectTypes.SHIP && distanceBetweenObjects(this.gameObject, game.playerShip) > game.viewport.width * 20) {
-				this.transition(FSMState.DIE);
-			} else {
-				const now = Date.now();
-				if (this.lastTransitionTime && this.state.duration && now - this.lastTransitionTime < this.state.duration) {
-					return;
-				}
-			}
-			this.state.execute && this.state.execute(this.gameObject);
-		 	if (this.state.duration) {
-			 	this.lastTransitionTime = Date.now();
-		 	}
-		}
+class FSM {
+	constructor(gameObject, currentState) {
+		this._gameObject = gameObject;
+		this._state = fsmStates[currentState];
+		this._startState = currentState;
+		this._lastTransitionTime = null;
 	}
-	this.transition = function(newState) {
-		if ((this.state.nextState && this.state.nextState.includes(newState)) || newState === FSMState.EXPLODING || newState === FSMState.DIE) {
-			this.state = fsmStates[newState];
+	get gameObject() {
+		return this._gameObject;
+	}
+	get state() {
+		return this._state;
+	}
+	get startState() {
+		return this._startState;
+	}
+	get lastTransitionTime() {
+		return this._lastTransitionTime;
+	}
+	set state(newState) {
+		this._state = newState;
+	}
+	set lastTransitionTime(transitionTime) {
+		this._lastTransitionTime = transitionTime;
+	}
+}
+
+FSM.prototype.execute = function() {
+	if (this.gameObject) {
+		if (this.gameObject.type === GameObjectTypes.SHIP && distanceBetweenObjects(this.gameObject, game.playerShip) > game.viewport.width * 20) {
+			this.transition(FSMState.DIE);
 		} else {
-			this.state = this.startState;
+			const now = Date.now();
+			if (this.lastTransitionTime && this.state.duration && now - this.lastTransitionTime < this.state.duration) {
+				return;
+			}
 		}
+		this.state.execute && this.state.execute(this.gameObject);
+		 if (this.state.duration) {
+			 this.lastTransitionTime = Date.now();
+		 }
+	}
+}
+
+FSM.prototype.transition = function(newState) {
+	if ((this.state.nextState && this.state.nextState.includes(newState)) || newState === FSMState.EXPLODING || newState === FSMState.DIE) {
+		this.state = fsmStates[newState];
+	} else {
+		this.state = this.startState;
 	}
 }
