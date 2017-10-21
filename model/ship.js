@@ -178,33 +178,33 @@ Ship.prototype.npcUpdate = function () {
 };
 	
 Ship.prototype.playerUpdate = function() {
-	if (keyUp) {
+	if (game.keys.up) {
 		this.increaseThrust();
 	}
-	if (keyDown) {
+	if (game.keys.down) {
 		this.decreaseThrust();
 	}
-	if (keyLeft) {
+	if (game.keys.left) {
 		this.yaw('ccw');
 	}
-	if (keyRight) {
+	if (game.keys.right) {
 		this.yaw('cw');
 	}
-	if (keyBoost) {
+	if (game.keys.boost) {
 		this.boost();
 	}
-	if (keyFire) {
+	if (game.keys.fire) {
 		this.fireWeapons();
 	}
-	if (keyFlightAssist) {
+	if (game.keys.flightAssist) {
 		this._flightAssist = !this._flightAssist;
 	}
-	if (keyThrust) {
+	if (game.keys.thrust) {
 		this.thrustOn();
 	} else {
 		this.thrustOff();
 	}
-	if (keyStop) {
+	if (game.keys.stop) {
 		this.allStop();
 	}
 	if (this._thrust != 0) {

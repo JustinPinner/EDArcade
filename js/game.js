@@ -68,6 +68,8 @@ class Game {
     this._player = new Player(playerName);
     this._playerShip = null;
     this._playerShipName = shipName;
+    this._keyHandler = new KeyHandler();
+  
   }
 
   /* getters */
@@ -102,6 +104,10 @@ class Game {
 
   get objects() {
     return this._gameObjects;
+  }
+
+  get keys() {
+    return this._keyHandler;
   }
 
   /* setters */
@@ -165,6 +171,8 @@ Game.prototype.tick = function() {
 }
 
 Game.prototype.start = function() {
+  window.addEventListener('keydown', this._keyHandler.handleKeyDown.bind(this._keyHandler), false);
+  window.addEventListener('keyup', this._keyHandler.handleKeyUp.bind(this._keyHandler), false);    
   // pre-load larger images
   imageService.loadImage('../image/Explosion01_5x5.png');
   this._background.init();
