@@ -50,7 +50,7 @@ class Canvas2D {
 
 Canvas2D.prototype.init = function(fillImage, callBack) {
 	if (this._selector && !this._context) {
-		var canvasElem = document.querySelector(this._selector);
+		const canvasElem = document.querySelector(this._selector);
 		if (canvasElem) {
 			this._context = canvasElem.getContext('2d');
 		}

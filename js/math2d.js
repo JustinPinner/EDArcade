@@ -18,14 +18,14 @@ class Point2d {
 }
 
 function distanceBetweenObjects(objA, objB) {
-  var dx = objA.centre.x - objB.centre.x;
-  var dy = objA.centre.y - objB.centre.y;
+  const dx = objA.centre.x - objB.centre.x;
+  const dy = objA.centre.y - objB.centre.y;
   return Math.sqrt((dx * dx) + (dy * dy));
 }
 
 function distanceBetweenPoints(pointA, pointB) {
-  var dx = pointA.x - pointB.x;
-  var dy = pointA.y - pointB.y;
+  const dx = pointA.x - pointB.x;
+  const dy = pointA.y - pointB.y;
   return Math.sqrt((dx * dx) + (dy * dy));  
 }
 
@@ -51,7 +51,7 @@ function dir_y(length, angle) {
 
 // source: http://stackoverflow.com/questions/17410809/how-to-calculate-rotation-in-2d-in-javascript
 function rotatePoint(cx, cy, x, y, degrees) {
-    var rads = degreesToRadians(degrees),
+    const rads = degreesToRadians(degrees),
     		cosTheta = Math.cos(rads),
         sinTheta = Math.sin(rads),
         nx = (((x - cx) * cosTheta) - ((y - cy) * sinTheta)) + cx,
@@ -60,8 +60,8 @@ function rotatePoint(cx, cy, x, y, degrees) {
 }
 
 function scaleBox(obj, scale) {
-  var ws = obj.geometry.width * (scale || 1);
-  var hs = obj.geometry.height * (scale || 1);
+  const ws = obj.geometry.width * (scale || 1);
+  const hs = obj.geometry.height * (scale || 1);
   return {
     width: ws,
     height: hs,
@@ -101,9 +101,9 @@ Vector2d.prototype.cross = function (v2d) {
 
 Vector2d.prototype.rotate = function (v2dCentre, degrees) {
 	//rotate counterclockwise
-	var r = [];
-	var x = this._x - v2dCentre.x;
-	var y = this._y - v2dCentre.y;
+	const r = [];
+	const x = this._x - v2dCentre.x;
+	const y = this._y - v2dCentre.y;
 	r[0] = x * Math.cos(angle) - y * Math.sin(degreesToRadians(degrees));
 	r[1] = x * Math.sin(angle) + y * Math.cos(degreesToRadians(degrees));
 	r[0] += v2dCentre.x;
@@ -112,15 +112,12 @@ Vector2d.prototype.rotate = function (v2dCentre, degrees) {
 }
 
 Vector2d.prototype.normalize = function () {
-	var len = this.length;
-	if (len > 0) {
-		len = 1 / len; 
-	}
+	const len = this.length > 0 ? (1 / this.length) : this.length;
   return new Vector2d(this._x * len, this._y * len);
 }
 
 Vector2d.prototype.distance = function (v2d) {
-	var x = this._x - v2d.x;
-	var y = this._y - v2d.y;
+	const x = this._x - v2d.x;
+	const y = this._y - v2d.y;
 	return Math.sqrt(x^2 + y^2);
 }

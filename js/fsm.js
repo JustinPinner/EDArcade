@@ -18,7 +18,7 @@ const FSMState = {
 	EFFECT: 'effectPlay'
 }
 
-var fsmStates = {
+const fsmStates = {
 	player: {
 		mode: FSMState.PLAYER,
 		nextState: [],
@@ -31,11 +31,11 @@ var fsmStates = {
 			if (self.threats.length > 0) {
 				self._fsm.transition(randInt(10) > 5 ? FSMState.ENGAGE : FSMState.EVADE);
 			} else {
-				var newHeading = randInt(360);
-				var deltaA = angleDifference(self._heading, newHeading);
-		  	if (deltaA < 0) self.yaw('ccw');
+				const newHeading = randInt(360);
+				const deltaA = angleDifference(self._heading, newHeading);
+		  		if (deltaA < 0) self.yaw('ccw');
 			 	if (deltaA > 0) self.yaw('cw');
-			 	var newSpeed = randInt(self.maxSpeed);
+			 	const newSpeed = randInt(self.maxSpeed);
 			 	if (newSpeed > self.speed) self.increaseThrust();
 			 	if (newSpeed < self.speed) self.decreaseThrust();
 			}
@@ -45,10 +45,10 @@ var fsmStates = {
 		mode: FSMState.HUNT,
 		nextState: [FSMState.CHASE, FSMState.ENGAGE, FSMState.EVADE, FSMState.ESCAPE],
 		execute: function(self) {		  
-	    if (!self.currentTarget && self.threats.length > 0) {
-	    	self.currentTarget = self.threats[0].ship;
-		    self._fsm.transition(FSMState.CHASE);
-	    }
+			if (!self.currentTarget && self.threats.length > 0) {
+				self.currentTarget = self.threats[0].ship;
+				self._fsm.transition(FSMState.CHASE);
+			}
 		}
 	},
 	engage: {
@@ -59,7 +59,7 @@ var fsmStates = {
 				self._fsm.transition(FSMState.HUNT);
 				return;
 			}
-			var combatSpeedRange = {
+			const combatSpeedRange = {
 				min: self._maxSpeed * 0.4,
 				max: self._maxSpeed * 0.6
 			}
@@ -69,56 +69,56 @@ var fsmStates = {
 				self.decreaseThrust();
 			}
 	    
-	    var aTmin = angleBetween(self.centre.x, self.centre.y, self.currentTarget.x, self.currentTarget.y);
-	    var aTmax = angleBetween(self.centre.x, self.centre.y, self.currentTarget.x + self.currentTarget.width, self.currentTarget.y + self.currentTarget.height);
+			const aTmin = angleBetween(self.centre.x, self.centre.y, self.currentTarget.x, self.currentTarget.y);
+			const aTmax = angleBetween(self.centre.x, self.centre.y, self.currentTarget.x + self.currentTarget.width, self.currentTarget.y + self.currentTarget.height);
 
-		  var deltaMin = angleDifference(self._heading, aTmin);
-		  var deltaMax = angleDifference(self._heading, aTmax);
+			const deltaMin = angleDifference(self._heading, aTmin);
+			const deltaMax = angleDifference(self._heading, aTmax);
 
-		  if (Math.abs(deltaMax - deltaMin) >= 5) {
-		  	if (deltaMax - deltaMin < 0) self.yaw('ccw');
-		  	if (deltaMax - deltaMin > 0) self.yaw('cw');
-		  }
+			if (Math.abs(deltaMax - deltaMin) >= 5) {
+				if (deltaMax - deltaMin < 0) self.yaw('ccw');
+				if (deltaMax - deltaMin > 0) self.yaw('cw');
+			}
 
-	    var dT = distanceBetweenObjects(self, self.currentTarget);
-	    if (dT <= self.maximumWeaponRange) {
-			  self.fireWeapons();
-	    }
-	    if (dT > self.engageRadius) {
-	    	self._fsm.transition(FSMState.CHASE);
-	    }
-	    if (dT <= self.maximumWeaponRange * 0.3 || self.isInFrontOf(self.currentTarget)) {
-	    	self._fsm.transition(FSMState.EVADE);
-	    }
+			const dT = distanceBetweenObjects(self, self.currentTarget);
+			if (dT <= self.maximumWeaponRange) {
+				self.fireWeapons();
+			}
+			if (dT > self.engageRadius) {
+				self._fsm.transition(FSMState.CHASE);
+			}
+			if (dT <= self.maximumWeaponRange * 0.3 || self.isInFrontOf(self.currentTarget)) {
+				self._fsm.transition(FSMState.EVADE);
+			}
 		}
 	},
 	chase: {
 		mode: FSMState.CHASE,
 		nextState: [FSMState.ENGAGE, FSMState.EVADE, FSMState.ESCAPE, FSMState.HUNT],
 		execute: function(self) {
-	    if (!self.currentTarget) self._fsm.transition(FSMState.HUNT);
+	    	if (!self.currentTarget) self._fsm.transition(FSMState.HUNT);
 	    
-	    var dT = distanceBetweenObjects(self, self.currentTarget);
-	    var aTmin = angleBetween(self.centre.x, self.centre.y, self.currentTarget.x, self.currentTarget.y);
-	    var aTmax = angleBetween(self.centre.x, self.centre.y, self.currentTarget.x + self.currentTarget.width, self.currentTarget.y + self.currentTarget.height);
+			const dT = distanceBetweenObjects(self, self.currentTarget);
+			const aTmin = angleBetween(self.centre.x, self.centre.y, self.currentTarget.x, self.currentTarget.y);
+			const aTmax = angleBetween(self.centre.x, self.centre.y, self.currentTarget.x + self.currentTarget.width, self.currentTarget.y + self.currentTarget.height);
 
-		  var deltaMin = angleDifference(self._heading, aTmin);
-		  var deltaMax = angleDifference(self._heading, aTmax);
+			const deltaMin = angleDifference(self._heading, aTmin);
+			const deltaMax = angleDifference(self._heading, aTmax);
 
-		  if (Math.abs(deltaMax - deltaMin) >= 5) {
-		  	if (deltaMax - deltaMin < 0) self.yaw('ccw');
-		  	if (deltaMax - deltaMin > 0) self.yaw('cw');
-		  }
+			if (Math.abs(deltaMax - deltaMin) >= 5) {
+		  		if (deltaMax - deltaMin < 0) self.yaw('ccw');
+		  		if (deltaMax - deltaMin > 0) self.yaw('cw');
+		  	}
 		  
-	    if (dT >= self.engageRadius) {
-    		self.increaseThrust();
-    	} else {
-    		self.decreaseThrust();
-    	}
+			if (dT >= self.engageRadius) {
+				self.increaseThrust();
+			} else {
+				self.decreaseThrust();
+			}
 
-	    if (dT < self.engageRadius) {
-	    	self.fsm.transition(FSMState.ENGAGE);
-	    }
+			if (dT < self.engageRadius) {
+				self.fsm.transition(FSMState.ENGAGE);
+			}
 		}
 	},
 	evade: {
@@ -133,10 +133,10 @@ var fsmStates = {
 				self._fsm.transition(FSMState.CHASE);
 				return;
 			}
-	    var aE = angleBetween(self.centre.x, self.centre.y, -self.currentTarget.centre.x , -self.currentTarget.centre.y);
-	    var deltaA = angleDifference(self._heading, aE);
-		  if (deltaA < 0) self.yaw('ccw');
-		  if (deltaA > 0) self.yaw('cw');
+	    	const aE = angleBetween(self.centre.x, self.centre.y, -self.currentTarget.centre.x , -self.currentTarget.centre.y);
+	    	const deltaA = angleDifference(self._heading, aE);
+			if (deltaA < 0) self.yaw('ccw');
+			if (deltaA > 0) self.yaw('cw');
 			self.increaseThrust();
 			self._fsm.transition(FSMState.ESCAPE);
 		}		
@@ -145,7 +145,7 @@ var fsmStates = {
 		mode: FSMState.ESCAPE,
 		nextState: [FSMState.NEUTRAL, FSMState.EVADE, FSMState.ENGAGE, FSMState.CHASE],
 		execute: function(self) {
-			var threats = self.threats.sort(function(a, b) {
+			const threats = self.threats.sort(function(a, b) {
 				if (a.range < b.range) {
 					return -1;
 				}
@@ -155,8 +155,8 @@ var fsmStates = {
 				return 0;
 			});
 			if (threats.length > 0) {
-		    var angleThreat = angleBetween(self.centre.x, self.centre.y, threats[0].ship.centre.x, threats[0].ship.centre.y);
-			  var escapeVector = angleDifference(self._heading, angleThreat) + 180 - 360;
+		    	const angleThreat = angleBetween(self.centre.x, self.centre.y, threats[0].ship.centre.x, threats[0].ship.centre.y);
+				const escapeVector = angleDifference(self._heading, angleThreat) + 180 - 360;
 		  	(escapeVector < 0) ? self.yaw('ccw') : self.yaw('cw');
 				self.increaseThrust();
 			} else {
@@ -169,7 +169,7 @@ var fsmStates = {
 		nextState: [FSMState.DIE],
 		duration: 3000,
 		execute: function(self) {
-			var explosion = new ShipExplosionEffect(self.drawOriginCentre.x, self.drawOriginCentre.y);
+			const explosion = new ShipExplosionEffect(self.drawOriginCentre.x, self.drawOriginCentre.y);
 			explosion.velocity = self._velocity
 			game.objects.push(explosion);
 			self._fsm.transition(FSMState.DIE);			
@@ -228,7 +228,7 @@ var FSM = function(gameObject, currentState) {
 			if (this.gameObject.type === GameObjectTypes.SHIP && distanceBetweenObjects(this.gameObject, game.playerShip) > game.viewport.width * 20) {
 				this.transition(FSMState.DIE);
 			} else {
-				var now = Date.now();
+				const now = Date.now();
 				if (this.lastTransitionTime && this.state.duration && now - this.lastTransitionTime < this.state.duration) {
 					return;
 				}

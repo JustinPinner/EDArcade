@@ -29,15 +29,15 @@ class Ship extends GameObject {
 		this._hardpoints = [];
 		this._hardpointGeometry = shipType.hardpointGeometry;
 		this.randomiseWeaponHardpoints = function(self) {
-			for (var sizeGroup in this._hardpointGeometry[HardpointTypes.WEAPON]) {
-				for (var slot in this._hardpointGeometry[HardpointTypes.WEAPON][sizeGroup]) {
-			    var loadSlot = randInt(100) > 32;
+			for (const sizeGroup in this._hardpointGeometry[HardpointTypes.WEAPON]) {
+				for (const slot in this._hardpointGeometry[HardpointTypes.WEAPON][sizeGroup]) {
+			    const loadSlot = randInt(100) > 32;
 			    if (loadSlot) {
-				    var i = Number(slot);
-				    var sz = Size[sizeGroup].value;
-				    var mnt = HardpointMountTypes[Object.keys(HardpointMountTypes)[Math.floor(rand(Object.keys(HardpointMountTypes).length))]];
-				    var wpn = WeaponTypes[Object.keys(WeaponTypes)[Math.floor(rand(Object.keys(WeaponTypes).length))]];
-				    var hpt = new WeaponHardpoint(self, sz, i, wpn, mnt, sz);
+				    const i = Number(slot);
+				    const sz = Size[sizeGroup].value;
+				    const mnt = HardpointMountTypes[Object.keys(HardpointMountTypes)[Math.floor(rand(Object.keys(HardpointMountTypes).length))]];
+				    const wpn = WeaponTypes[Object.keys(WeaponTypes)[Math.floor(rand(Object.keys(WeaponTypes).length))]];
+				    const hpt = new WeaponHardpoint(self, sz, i, wpn, mnt, sz);
 				    self._hardpoints.push(hpt);
 				  }
 				}
@@ -70,7 +70,7 @@ class Ship extends GameObject {
 		);	
 	}
 	get drawOrigin() {
-		var originCentre = this.drawOriginCentre;
+		const originCentre = this.drawOriginCentre;
 		return {
 			x: originCentre.x - (this._model.width / 2),
 			y: originCentre.y - (this._model.height / 2)
@@ -80,7 +80,7 @@ class Ship extends GameObject {
 		return this._hardpointGeometry;
 	}
 	get threats() {
-		var scannedThreats = this._contacts ? this._contacts.filter(function(ping){return ping.threat;}) : [];
+		const scannedThreats = this._contacts ? this._contacts.filter(function(ping){return ping.threat;}) : [];
 		scannedThreats.sort(function(a, b) {
 			if (a.range < b.range) {
 				return -1;
@@ -93,7 +93,7 @@ class Ship extends GameObject {
 		return scannedThreats; 
 	}
 	get targets() {
-		var scannedTargets = this._contacts ? this._contacts.filter(function(ping){return ping.target;}) : [];
+		const scannedTargets = this._contacts ? this._contacts.filter(function(ping){return ping.target;}) : [];
 		scannedTargets.sort(function(a, b) {
 			if (a.range < b.range) {
 				return -1;
@@ -119,7 +119,7 @@ class Ship extends GameObject {
 	}
 	get maximumWeaponRange() {
 		var range = null;
-		for (var w in this._hardpoints) {
+		for (const w in this._hardpoints) {
 			if (this._hardpoints[w].weapon && this._hardpoints[w].loaded) {
 				if (range) {
 					if (range > this._hardpoints[w].weapon.range) {
@@ -217,15 +217,15 @@ Ship.prototype.accelerate = function() {
 	if (!this._player) {
 		debugger;
 	}
-	var rate = this._thrust / this._model.agility * 0.01;
-	var dx = dir_x(rate, this._heading);
-	var dy = dir_y(rate, this._heading);	
+	const rate = this._thrust / this._model.agility * 0.01;
+	const dx = dir_x(rate, this._heading);
+	const dy = dir_y(rate, this._heading);	
 	
 	// speed limiter
 	var apply_dx = true;
 	var apply_dy = true;
-	var maxLimit = this._model.maxSpeed / fps;
-	var minLimit = maxLimit * -1;
+	const maxLimit = this._model.maxSpeed / fps;
+	const minLimit = maxLimit * -1;
 
 	if (dx > 0 && this._velocity.x > 0 && (this._velocity.x + dx > maxLimit)) {
 		apply_dx = false;
@@ -249,7 +249,7 @@ Ship.prototype.accelerate = function() {
 };
 
 Ship.prototype.updateMomentum = function() {
-	var dA = angleDifference(this._heading, this._direction);
+	const dA = angleDifference(this._heading, this._direction);
 	if (Math.abs(this._thrust) != 0) {
 		this._direction += dA * this.yawRate * 0.1; //(this.yawRate * (1 / (this.thrust != 0 ? Math.abs(this.thrust) : 1)));	
 	}
@@ -330,7 +330,7 @@ Ship.prototype.selectClosestTarget = function() {
 };
 
 Ship.prototype.isInFrontOf = function(ship) {
-	var dA = angleBetween(this._coordinates.x, this._coordinates.y, ship.coordinates.x, ship.coordinates.y);
+	const dA = angleBetween(this._coordinates.x, this._coordinates.y, ship.coordinates.x, ship.coordinates.y);
 	return Math.abs(dA) >= 150;
 };
 	
@@ -460,11 +460,8 @@ Ship.prototype.draw = function(debug) {
 	if (!game.viewport || !game.viewport.context) {
 		return;
 	}
-	var origin = this.drawOriginCentre;
+	const origin = this.drawOriginCentre;
 	game.viewport.context.save();
-	//if (!this._player && (origin.x != this._coordinates.x || origin.y != this._coordinates.y)) {
-	//	//debug here
-	//}
 	game.viewport.context.translate(origin.x, origin.y);
 	game.viewport.context.rotate(degreesToRadians(this._heading + 90));
 	try {
@@ -490,10 +487,10 @@ Ship.prototype.drawHud = function() {
 	game.viewport.context.save();	
 	// draw threat pointers
 	for (var i=0; i < this._contacts.length; i++) {
-		var ping = this._contacts[i];
-		var angle = angleBetween(this._coordinates.x, this._coordinates.y, ping.ship.centre.x, ping.ship.centre.y);
-		var distance = distanceBetweenObjects(this, ping.ship);
-		var threatLevel = ping.target || ping.ship.currentTarget && ping.ship.currentTarget === this ? 2 : ping.threat ? 1 : 0;
+		const ping = this._contacts[i];
+		const angle = angleBetween(this._coordinates.x, this._coordinates.y, ping.ship.centre.x, ping.ship.centre.y);
+		const distance = distanceBetweenObjects(this, ping.ship);
+		const threatLevel = ping.target || ping.ship.currentTarget && ping.ship.currentTarget === this ? 2 : ping.threat ? 1 : 0;
 		if (ping.ship.isOnScreen() && threatLevel > 0) {
 			origin = ping.ship.drawOriginCentre;
 			// draw threat ring
@@ -507,7 +504,7 @@ Ship.prototype.drawHud = function() {
 			origin = this.drawOriginCentre;
 			game.viewport.context.fillStyle = threatLevel < 2 ? (threatLevel < 1 ? 'gray' : 'orange') : 'red';
 			game.viewport.context.font = '24px serif';
-			var symbol = threatLevel < 1 ? '[]' : '!';
+			const symbol = threatLevel < 1 ? '[]' : '!';
 			var symbol_x = origin.x - dir_x(distance, angle);
 			if (symbol_x < 0) symbol_x = ScreenBorder.HORIZONTAL;
 			if (symbol_x > game.viewport.width) symbol_x = game.viewport.width - ScreenBorder.HORIZONTAL;
@@ -911,19 +908,19 @@ const ShipTypes = {
 	}
 }
 
-var PilotStatus = {
+const PilotStatus = {
 	CLEAN: 'clean',
 	VIGILANTE: 'vigilante',
 	SECURITY: 'security',
 	WANTED: 'wanted'
 }
 
-var NonPilotStatus = {
+const NonPilotStatus = {
 	CARGO: 'cargo',
 	MINERAL: 'mineral'
 }
 
-var ShipRoles = {
+const ShipRoles = {
 	TRADER: {
 		roleName: 'Trader',
 		initialState: FSMState.NEUTRAL,
@@ -979,12 +976,12 @@ class Scanner {
 Scanner.prototype.scan = function() {
   if (!this.lastScan || Date.now() - this.lastScan >= this.interval) {
     this.ship.contacts = [];
-		var nonMunitions = game.objects.filter(function(obj)	{
+		const nonMunitions = game.objects.filter(function(obj)	{
 			return !(obj instanceof Munition);
 		});
-		var scanLimit = this.ship.maximumWeaponRange * 10;	//todo - use a better scan limit
+		const scanLimit = this.ship.maximumWeaponRange * 10;	//todo - use a better scan limit
     for (var i = 0; i < nonMunitions.length; i++) {
-   		var range = distanceBetweenObjects(this.ship, game.objects[i]);
+   		const range = distanceBetweenObjects(this.ship, game.objects[i]);
    		if (game.objects[i] !== this.ship && range <= scanLimit) {
 				var threat = false;				
 				var target = false;
@@ -996,7 +993,7 @@ Scanner.prototype.scan = function() {
 						return t == game.objects[i].status;
 					}).length > 0 ? true : this.ship.currentTarget === game.objects[i] ? true : false;
 				}
-      	var ping = {
+      	const ping = {
       		ship: game.objects[i],
       		threat: threat,
       		target: target,

@@ -11,7 +11,7 @@ ImageService.prototype.loadImage = function(imgPath, onLoad) {
 			return this._loadedImages[i].img;
 		}
 	}
-	var image = new Image();
+	const image = new Image();
 	image.src = imgPath;
 	if (onLoad) {
 		image.addEventListener('load', onLoad, false);

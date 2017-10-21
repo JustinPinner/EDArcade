@@ -41,10 +41,10 @@ var Player = function(name) {
 	}
 	this.visibleRegion = function() {
 	  return {
-	  	x1: playerShip.cx - environment.viewport.width / 2,
-			y1: playerShip.cy - environment.viewport.height / 2,
-			x2: playerShip.cx + environment.viewport.width / 2,
-			y2: playerShip.cy + environment.viewport.height / 2
+		x1: playerShip.centre.x - environment.viewport.width / 2,
+		y1: playerShip.centre.y - environment.viewport.height / 2,
+		x2: playerShip.centre.x + environment.viewport.width / 2,
+		y2: playerShip.centre.y + environment.viewport.height / 2
 	  };
 	}
 };

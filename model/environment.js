@@ -5,7 +5,7 @@ const ScreenBorder = {
 	HORIZONTAL: 40
 };
 
-var systemGeometry = {
+const systemGeometry = {
 	width: window.innerWidth, 
 	height: window.innerHeight
 };
@@ -59,8 +59,8 @@ class Midground extends Canvas2D {
 Midground.prototype.draw = function() {
 	if (!this.ready) return;
 	// scroll direction is opposide of ship direction		
-	var newX = this._scrollData && this._scrollData.velocity.x != 0 ? this._coordinates.x - this._scrollData.velocity.x * this._scrollScale : this._coordinates.x;
-	var newY = this._scrollData && this._scrollData.velocity.y != 0 ? this._coordinates.y - this._scrollData.velocity.y * this._scrollScale : this._coordinates.y;
+	const newX = this._scrollData && this._scrollData.velocity.x != 0 ? this._coordinates.x - this._scrollData.velocity.x * this._scrollScale : this._coordinates.x;
+	const newY = this._scrollData && this._scrollData.velocity.y != 0 ? this._coordinates.y - this._scrollData.velocity.y * this._scrollScale : this._coordinates.y;
 	this._coordinates.x = newX >= this._width ? 0 : (newX < 0 ? this._width : newX);
 	this._coordinates.y = newY >= this._height ? 0 : (newY < 0 ? this._height : newY);
 	this.clear();

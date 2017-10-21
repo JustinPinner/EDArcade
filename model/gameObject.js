@@ -95,16 +95,16 @@ GameObject.prototype.updatePosition = function() {
 }
 
 GameObject.prototype.collisionDetect = function(x, y) {
-	var self = this,
-		x = x || self._coordinates.x,
-		y = y || self._coordinates.y;
+	const self = this,
+		_x = x || self._coordinates.x,
+		_y = y || self._coordinates.y;
 	var hitObjects = game.objects.filter(function(obj) {
 		return obj.type === GameObjectTypes.SHIP && 
 			obj !== self &&
-			x >= obj.coordinates.x &&
-			x <= obj.coordinates.x + obj.geometry.width &&
-			y >= obj.coordinates.y &&
-			y <= obj.coordinates.y + obj.geometry.height;
+			_x >= obj.coordinates.x &&
+			_x <= obj.coordinates.x + obj.geometry.width &&
+			_y >= obj.coordinates.y &&
+			_y <= obj.coordinates.y + obj.geometry.height;
 	});
 	if (hitObjects.length > 0) {
 		//debugger;
