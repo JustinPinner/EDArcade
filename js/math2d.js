@@ -1,14 +1,20 @@
-var Point2d = function(x, y) {
-  this.x = x;
-  this.y = y;
-}
-
-Point2d.prototype.x = function() {
-  return this.x;
-}
-
-Point2d.prototype.y = function() {
-  return this.y;
+class Point2d {
+  constructor(x, y) {
+    this._x = x;
+    this._y = y;
+  }
+  get x() {
+    return this._x;
+  }
+  get y() {
+    return this._y;
+  }
+  set x(xNew) {
+    this._x = xNew;
+  }
+  set y(yNew) {
+    this._y = yNew;
+  }
 }
 
 function distanceBetweenObjects(objA, objB) {
@@ -54,59 +60,50 @@ function rotatePoint(cx, cy, x, y, degrees) {
 }
 
 function scaleBox(obj, scale) {
-  if (scale) {
-    var ws = obj.geometry.width * scale;
-    var hs = obj.geometry.height * scale;
-    return {
-      width: ws,
-      height: hs,
-      x: obj.coordinates.x + (obj.geometry.width / 2) - (ws / 2),
-      y: obj.coordinates.y + (obj.geometry.height / 2) - (hs / 2)
-    };
-  } else {
-    return {
-      width: obj.geometry.width,
-      height: obj.geometry,height,
-      x: obj.x,
-      y: obj.y
-    };
+  var ws = obj.geometry.width * (scale || 1);
+  var hs = obj.geometry.height * (scale || 1);
+  return {
+    width: ws,
+    height: hs,
+    x: obj.coordinates.x + (obj.geometry.width / 2) - (ws / 2),
+    y: obj.coordinates.y + (obj.geometry.height / 2) - (hs / 2)
+  };
+}
+
+class Vector2d extends Point2d {
+  constructor(x, y) {
+    super(x, y);
+  }
+  get length() {
+    return Math.sqrt(this._x^2 + this._y^2);
   }
 }
 
-var Vector2d = function(x,y) {
-	this.x = x;
-	this.y = y;
-}
-
-Vector2d.prototype.length = function() {
-	return Math.sqrt(this.x^2 + this.y^2);
-}
-
 Vector2d.prototype.add = function(v2d) {
-	return new Vector2d(v2d.x + this.x, v2d.y + this.y);
+	return new Vector2d(v2d.x + this._x, v2d.y + this._y);
 }
 
 Vector2d.prototype.subtract = function(v2d) {
-	return new Vector2d(this.x - v2d.x, this.y - v2d.y);
+	return new Vector2d(this._x - v2d.x, this._y - v2d.y);
 }
 
 Vector2d.prototype.scale = function(n) {
-	return new Vector2d(this.x * n, this.y * n);
+	return new Vector2d(this._x * n, this._y * n);
 }
 
 Vector2d.prototype.dot = function (v2d) {
-	return (this.x * v2d.x + this.y * v2d.y);
+	return (this._x * v2d.x + this._y * v2d.y);
 }
 
 Vector2d.prototype.cross = function (v2d) {
-	return (this.x * v2d.y - this.y * v2d.x);
+	return (this._x * v2d.y - this._y * v2d.x);
 }
 
 Vector2d.prototype.rotate = function (v2dCentre, degrees) {
 	//rotate counterclockwise
 	var r = [];
-	var x = this.x - v2dCentre.x;
-	var y = this.y - v2dCentre.y;
+	var x = this._x - v2dCentre.x;
+	var y = this._y - v2dCentre.y;
 	r[0] = x * Math.cos(angle) - y * Math.sin(degreesToRadians(degrees));
 	r[1] = x * Math.sin(angle) + y * Math.cos(degreesToRadians(degrees));
 	r[0] += v2dCentre.x;
@@ -115,15 +112,15 @@ Vector2d.prototype.rotate = function (v2dCentre, degrees) {
 }
 
 Vector2d.prototype.normalize = function () {
-	var len = this.length();
+	var len = this.length;
 	if (len > 0) {
 		len = 1 / len; 
 	}
-  return new Vector2d(this.x * len, this.y * len);
+  return new Vector2d(this._x * len, this._y * len);
 }
 
 Vector2d.prototype.distance = function (v2d) {
-	var x = this.x - v2d.x;
-	var y = this.y - v2d.y;
+	var x = this._x - v2d.x;
+	var y = this._y - v2d.y;
 	return Math.sqrt(x^2 + y^2);
 }

@@ -2,7 +2,7 @@
 
 var debug = true;
 
-var minNPC = 10;
+var minNPC = 5;
 var fps = 30;
 
 var imageService = new ImageService();
@@ -158,8 +158,8 @@ Game.prototype.tick = function() {
     var spawnShipType = ShipTypes[Object.keys(ShipTypes)[Math.floor(rand(Object.keys(ShipTypes).length))]];
     var spawnShipRole = ShipRoles[Object.keys(ShipRoles)[Math.floor(rand(Object.keys(ShipRoles).length - 1))]];
     var newShip = new Ship(spawnShipType, 'NPC' + i, spawnShipRole);
-    newShip.coordinates.x = this._playerShip.coordinates.x + rand(this.maxSpawnDistanceX, incNegatives = true);
-    newShip.coordinates.y = this._playerShip.coordinates.y + rand(this.maxSpawnDistanceY, incNegatives = true);
+    //newShip.coordinates.x = this._playerShip.coordinates.x + rand(this.maxSpawnDistanceX, incNegatives = true);
+    //newShip.coordinates.y = this._playerShip.coordinates.y + rand(this.maxSpawnDistanceY, incNegatives = true);
     this._gameObjects.push(newShip);
   }
 
@@ -174,10 +174,10 @@ Game.prototype.start = function() {
   this._viewport.init();
   // create player's ship
   this._playerShip = new Ship(ShipTypes.COBRA3, this._playerShipName, this._player);
-  this._playerShip.coordinates = new Point2d(
-    this._viewport.centre.x - (this._playerShip.model.width / 2),
-    this._viewport.centre.y - (this._playerShip.model.height / 2)
-  )
+  //this._playerShip.coordinates = new Point2d(
+  //  this._viewport.centre.x - (this._playerShip.model.width / 2),
+  //  this._viewport.centre.y - (this._playerShip.model.height / 2)
+  //)
   this._gameObjects.push(this._playerShip);
   // all systems go!
 	setInterval(main, 1000/fps);

@@ -5,6 +5,7 @@ class Ship extends GameObject {
 	constructor(shipType, shipName, role) {
 		super(GameObjectTypes.SHIP, shipName, role);
 		this._model = shipType;
+		this._geometry = { width: shipType.width, height: shipType.height };
 		this._player = role instanceof Player ? role : null;
 		this._flightAssist = this._player ? false : true;
 		this._heading = this._player ? 270 : rand(359);
@@ -30,7 +31,7 @@ class Ship extends GameObject {
 		this.randomiseWeaponHardpoints = function(self) {
 			for (var sizeGroup in this._hardpointGeometry[HardpointTypes.WEAPON]) {
 				for (var slot in this._hardpointGeometry[HardpointTypes.WEAPON][sizeGroup]) {
-			    var loadSlot = randInt(2) > 0;
+			    var loadSlot = randInt(100) > 32;
 			    if (loadSlot) {
 				    var i = Number(slot);
 				    var sz = Size[sizeGroup].value;
@@ -274,7 +275,6 @@ Ship.prototype.updatePosition = function() {
 		}
 		game.viewport.focus(this);
 	}
-	this.syncHardpoints();
 };
 
 Ship.prototype.isOnScreen = function(debug) {
@@ -403,17 +403,6 @@ Ship.prototype.yaw = function(dir) {
 	}
 };
 	
-Ship.prototype.syncHardpoints = function() {
-	for (var i = 0; i < this._hardpoints.length; i++) {
-		var hp = this._hardpoints[i],
-			geometry = this._hardpointGeometry[hp.type][hp.sizeName][hp.index], 
-			x = this._coordinates.x + geometry.x,
-			y = this._coordinates.y + geometry.y,
-			rotated = rotatePoint(this.centre.x, this.centre.y, x, y, this._heading + 90);
-		hp.coordinates = new Point2d(rotated.x, rotated.y);
-	}
-}
-
 Ship.prototype.boost = function() {
 	this._speed = this._boostSpeed;	
 };
@@ -425,7 +414,7 @@ Ship.prototype.setTarget = function(ship) {
 Ship.prototype.fireWeapons = function() {
 	for (hardpoint in this._hardpoints) {
 		if (this._hardpoints[hardpoint].loaded && this._hardpoints[hardpoint].weapon) {
-			this._hardpoints[hardpoint].weapon.fire(this);
+			this._hardpoints[hardpoint].weapon.fire();
 		}
 	}	
 };
@@ -473,9 +462,9 @@ Ship.prototype.draw = function(debug) {
 	}
 	var origin = this.drawOriginCentre;
 	game.viewport.context.save();
-	if (!this._player && (origin.x != this._coordinates.x || origin.y != this._coordinates.y)) {
-		//debug here
-	}
+	//if (!this._player && (origin.x != this._coordinates.x || origin.y != this._coordinates.y)) {
+	//	//debug here
+	//}
 	game.viewport.context.translate(origin.x, origin.y);
 	game.viewport.context.rotate(degreesToRadians(this._heading + 90));
 	try {
@@ -612,6 +601,28 @@ const ShipTypes = {
 					1: {x: 8, y: 21, z: -1},
 					2: {x: 35, y: 21,	z: -1}
 				}
+			}
+		},
+		collisionCentres: {
+			leftFront: {
+				x: 38,
+				y: 34,
+				radius: 31
+			},
+			rightFront:{
+				x: 68,
+				y: 34,
+				radius: 31
+			},
+			leftRear: {
+				x: 13,
+				y: 53,
+				radius: 12
+			},
+			rightRear: {
+				x: 94,
+				y: 53,
+				radius: 12
 			}
 		},
 		cells: {

@@ -152,11 +152,11 @@ class LaserBeam extends Munition {
 		this._colour = LaserBeams[type][size].colour;
 		this._strength = LaserBeams[type][size].strength;
 		this._hardpoint = hardpoint;
-		this._coordinates = new Point2d(this._hardpoint.coordinates.x, this._hardpoint.coordinates.y);
-		this._heading = null;
+		this._coordinates = hardpoint.coordinatesWithRotation;
+		this._heading = hardpoint.parent.heading;
 		this._collisionDetectionPoint = {
-			x: this._coordinates.x + dir_x(this._height, this._heading),
-			y: this._coordinates.y + dir_y(this._height, this._heading)
+			x: this._coordinates.x + dir_x(this._geometry.height, this._heading),
+			y: this._coordinates.y + dir_y(this._geometry.width, this._heading)
 		}
 		this._speed = 100;
 	}
@@ -318,7 +318,6 @@ const LaserBeams = {
 }
 
 
-
 class Hardpoint {
 	constructor(parent, type, size, index) {
 		this._parent = parent;
@@ -339,27 +338,18 @@ class Hardpoint {
 	get index() {
 		return this._index;
 	}
-	get x() {
-		return this.coordinatesWithRotation.x;
-	}
-	get y() {
-		return this.coordinatesWithRotation.y;
-	}
-	get z() {
-		return this._geometry.z;
-	}
 	get coordinates() {
 		return {
-			x: this.x, 
-			y: this.y, 
-			z: this.z
+			x: this._parent.coordinates.x + this._geometry.x, 
+			y: this._parent.coordinates.y + this._geometry.y, 
+			z: this._geometry.z
 		};	
 	}
 	get coordinatesWithRotation() {
 		return rotatePoint(this._parent.centre.x, 
 			this._parent.centre.y, 
-			this._coordinates.x, 
-			this._coordinates.y, 
+			this.coordinates.x, 
+			this.coordinates.y, 
 			this._parent.heading + 90); 
 	}
 	get geometry() {
@@ -376,13 +366,15 @@ class Hardpoint {
 }
 
 Hardpoint.prototype.draw = function() {
-	var x = -game.viewport.x + this._parent.coordinates.x + this.geometry.x,
-		y = -game.viewport.y + this._parent.coordinates.y + this.geometry.y,
-		z = this._geometry.z,
-		r = rotatePoint(-game.viewport.x + this._parent.centre.x, -game.viewport.y + this._parent.centre.y, x, y, this._parent.heading + 90);
+	const r = rotatePoint(this._parent.drawOriginCentre.x, 
+		this._parent.drawOriginCentre.y, 
+		this._parent.drawOrigin.x + this._geometry.x, 
+		this._parent.drawOrigin.y + this._geometry.y, 
+		this._parent.heading + 90); 
+
 	game.viewport.context.moveTo(r.x, r.y);
 	game.viewport.context.beginPath();
-	game.viewport.context.strokeStyle = (this.z == 1 ? 'yellow' : 'orange');
+	game.viewport.context.strokeStyle = (this._geometry.z == 1 ? 'yellow' : 'orange');
 	game.viewport.context.arc(r.x, r.y, 2, 0, Math.PI * 2, false);
 	game.viewport.context.stroke();
 }
