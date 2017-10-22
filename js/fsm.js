@@ -35,7 +35,7 @@ const fsmStates = {
 				const deltaA = angleDifference(self._heading, newHeading);
 		  		if (deltaA < 0) self.yaw('ccw');
 			 	if (deltaA > 0) self.yaw('cw');
-			 	const newSpeed = randInt(self.maxSpeed);
+			 	const newSpeed = randInt(self._model.maxSpeed);
 			 	if (newSpeed > self.speed) self.increaseThrust();
 			 	if (newSpeed < self.speed) self.decreaseThrust();
 			}
@@ -60,8 +60,8 @@ const fsmStates = {
 				return;
 			}
 			const combatSpeedRange = {
-				min: self._maxSpeed * 0.4,
-				max: self._maxSpeed * 0.6
+				min: self._model.maxSpeed * 0.4,
+				max: self._model.maxSpeed * 0.6
 			}
 			if (self.speed < combatSpeedRange.min) {
 				self.increaseThrust();

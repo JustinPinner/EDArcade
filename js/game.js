@@ -191,8 +191,6 @@ function main() {
   requestAnimationFrame(game.tick.bind(game));
 };
 
-//requestAnimationFrame(game.tick.bind(game));
-
 (function() {
   game.start();
 })();

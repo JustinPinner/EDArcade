@@ -152,7 +152,18 @@ class Ship extends GameObject {
 	get hullIntegrity() {
 		return this._hullIntegrity;
 	}
+	get contacts() {
+		return this._contacts;
+	}
+	get fsm() {
+		return this._fsm;
+	}
+	
 	/* Setters */
+
+	set contacts(pings) {
+		this._contacts = pings;
+	}
 };
 
 Ship.prototype.updateAndDraw = function(debug) {
@@ -214,9 +225,6 @@ Ship.prototype.playerUpdate = function() {
 };
 
 Ship.prototype.accelerate = function() {
-	if (!this._player) {
-		debugger;
-	}
 	const rate = this._thrust / this._model.agility * 0.01;
 	const dx = dir_x(rate, this._heading);
 	const dy = dir_y(rate, this._heading);	
