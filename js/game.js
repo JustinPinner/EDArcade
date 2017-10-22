@@ -1,6 +1,6 @@
 // js/game.js
 
-const debug = true;
+const debug = document.location.search.substr(1).indexOf("debug") > -1;
 
 const minNPC = 5;
 const fps = 30;
