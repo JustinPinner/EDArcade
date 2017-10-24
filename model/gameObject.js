@@ -24,6 +24,7 @@ class GameObject {
 		this._direction = null;
 		this._sprite = null;
 		this._colour = null;
+		this._model = null;
 	}
 	// getters
 	get type() {
@@ -47,6 +48,11 @@ class GameObject {
 	get velocity() {
 		return this._velocity;
 	}
+	get speed() {
+		const currentPos = this.centre;
+		const nextPos = new Point2d(currentPos.x + this._velocity.x, currentPos.y + this._velocity.y);	
+		return Math.abs(distanceBetweenPoints(currentPos, nextPos) * fps);
+	}
 	get drawOriginCentre() {
 		return {
 			x: this.centre.x + -game.viewport.x,
@@ -67,6 +73,9 @@ class GameObject {
 	}
 	get disposable() {
 		return this._disposable;
+	}
+	get model() {
+		return this._model;
 	}
 	// setters
 	set coordinates(point2d) {

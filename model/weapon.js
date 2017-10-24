@@ -145,6 +145,7 @@ Munition.prototype.updateAndDraw = function(debug) {
 class LaserBeam extends Munition {
 	constructor(type, size, hardpoint) {
 		super(WeaponClasses.ENERGY, DamageTypes.POINT, MunitionRoles.BEAM);
+		this._model = LaserBeams[type][size];
 		this._geometry = {
 			width: LaserBeams[type][size].width,
 			height: LaserBeams[type][size].length
@@ -158,7 +159,7 @@ class LaserBeam extends Munition {
 			x: this._coordinates.x + dir_x(this._geometry.height, this._heading),
 			y: this._coordinates.y + dir_y(this._geometry.width, this._heading)
 		}
-		this._speed = 100;
+		this._velocity = new Vector2d(0, 0);
 	}
 	get heading() {
 		if (this._heading) return this._heading;
@@ -182,6 +183,9 @@ class LaserBeam extends Munition {
 				return this._heading;
 				break;
 		}
+	}
+	get hardpoint() {
+		return this._hardpoint;
 	}
 	get shooter() {
 		return this._hardpoint.parent;
@@ -208,7 +212,7 @@ LaserBeam.prototype.draw = function(debug) {
 	const normalWidth = game.viewport.context.lineWidth;		
 	game.viewport.context.beginPath();
 	game.viewport.context.moveTo(x, y);
-	game.viewport.context.lineTo(x + dir_x(this._speed, this.heading), y + dir_y(this._speed, this.heading));
+	game.viewport.context.lineTo(x - this.velocity.x, y - this.velocity.y);
 	game.viewport.context.strokeStyle = this._colour ? this._colour : '#ffffff';
 	game.viewport.context.lineWidth = this._geometry.width;
 	game.viewport.context.stroke();
@@ -294,25 +298,33 @@ const LaserBeams = {
 			width: 2,
 			length: 200,
 			colour: '#ff0000',
-			strength: 3
+			strength: 3,
+			launchSpeed: 100,
+			maxSpeed: 100
 		},
 		2: {
 			width: 3,
 			length: 300,
 			colour: '#ff3300',
-			strength: 4			
+			strength: 4,
+			launchSpeed: 150,
+			maxSpeed: 150			
 		},
 		3: {
 			width: 4,
 			length: 400,
 			colour: '#ff3300',
-			strength: 5			
+			strength: 5,
+			launchSpeed: 200,
+			maxSpeed: 200			
 		},
 		4: {
 			width: 5,
 			length: 500,
 			colour: '#ff3300',
-			strength: 6			
+			strength: 6,
+			launchSpeed: 250,
+			maxSpeed: 250			
 		}
 	}	
 }

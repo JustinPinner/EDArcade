@@ -6,6 +6,9 @@ class Effect extends GameObject {
 		this._sprite = sprite;
 		this._sprite.loadImage();						
 	}
+	get sprite() {
+		return this._sprite;
+	}
 }
 
 var EffectRoles = {
@@ -19,9 +22,8 @@ var EffectRoles = {
 }
 
 class ShipExplosionEffect extends Effect {
-	constructor(centre_x, centre_y) {
-		super(EffectRoles.shipExplosion, new Sprite(centre_x, centre_y, 204.8, 204.8, EffectRoles.shipExplosion.roleName));
-		this._coordinates = new Point2d(centre_x, centre_y);
+	constructor(drawOriginCentre) {
+		super(EffectRoles.shipExplosion, new Sprite(drawOriginCentre.x, drawOriginCentre.y, 204.8, 204.8, EffectRoles.shipExplosion.roleName));
 		this._sprite.cells = {
 			frameRate: 15,
 			frameWidth: 204.8,
@@ -34,6 +36,7 @@ class ShipExplosionEffect extends Effect {
 			width: this._sprite.width,
 			height: this._sprite.height
 		};
+		this._coordinates = new Point2d(drawOriginCentre.x - (this._sprite.width / 2), drawOriginCentre.y - (this._sprite.height / 2));
 		this._fsm = new FSM(this, FSMState.EFFECT);
 		this.updateAndDraw = function() {
 			this.updatePosition();

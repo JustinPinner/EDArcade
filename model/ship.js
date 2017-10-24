@@ -105,6 +105,9 @@ class Ship extends GameObject {
 		});
 		return scannedTargets;
 	}
+	get currentTarget() {
+		return this._currentTarget;
+	}
 	get thrustVector() {
 		return (this._heading + 180) - 360;
 	}
@@ -132,11 +135,6 @@ class Ship extends GameObject {
 		}
 		return range;
 	}
-	get speed() {
-		const currentPos = this.centre;
-		const nextPos = new Point2d(currentPos.x + this._velocity.x, currentPos.y + this._velocity.y);	
-		return Math.abs(distanceBetweenPoints(currentPos, nextPos) * fps);
-	}
 	get role() {
 		return this._role;
 	}
@@ -163,6 +161,9 @@ class Ship extends GameObject {
 
 	set contacts(pings) {
 		this._contacts = pings;
+	}
+	set currentTarget(ping) {
+		this._currentTarget = ping;
 	}
 };
 
@@ -416,7 +417,7 @@ Ship.prototype.boost = function() {
 };
 	
 Ship.prototype.setTarget = function(ship) {
-	this.currentTarget = ship;
+	this._currentTarget = ship;
 };
 	
 Ship.prototype.fireWeapons = function() {
