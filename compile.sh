@@ -5,13 +5,13 @@ mkdir -p dist/js
 
 echo 'js...'
 # until uglifyjs works with all sources
-cat js/lib.js > dist/js/game.js
+cat js/keys.js > dist/js/game.js
+cat js/lib.js >> dist/js/game.js
 cat js/imageService.js >> dist/js/game.js
 cat js/canvas2d.js >> dist/js/game.js
 cat model/environment.js >> dist/js/game.js
 cat model/gameObject.js >> dist/js/game.js
 cat js/perfmon.js >> dist/js/game.js
-cat js/keys.js >> dist/js/game.js
 cat util/polyfill.js >> dist/js/game.js
 cat js/fsm.js >> dist/js/game.js
 cat js/effect.js >> dist/js/game.js

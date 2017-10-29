@@ -2,7 +2,7 @@
 
 const debug = document.location.search.substr(1).indexOf("debug") > -1;
 
-const minNPC = 5;
+const minNPC = 10;
 const fps = 30;
 
 const imageService = new ImageService();
@@ -95,11 +95,11 @@ class Game {
   }
 
   get maxSpawnDistanceX() {
-    return this._viewport.width * 1;
+    return this._viewport.width * 5;
   }
 
   get maxSpawnDistanceY() {
-    return this._viewport.height * 1;
+    return this._viewport.height * 5;
   }
 
   get objects() {
