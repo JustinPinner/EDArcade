@@ -68,6 +68,7 @@ LaserWeapon.prototype.fire = function() {
 	}
 	this._lastFiredTime = Date.now();
 	const beam = new LaserBeam(this._category, this._size, this._parent);
+	beam.draw();
 	game.objects.push(beam);
 	beam.fsm.transition(FSMState.LAUNCH);
 }

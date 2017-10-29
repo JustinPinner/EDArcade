@@ -171,8 +171,8 @@ const fsmStates = {
 		mode: FSMState.EXPLODING,
 		nextState: [FSMState.DIE],
 		duration: 3000,
-		execute: function(self) {
-			const explosion = new ShipExplosionEffect(self.drawOriginCentre);
+		execute: function(self, explosionEffect) {
+			const explosion = explosionEffect || new ShipExplosionEffect(self.drawOriginCentre);
 			explosion.velocity = self._velocity
 			game.objects.push(explosion);
 			self.fsm.transition(FSMState.DIE);			
