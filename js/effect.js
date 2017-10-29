@@ -1,18 +1,13 @@
 // effect.js
 
 class Effect extends GameObject {
-	constructor(role) {
+	constructor(role, sprite) {
 		super(GameObjectTypes.EFFECT, role.roleName, role);
-		this.cellAnims = {
-			spriteSheet: '../image/' + this.oName + '.png',
-			frameRate: null,
-			frameWidth: 800,
-			frameHeight: 600,
-			framesWide: 10,
-			framesHigh: 8,
-			lastFrameDrawn: 0,
-			framesRepeat: false
-		};		
+		this._sprite = sprite;
+		this._sprite.loadImage();						
+	}
+	get sprite() {
+		return this._sprite;
 	}
 }
 
@@ -27,55 +22,52 @@ var EffectRoles = {
 }
 
 class ShipExplosionEffect extends Effect {
-	constructor(centre_x, centre_y) {
-		super(EffectRoles.shipExplosion);
-		this.cellAnims.frameRate = 15;
-		this.cellAnims.frameWidth = 204.8;
-		this.cellAnims.frameHeight = 204.8;
-		this.cellAnims.frameColumns = 5;
-		this.cellAnims.frameRows = 5;
-		this.sprite.image = imageService.loadImage(this.cellAnims.spriteSheet);
-		this.sprite.width = this.cellAnims.frameWidth;
-		this.sprite.height = this.cellAnims.frameHeight;
-		this.x = centre_x - (this.cellAnims.frameWidth / 2);
-		this.y = centre_y - (this.cellAnims.frameHeight / 2);
-		this.geometry = {
-			width: this.sprite.width,
-			height: this.sprite.height
+	constructor(drawOriginCentre) {
+		super(EffectRoles.shipExplosion, new Sprite(drawOriginCentre.x, drawOriginCentre.y, 204.8, 204.8, EffectRoles.shipExplosion.roleName));
+		this._sprite.cells = {
+			frameRate: 15,
+			frameWidth: 204.8,
+			frameHeight: 204.8,
+			frameColumns: 5,
+			frameRows: 5,
+			lastFrameDrawn: 0
 		};
-		this.fsm = new FSM(this, FSMState.EFFECT);
+		this._geometry = {
+			width: this._sprite.width,
+			height: this._sprite.height
+		};
+		this._coordinates = new Point2d(drawOriginCentre.x - (this._sprite.width / 2), drawOriginCentre.y - (this._sprite.height / 2));
+		this._fsm = new FSM(this, FSMState.EFFECT);
 		this.updateAndDraw = function() {
 			this.updatePosition();
-			this.fsm.execute();
+			this._fsm.execute();
 		};
 		this.draw = function() {
-			var origin = this.drawOriginCentre;
-			var cell = (this.cellAnims.lastFrameDrawn * this.cellAnims.frameWidth) / (this.cellAnims.frameWidth * this.cellAnims.frameColumns);
-			var row = Math.floor(cell);
-			var col = (cell - row) * this.cellAnims.frameColumns;
+			// TODO: fix drawOriginCentre for effects
+			var origin = this._coordinates;
+			var cell = ((this._sprite.cells.lastFrameDrawn || 0) * this._sprite.cells.frameWidth) / (this._sprite.cells.frameWidth * this._sprite.cells.frameColumns);
+			var row = Math.floor((this._sprite.cells.lastFrameDrawn || 0) / this._sprite.cells.frameColumns);
+			var col = (cell - row) * this._sprite.cells.frameColumns;
 			var spriteSheetMap = {
-				x: col * this.cellAnims.frameWidth,
-				y: row * this.cellAnims.frameHeight,
-				width: this.cellAnims.frameWidth,
-				height: this.cellAnims.frameHeight
+				x: col * this._sprite.cells.frameWidth,
+				y: row * this._sprite.cells.frameHeight,
+				width: this._sprite.cells.frameWidth,
+				height: this._sprite.cells.frameHeight
 			};
-			environment.viewport.ctx.save();
-			environment.viewport.ctx.translate(this.x, this.y);
-			environment.viewport.ctx.drawImage(this.sprite.image, 
+			game.viewport.context.drawImage(this._sprite.image, 
 				spriteSheetMap.x, 
 				spriteSheetMap.y, 
 				spriteSheetMap.width, 
 				spriteSheetMap.height,
-				0, 
-				0, 
-				this.geometry.width, 
-				this.geometry.height);
-			environment.viewport.ctx.restore();
-			this.cellAnims.lastFrameDrawn = this.cellAnims.lastFrameDrawn === this.cellAnims.frameColumns * this.cellAnims.frameRows ? 0 : this.cellAnims.lastFrameDrawn += 1;
-			if (this.complete()) this.fsm.transition(FSMState.DIE);
+				this._coordinates.x, 
+				this._coordinates.y, 
+				this._geometry.width, 
+				this._geometry.height);
+			this._sprite.cells.lastFrameDrawn = this._sprite.cells.lastFrameDrawn === this._sprite.cells.frameColumns * this._sprite.cells.frameRows ? 0 : this._sprite.cells.lastFrameDrawn += 1;
+			if (this.complete()) this._fsm.transition(FSMState.DIE);
 		};
 		this.complete = function() {
-			return this.cellAnims.lastFrameDrawn >= this.cellAnims.frameRows * this.cellAnims.frameColumns && !this.cellAnims.framesRepeat;
+			return this._sprite.cells.lastFrameDrawn >= this._sprite.cells.frameRows * this._sprite.cells.frameColumns && !this._sprite.cells.framesRepeat;
 		};
 	}
 }
