@@ -2,7 +2,7 @@
 
 class Effect extends GameObject {
 	constructor(role, sprite) {
-		super(GameObjectTypes.EFFECT, role.roleName, role);
+		super(GameObjectTypes.EFFECT, null, role.roleName, role);
 		this._sprite = sprite;
 		this._sprite.loadImage();						
 	}

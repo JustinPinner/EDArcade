@@ -18,6 +18,13 @@ cat js/effect.js >> dist/js/game.js
 cat model/weapon.js >> dist/js/game.js
 cat model/sprite.js >> dist/js/game.js
 cat js/math2d.js >> dist/js/game.js
+cat model/sidewinder.js >> dist/js/game.js
+cat model/cobra3.js >> dist/js/game.js
+cat model/cobra4.js >> dist/js/game.js
+cat model/python.js >> dist/js/game.js
+cat model/anaconda.js >> dist/js/game.js
+cat model/type6.js >> dist/js/game.js
+cat model/viper3.js >> dist/js/game.js
 cat model/ship.js >> dist/js/game.js
 cat model/player.js >> dist/js/game.js
 cat js/game.js >> dist/js/game.js

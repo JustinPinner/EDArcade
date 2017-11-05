@@ -10,7 +10,8 @@ const GameObjectTypes = {
 var nextObjId = 0;
 
 class GameObject {
-	constructor(type, name, role) {
+	constructor(type, model, name, role) {
+		this._model = model;
 		this._disposable = false;
 		this._id = nextObjId += 1;
 		this._type = type;
@@ -24,7 +25,50 @@ class GameObject {
 		this._direction = null;
 		this._sprite = null;
 		this._colour = null;
-		this._model = null;
+		this._collide = function(otherGameObject) {
+			if (!(this.collisionCentres.length > 0 && otherGameObject.collisionCentres.length > 0)) {
+				return;
+			}
+			// iterate over each object's collision radii
+			for (const myCentre in this.collisionCentres) {
+				for (const theirCentre in otherGameObject.collisionCentres) {
+					const dx = this.collisionCentres[myCentre].x - otherGameObject.collisionCentres[theirCentre].x;
+					const dy = this.collisionCentres[myCentre].y - otherGameObject.collisionCentres[theirCentre].y;
+					const distance = Math.sqrt((dx * dx) + (dy * dy));		
+					if (distance <= this.collisionCentres[myCentre].radius + otherGameObject.collisionCentres[theirCentre].radius) {
+						// Apply basic motion transference algorithm
+						// from https://gamedevelopment.tutsplus.com/tutorials/when-worlds-collide-simulating-circle-circle-collisions--gamedev-769)
+						// a = shape1.vX * (shape1.mass - shape2.mass)
+						// b = (2 * shape2.mass * shape2.vX)
+						// c = (shape1.mass + shape2.mass)
+						//
+						// newVelX = (a + b) / c;
+						//						
+						// d = shape1.vY * (shape1.mass - shape2.mass)
+						// e = (2 * shape2.mass * shape2.vY)
+						// f = (shape1.mass + shape2.mass)
+						//
+						// newVelY = (d + e) / f;
+						const newVelX1 = ((this.velocity.x * (this.mass - otherGameObject.mass)) +
+							(2 * otherGameObject.mass * otherGameObject.velocity.x)) /
+							(this.mass + otherGameObject.mass);
+						const newVelY1 = ((this.velocity.y * (this.mass - otherGameObject.mass)) +
+							(2 * otherGameObject.mass * otherGameObject.velocity.y)) /
+							(this.mass + otherGameObject.mass);
+						const newVelX2 = ((otherGameObject.velocity.x * (otherGameObject.mass - this.mass)) +
+							(2 * this.mass * this.velocity.x)) /
+							(this.mass + otherGameObject.mass);
+						const newVelY2 = ((otherGameObject.velocity.y * (otherGameObject.mass - this.mass)) +
+							(2 * this.mass * this.velocity.y)) /
+							(this.mass + otherGameObject.mass);
+						this.velocity.x = newVelX1;
+						this.velocity.y = newVelY1;
+						otherGameObject.velocity.x = newVelX2;
+						otherGameObject.velocity.y = newVelY2;
+					}
+				}
+			}			
+		}
 	}
 	// getters
 	get type() {
@@ -68,6 +112,24 @@ class GameObject {
 			height: this._model ? this._model.height : 0
 		};
 	}
+	get mass() {
+		return this._model.mass || 0;
+	}
+	get collisionCentres() {
+		const _centres = [];
+		if (this._model.collisionCentres) {
+			for (const collCtrGrp in this._model.collisionCentres) {
+				const collCtr = this._model.collisionCentres[collCtrGrp];
+				const _newXY = rotatePoint(this.drawOriginCentre.x, this.drawOriginCentre.y, this.drawOrigin.x + collCtr.x, this.drawOrigin.y + collCtr.y, this._heading + 90);
+				_centres.push({
+					x: _newXY.x,
+					y: _newXY.y,
+					radius: collCtr.radius
+				})
+			}			
+		}
+		return _centres;
+	}
 	get colour() {
 		return this._colour;
 	}
@@ -107,19 +169,38 @@ GameObject.prototype.collisionDetect = function(x, y) {
 	const self = this,
 		_x = x || self._coordinates.x,
 		_y = y || self._coordinates.y;
-	var hitObjects = game.objects.filter(function(obj) {
-		return obj.type === GameObjectTypes.SHIP && 
-			obj !== self &&
-			_x >= obj.coordinates.x &&
-			_x <= obj.coordinates.x + obj.geometry.width &&
-			_y >= obj.coordinates.y &&
-			_y <= obj.coordinates.y + obj.geometry.height;
+	const candidates = game.objects.filter(function(obj) {
+		if (obj === self) {
+			return false;
+		}
+		// draw a circle to envelope the whole object
+		const selfCirc = {
+			x: self.centre.x,
+			y: self.centre.y,
+			r: (self.geometry.width > self.geometry.height ?  self.geometry.width : self.geometry.height) / 2
+		};
+		const objCirc = {
+			x: obj.centre.x,
+			y: obj.centre.y,
+			r: (obj.geometry.width > obj.geometry.height ? obj.geometry.width : obj.geometry.height) / 2
+		};
+		const dx = selfCirc.x - objCirc.x;
+		const dy = selfCirc.y - objCirc.y;
+		const distance = Math.sqrt((dx * dx) + (dy * dy));		
+	
+		return obj !== self &&
+			distance <= selfCirc.r + objCirc.r;
 	});
-	if (hitObjects.length > 0) {
-		//debugger;
-		hitObjects[0].takeDamage(this);
-		self.takeDamage(hitObjects[0]);
+	if (candidates.length > 0) {
+		for (var c = 0; c < candidates.length; c++) {
+			self._collide(candidates[c]);
+		}
 	}
+	// if (candidates.length > 0) {
+	// 	//debugger;
+	// 	hitObjects[0].takeDamage(this);
+	// 	self.takeDamage(hitObjects[0]);
+	// }
 }
 
 // abstract

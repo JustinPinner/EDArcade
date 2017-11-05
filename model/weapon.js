@@ -85,7 +85,7 @@ const WeaponTypes = {
 
 class Munition extends GameObject {
 	constructor(type, effect, role) {
-		super(GameObjectTypes.MUNITION, type, role);
+		super(GameObjectTypes.MUNITION, null, type, role);
 		this._munitionType = type;
 		this._munitionEffect = effect;
 		this._munitionRole = role;
