@@ -84,8 +84,8 @@ const WeaponTypes = {
 }
 
 class Munition extends GameObject {
-	constructor(type, effect, role) {
-		super(GameObjectTypes.MUNITION, null, type, role);
+	constructor(type, model, effect, role) {
+		super(GameObjectTypes.MUNITION, model, type, role);
 		this._munitionType = type;
 		this._munitionEffect = effect;
 		this._munitionRole = role;
@@ -115,52 +115,25 @@ class Munition extends GameObject {
 	}
 }
 
-//TODO: check hierarchies for munition
-Munition.prototype.collisionDetect = function(x, y, scale) {
-	const self = this;
-	const hitObjects = game.objects.filter(function(obj) {
-		if (obj.type !== this._type && obj !== self._hardpoint.parent) {
-			const impactBox = scaleBox(obj, scale);
-			return x >= impactBox.x &&
-				x <= impactBox.x + impactBox.width &&
-				y >= impactBox.y &&
-				y <= impactBox.y + impactBox.height;
-		} else {
-			return false;
-		}
-	});
-	if (hitObjects.length > 0) {
-		hitObjects[0].takeDamage(this);
-		self.takeDamage(hitObjects[0]);
-	}
-}
-
 Munition.prototype.updateAndDraw = function(debug) {
-	const scale = 0.75;
 	this.updatePosition();
+	this.collisionDetect();
 	this.draw();
-	this.collisionDetect(this._coordinates.x + dir_x(this._geometry.height, this._heading), this._coordinates.y + dir_y(this._geometry.height, this._heading), scale);
 	this._fsm.execute();
 }
 
 class LaserBeam extends Munition {
 	constructor(type, size, hardpoint) {
-		super(WeaponClasses.ENERGY, DamageTypes.POINT, MunitionRoles.BEAM);
-		this._model = LaserBeams[type][size];
-		this._geometry = {
-			width: LaserBeams[type][size].width,
-			height: LaserBeams[type][size].length
-		};
+		super(WeaponClasses.ENERGY, LaserBeams[type][size], DamageTypes.POINT, MunitionRoles.BEAM);
 		this._colour = LaserBeams[type][size].colour;
 		this._strength = LaserBeams[type][size].strength;
 		this._hardpoint = hardpoint;
 		this._coordinates = hardpoint.coordinatesWithRotation;
 		this._heading = hardpoint.parent.heading;
-		this._collisionDetectionPoint = {
-			x: this._coordinates.x + dir_x(this._geometry.height, this._heading),
-			y: this._coordinates.y + dir_y(this._geometry.width, this._heading)
-		}
 		this._velocity = new Vector2d(0, 0);
+	}
+	get drawOrigin() {
+		return new Point2d(this.coordinates.x + -game.viewport.coordinates.x, this.coordinates.y + -game.viewport.coordinates.y);
 	}
 	get heading() {
 		if (this._heading) return this._heading;
@@ -215,7 +188,7 @@ LaserBeam.prototype.draw = function(debug) {
 	game.viewport.context.moveTo(x, y);
 	game.viewport.context.lineTo(x - this.velocity.x, y - this.velocity.y);
 	game.viewport.context.strokeStyle = this._colour ? this._colour : '#ffffff';
-	game.viewport.context.lineWidth = this._geometry.width;
+	game.viewport.context.lineWidth = this.geometry.width;
 	game.viewport.context.stroke();
 	game.viewport.context.lineWidth = normalWidth;
 }
@@ -297,35 +270,63 @@ const LaserBeams = {
 	PULSE: {
 		1: {
 			width: 2,
-			length: 200,
+			height: 2,
 			colour: '#ff0000',
 			strength: 3,
 			launchSpeed: 100,
-			maxSpeed: 100
+			maxSpeed: 100,
+			collisionCentres : {
+				impactPoint: {
+					x: 1,
+					y: 1,
+					radius: 2
+				}
+			}
 		},
 		2: {
 			width: 3,
-			length: 300,
+			height: 3,
 			colour: '#ff3300',
 			strength: 4,
 			launchSpeed: 150,
-			maxSpeed: 150			
+			maxSpeed: 150,
+			collisionCentres : {
+				impactPoint: {
+					x: 1,
+					y: 1,
+					radius: 2
+				}
+			}
 		},
 		3: {
 			width: 4,
-			length: 400,
+			height: 4,
 			colour: '#ff3300',
 			strength: 5,
 			launchSpeed: 200,
-			maxSpeed: 200			
+			maxSpeed: 200,
+			collisionCentres : {
+				impactPoint: {
+					x: 1,
+					y: 1,
+					radius: 2
+				}
+			}			
 		},
 		4: {
 			width: 5,
-			length: 500,
+			height: 5,
 			colour: '#ff3300',
 			strength: 6,
 			launchSpeed: 250,
-			maxSpeed: 250			
+			maxSpeed: 250,
+			collisionCentres : {
+				impactPoint: {
+					x: 1,
+					y: 1,
+					radius: 2
+				}
+			}		
 		}
 	}	
 }

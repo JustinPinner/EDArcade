@@ -2,7 +2,7 @@
 
 class Effect extends GameObject {
 	constructor(role, sprite) {
-		super(GameObjectTypes.EFFECT, null, role.roleName, role);
+		super(GameObjectTypes.EFFECT, sprite, role.roleName, role);
 		this._sprite = sprite;
 		this._sprite.loadImage();						
 	}
@@ -32,10 +32,6 @@ class ShipExplosionEffect extends Effect {
 			frameRows: 5,
 			lastFrameDrawn: 0
 		};
-		this._geometry = {
-			width: this._sprite.width,
-			height: this._sprite.height
-		};
 		this._coordinates = new Point2d(drawOriginCentre.x - (this._sprite.width / 2), drawOriginCentre.y - (this._sprite.height / 2));
 		this._fsm = new FSM(this, FSMState.EFFECT);
 		this.updateAndDraw = function() {
@@ -43,7 +39,6 @@ class ShipExplosionEffect extends Effect {
 			this._fsm.execute();
 		};
 		this.draw = function() {
-			// TODO: fix drawOriginCentre for effects
 			var origin = this._coordinates;
 			var cell = ((this._sprite.cells.lastFrameDrawn || 0) * this._sprite.cells.frameWidth) / (this._sprite.cells.frameWidth * this._sprite.cells.frameColumns);
 			var row = Math.floor((this._sprite.cells.lastFrameDrawn || 0) / this._sprite.cells.frameColumns);
@@ -61,8 +56,8 @@ class ShipExplosionEffect extends Effect {
 				spriteSheetMap.height,
 				this._coordinates.x, 
 				this._coordinates.y, 
-				this._geometry.width, 
-				this._geometry.height);
+				this.geometry.width, 
+				this.geometry.height);
 			this._sprite.cells.lastFrameDrawn = this._sprite.cells.lastFrameDrawn === this._sprite.cells.frameColumns * this._sprite.cells.frameRows ? 0 : this._sprite.cells.lastFrameDrawn += 1;
 			if (this.complete()) this._fsm.transition(FSMState.DIE);
 		};

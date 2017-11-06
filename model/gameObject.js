@@ -19,14 +19,13 @@ class GameObject {
 		this._role = role;
 		this._coordinates = null;
 		this._velocity = new Vector2d(0, 0);
-		this._geometry = null;
 		this._speed = null;
 		this._heading = null;
 		this._direction = null;
 		this._sprite = null;
 		this._colour = null;
 		this._collide = function(otherGameObject) {
-			if (!(this.collisionCentres.length > 0 && otherGameObject.collisionCentres.length > 0)) {
+			if (this.collisionCentres.length == 0 || otherGameObject.collisionCentres.length == 0) {
 				return;
 			}
 			// iterate over each object's collision radii
@@ -65,6 +64,9 @@ class GameObject {
 						this.velocity.y = newVelY1;
 						otherGameObject.velocity.x = newVelX2;
 						otherGameObject.velocity.y = newVelY2;
+						// Apply damage
+						otherGameObject.takeDamage(this);
+						this.takeDamage(otherGameObject);						
 					}
 				}
 			}			
@@ -85,8 +87,8 @@ class GameObject {
 	}
 	get centre() {
 		return this._coordinates && new Point2d(
-			this._coordinates.x + (this._geometry ? (this._geometry.width / 2) : 0),
-			this._coordinates.y + (this._geometry ? (this._geometry.height / 2) : 0)
+			this._coordinates.x + (this.geometry ? (this.geometry.width / 2) : 0),
+			this._coordinates.y + (this.geometry ? (this.geometry.height / 2) : 0)
 		);
 	}
 	get velocity() {
@@ -99,8 +101,8 @@ class GameObject {
 	}
 	get drawOriginCentre() {
 		return {
-			x: this.centre.x + -game.viewport.x,
-			y: this.centre.y + -game.viewport.y
+			x: this.centre.x + -game.viewport.coordinates.x,
+			y: this.centre.y + -game.viewport.coordinates.y
 		};
 	}
 	get coordinatesRotated() {
@@ -170,7 +172,9 @@ GameObject.prototype.collisionDetect = function(x, y) {
 		_x = x || self._coordinates.x,
 		_y = y || self._coordinates.y;
 	const candidates = game.objects.filter(function(obj) {
-		if (obj === self) {
+		if (obj === self || 
+			(obj instanceof Munition && obj.shooter === self) ||
+			(self instanceof Munition && self.shooter === obj )) {
 			return false;
 		}
 		// draw a circle to envelope the whole object
@@ -188,26 +192,20 @@ GameObject.prototype.collisionDetect = function(x, y) {
 		const dy = selfCirc.y - objCirc.y;
 		const distance = Math.sqrt((dx * dx) + (dy * dy));		
 	
-		return obj !== self &&
-			distance <= selfCirc.r + objCirc.r;
+		return distance <= selfCirc.r + objCirc.r;
 	});
 	if (candidates.length > 0) {
 		for (var c = 0; c < candidates.length; c++) {
 			self._collide(candidates[c]);
 		}
 	}
-	// if (candidates.length > 0) {
-	// 	//debugger;
-	// 	hitObjects[0].takeDamage(this);
-	// 	self.takeDamage(hitObjects[0]);
-	// }
 }
 
 // abstract
 GameObject.prototype.takeDamage = function(source) {};
 
 GameObject.prototype.isOnScreen = function(debug) {
-	return game.viewport.contains(this._coordinates.x, this._coordinates.y, this._geometry.width, this._geometry.height);	
+	return game.viewport.contains(this._coordinates.x, this._coordinates.y, this.geometry.width, this.geometry.height);	
 };
 
 GameObject.prototype.draw = function(debug) {
@@ -217,10 +215,10 @@ GameObject.prototype.draw = function(debug) {
 	game.viewport.context.translate(this.drawOriginCentre.x, this.drawOriginCentre.y);
 	game.viewport.context.rotate(degreesToRadians(this._heading + 90));
 	if (this._sprite && this._sprite.image) {
-	  game.viewport.context.drawImage(this._sprite.image, -this._geometry.width / 2, -this._geometry.height / 2, this._geometry.width, this._geometry.height);
+	  game.viewport.context.drawImage(this._sprite.image, -this.geometry.width / 2, -this.geometry.height / 2, this.geometry.width, this.geometry.height);
 	} else {
 	  game.viewport.context.fillStyle = this._colour ? this._colour : '#ffffff';
-	  game.viewport.context.fillRect(-this._geometry.width / 2, -this._geometry.height / 2, this._geometry.width, this._geometry.height);
+	  game.viewport.context.fillRect(-this.geometry.width / 2, -this.geometry.height / 2, this.geometry.width, this.geometry.height);
 	}
 	game.viewport.context.restore();
 };

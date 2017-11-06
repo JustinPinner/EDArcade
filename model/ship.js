@@ -4,7 +4,6 @@
 class Ship extends GameObject {
 	constructor(shipType, shipName, role) {
 		super(GameObjectTypes.SHIP, shipType, shipName, role);
-		this._geometry = { width: shipType.width, height: shipType.height };
 		this._player = role instanceof Player ? role : null;
 		this._flightAssist = this._player ? false : true;
 		this._heading = this._player ? 270 : rand(359);
