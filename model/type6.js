@@ -48,4 +48,4 @@ const Type6 = {
             self._hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));	
         }
     }
-};54
+};
