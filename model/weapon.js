@@ -64,9 +64,13 @@ class LaserWeapon extends Weapon {
 		this._range = Lasers[size][category][mount].range;
 		this._damage = Lasers[size][category][mount].damage;
 		this._rateOfFire = Lasers[size][category][mount].rof;
+		this._iconName = Lasers[size][category][mount].iconName;
 	}
 	get range() {
 		return this._range;
+	}
+	get iconName() {
+		return this._iconName;
 	}
 }
 
@@ -209,13 +213,15 @@ const Lasers = {
 				name: 'Fixed pulse laser (size 1)',
 				range: 500,
 				rof: 3.8,
-				damage: 3.0
+				damage: 3.0,
+				iconName: 'FixedLaser1'
 			},
 			TURRET: {
 				name: 'Turreted pulse laser (size 1)',
 				range: 500,
 				rof: 2.5,
-				damage: 1.7				
+				damage: 1.7,
+				iconName: 'TurretLaser1'				
 			}
 		}
 	},
@@ -225,13 +231,15 @@ const Lasers = {
 				name: 'Fixed pulse laser (size 2)',
 				range: 600,
 				rof: 4.0,
-				damage: 4.0
+				damage: 4.0,
+				iconName: 'FixedLaser2'
 			},
 			TURRET: {
 				name: 'Turreted pulse laser (size 2)',
 				range: 600,
 				rof: 2.7,
-				damage: 1.8								
+				damage: 1.8,
+				iconName: 'TurretLaser2'								
 			}
 		}
 	},
@@ -241,13 +249,15 @@ const Lasers = {
 				name: 'Fixed pulse laser (size 3)',
 				range: 700,
 				rof: 4.2,
-				damage: 5
+				damage: 5,
+				iconName: 'FixedLaser3'
 			},
 			TURRET: {
 				name: 'Turreted pulse laser (size 3)',
 				range: 700,
 				rof: 2.9,
-				damage: 2.0								
+				damage: 2.0,
+				iconName: 'TurretLaser3'								
 			}
 		}
 	},
@@ -257,13 +267,15 @@ const Lasers = {
 				name: 'Fixed pulse laser (size 4)',
 				range: 800,
 				rof: 4.4,
-				damage: 5.2
+				damage: 5.2,
+				iconName: 'FixedLaser4'
 			},
 			TURRET: {
 				name: 'Turreted pulse laser (size 4)',
 				range: 800,
 				rof: 3.1,
-				damage: 2.42							
+				damage: 2.42,
+				iconName: 'TurretLaser4'							
 			}
 		}
 	}

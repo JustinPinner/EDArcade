@@ -3,8 +3,8 @@ const flotsam = {
     mass: 1,
     agility: 0,
     armour: 5,
-    width: 10,
-    height: 10
+    width: 50,
+    height: 50
 }
 
 const pickupRoles = {
@@ -23,7 +23,10 @@ const pickupRoles = {
 class Pickup extends GameObject {
 	constructor(obj) {
 		super(GameObjectTypes.PICKUP, flotsam, flotsam.name, pickupRoles.DRIFTER);
+		this._heading = 270;
 		this._payload = obj;
+		this._sprite = new Sprite(0, 0, flotsam.width, flotsam.height, obj.iconName);
+		this._sprite.loadImage();		
 	}
 	get payload() {
 		return this._payload;

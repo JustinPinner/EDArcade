@@ -468,7 +468,7 @@ Ship.prototype.dumpWeapons = function() {
 		if (this._hardpoints[hardpoint].loaded && this._hardpoints[hardpoint].weapon) {
 			const pickup = new Pickup(this._hardpoints[hardpoint].weapon);
 			pickup.coordinates = this._hardpoints[hardpoint].coordinates;
-			pickup.velocity = new Vector2d(Math.random(this._velocity.x), Math.random(this._velocity.y));
+			pickup.velocity = new Vector2d(Math.random(this._velocity.x * 0.8), Math.random(this._velocity.y * 0.8));
 			game.objects.push(pickup);
 		}
 	}		
