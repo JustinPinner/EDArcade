@@ -35,6 +35,21 @@ class GameObject {
 					const dy = this.collisionCentres[myCentre].y - otherGameObject.collisionCentres[theirCentre].y;
 					const distance = Math.sqrt((dx * dx) + (dy * dy));		
 					if (distance <= this.collisionCentres[myCentre].radius + otherGameObject.collisionCentres[theirCentre].radius) {
+						if (otherGameObject instanceof Pickup && 
+							otherGameObject.payload instanceof Weapon && 
+							this instanceof Ship && 
+							otherGameObject.payload.parent.parent !== this) {
+							this.collectWeapon(otherGameObject);
+							otherGameObject.disposable = true;
+							return;
+						} else if (this instanceof Pickup && 
+							this.payload instanceof Weapon && 
+							otherGameObject instanceof Ship &&
+							this.payload.parent.parent !== otherGameObject) {
+							otherGameObject.collectWeapon(this);
+							this.disposable = true;
+							return;
+						}
 						// Apply basic motion transference algorithm
 						// from https://gamedevelopment.tutsplus.com/tutorials/when-worlds-collide-simulating-circle-circle-collisions--gamedev-769)
 						// a = shape1.vX * (shape1.mass - shape2.mass)
@@ -129,6 +144,13 @@ class GameObject {
 					radius: collCtr.radius
 				})
 			}			
+		} else {
+			const collCtr = {
+				x: this.drawOriginCentre.x,
+				y: this.drawOriginCentre.y,
+				radius: (this.geometry.width > this.geometry.height ? this.geometry.width : this.geometry.height) / 2
+			};
+			_centres.push(collCtr);
 		}
 		return _centres;
 	}
@@ -177,7 +199,7 @@ GameObject.prototype.collisionDetect = function(x, y) {
 			(self instanceof Munition && self.shooter === obj )) {
 			return false;
 		}
-		// draw a circle to envelope the whole object
+		// draw a circle to enclose the whole object
 		const selfCirc = {
 			x: self.centre.x,
 			y: self.centre.y,
@@ -221,4 +243,10 @@ GameObject.prototype.draw = function(debug) {
 	  game.viewport.context.fillRect(-this.geometry.width / 2, -this.geometry.height / 2, this.geometry.width, this.geometry.height);
 	}
 	game.viewport.context.restore();
+};
+
+GameObject.prototype.updateAndDraw = function(debug) {
+	this.updatePosition();
+	this.collisionDetect();
+	this.draw(debug);
 };

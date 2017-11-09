@@ -42,8 +42,17 @@ class Weapon {
 	get lastFiredTime() {
 		return this._lastFiredTime;
 	}
+	get parent() {
+		return this._parent;
+	}
+	get size() {
+		return this._size;
+	}
 	set lastFiredTime(val) {
 		this._lastFiredTime = val;
+	}
+	set parent(newParent) {
+		this._parent = newParent;
 	}
 }
 
@@ -346,6 +355,9 @@ class Hardpoint {
 	get type() {
 		return this._type;
 	}
+	get size() {
+		return this._size;
+	}
 	get sizeName() {
 		return this._sizeName;
 	}
@@ -373,9 +385,15 @@ class Hardpoint {
 			z: this._geometry.z
 		};
 	}
+	get parent() {
+		return this._parent;
+	}
 	/* Setters */
 	set coordinates(point2d) {
 		this._coordinates = point2d;
+	}
+	set parent(newParent) {
+		this._parent = newParent;
 	}
 }
 
@@ -401,13 +419,17 @@ class WeaponHardpoint extends Hardpoint {
 	constructor(parent, size, index, weaponClass, weaponMount, weaponSize) {
 		super(parent, HardpointTypes.WEAPON, size, index);
 		this._weapon = weaponClass ? new weaponClass(this, weaponMount, weaponSize) : null;
-		this._loaded = this.weapon ? true : false;
+		this._loaded = this._weapon ? true : false;
 	}
 	get weapon() {
 		return this._weapon;
 	}
 	get parent() {
 		return this._parent;
+	}
+	set weapon(wpn) {
+		this._weapon = wpn;
+		this._loaded = true;
 	}
 }
 

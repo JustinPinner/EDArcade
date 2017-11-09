@@ -182,6 +182,9 @@ const fsmStates = {
 		mode: FSMState.DIE,
 		nextState: [],
 		execute: function(self) {
+			if (self.dumpWeapons) {
+				self.dumpWeapons();
+			}
 			self._disposable = true;
 		}		
 	},

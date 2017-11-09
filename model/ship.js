@@ -29,15 +29,15 @@ class Ship extends GameObject {
 		this.randomiseWeaponHardpoints = function(self) {
 			for (const sizeGroup in this._hardpointGeometry[HardpointTypes.WEAPON]) {
 				for (const slot in this._hardpointGeometry[HardpointTypes.WEAPON][sizeGroup]) {
-			    const loadSlot = randInt(100) > 32;
-			    if (loadSlot) {
-				    const i = Number(slot);
-				    const sz = Size[sizeGroup].value;
-				    const mnt = HardpointMountTypes[Object.keys(HardpointMountTypes)[Math.floor(rand(Object.keys(HardpointMountTypes).length))]];
-				    const wpn = WeaponTypes[Object.keys(WeaponTypes)[Math.floor(rand(Object.keys(WeaponTypes).length))]];
-				    const hpt = new WeaponHardpoint(self, sz, i, wpn, mnt, sz);
-				    self._hardpoints.push(hpt);
-				  }
+					const loadSlot = randInt(100) > 32;
+					if (loadSlot) {
+						const i = Number(slot);
+						const sz = Size[sizeGroup].value;
+						const mnt = HardpointMountTypes[Object.keys(HardpointMountTypes)[Math.floor(rand(Object.keys(HardpointMountTypes).length))]];
+						const wpn = WeaponTypes[Object.keys(WeaponTypes)[Math.floor(rand(Object.keys(WeaponTypes).length))]];
+						const hpt = new WeaponHardpoint(self, sz, i, wpn, mnt, sz);
+						self._hardpoints.push(hpt);
+					}
 				}
 			}	    
 		};
@@ -428,7 +428,7 @@ Ship.prototype.fireWeapons = function() {
 	
 Ship.prototype.takeDamage = function(source) {
 	// what hit us?
-	if (source.type !== 'ship') {
+	if (source instanceof Munition) {
 		source.shooter.registerHit(this);
 		if (this._shield && this._shield.charge > 0) {
 			this._shield.impact(source);
@@ -462,6 +462,31 @@ Ship.prototype.matchTargetVector = function(ship) {
 	if (ship.direction > this._direction) this.yaw('cw');
 	if (ship.direction < this._direction) this.yaw('ccw');
 };
+
+Ship.prototype.dumpWeapons = function() {
+	for (hardpoint in this._hardpoints) {
+		if (this._hardpoints[hardpoint].loaded && this._hardpoints[hardpoint].weapon) {
+			const pickup = new Pickup(this._hardpoints[hardpoint].weapon);
+			pickup.coordinates = this._hardpoints[hardpoint].coordinates;
+			pickup.velocity = new Vector2d(Math.random(this._velocity.x), Math.random(this._velocity.y));
+			game.objects.push(pickup);
+		}
+	}		
+}
+
+Ship.prototype.collectWeapon = function(pickup) {
+	const wpn = pickup.payload;
+	for (hardpoint in this._hardpoints) {
+		const hpt = this._hardpoints[hardpoint];
+		if (hpt.type === HardpointTypes.WEAPON && 
+			hpt.size >= wpn.size &&
+			!hpt.loaded()) {
+			wpn.parent = hpt;
+			hpt.weapon = wpn;
+			break;
+		}
+	}	
+}
 
 Ship.prototype.draw = function(debug) {
 	if (!game.viewport || !game.viewport.context) {
