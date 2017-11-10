@@ -268,10 +268,10 @@ Ship.prototype.updateMomentum = function() {
 	}
 };
 
-Ship.prototype.updatePosition = function() {
+Ship.prototype.updatePosition = function() {	
 	this._coordinates.x += this._velocity.x;
 	this._coordinates.y += this._velocity.y;
-	if (this._player) {
+	if (this === game.playerShip) {
 		if (game.midground.scrollData.anchor !== this) {
 			game.midground.scrollData.anchor = this;
 		}
