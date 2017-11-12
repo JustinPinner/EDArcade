@@ -81,15 +81,12 @@ const fsmStates = {
 				self.decreaseThrust();
 			}
 	    
-			const aTmin = angleBetween(self.centre.x, self.centre.y, self.currentTarget.x, self.currentTarget.y);
-			const aTmax = angleBetween(self.centre.x, self.centre.y, self.currentTarget.x + self.currentTarget.width, self.currentTarget.y + self.currentTarget.height);
+			const aTmin = angleBetween(self.centre.x, self.centre.y, self.currentTarget.centre.x, self.currentTarget.centre.y);
 
 			const deltaMin = angleDifference(self.heading, aTmin);
-			const deltaMax = angleDifference(self.heading, aTmax);
 
-			if (Math.abs(deltaMax - deltaMin) >= 5) {
-				if (deltaMax - deltaMin < 0) self.yaw('ccw');
-				if (deltaMax - deltaMin > 0) self.yaw('cw');
+			if (Math.abs(deltaMin >= 5)) {
+				self.yaw(deltaMin < 0 ? 'ccw' : 'cw');
 			}
 
 			const dT = distanceBetweenObjects(self, self.currentTarget);
@@ -98,8 +95,9 @@ const fsmStates = {
 			}
 			if (dT > self.engageRadius) {
 				self.fsm.transition(FSMState.CHASE);
+				return;
 			}
-			if (dT <= self.maximumWeaponRange * 0.3 || self.isInFrontOf(self.currentTarget)) {
+			if (dT <= self.maximumWeaponRange * 0.3) { //|| self.isInFrontOf(self.currentTarget)) {
 				self.fsm.transition(FSMState.EVADE);
 			}
 		}
@@ -115,17 +113,13 @@ const fsmStates = {
 			} 
 
 			const dT = distanceBetweenObjects(self, self.currentTarget);
-			const aTmin = angleBetween(self.centre.x, self.centre.y, self.currentTarget.x, self.currentTarget.y);
-			const aTmax = angleBetween(self.centre.x, self.centre.y, self.currentTarget.x + self.currentTarget.width, self.currentTarget.y + self.currentTarget.height);
-
+			const aTmin = angleBetween(self.centre.x, self.centre.y, self.currentTarget.centre.x, self.currentTarget.centre.y);
 			const deltaMin = angleDifference(self.heading, aTmin);
-			const deltaMax = angleDifference(self.heading, aTmax);
-
-			if (Math.abs(deltaMax - deltaMin) >= 5) {
-		  		if (deltaMax - deltaMin < 0) self.yaw('ccw');
-		  		if (deltaMax - deltaMin > 0) self.yaw('cw');
-		  	}
 		  
+			if (Math.abs(deltaMin >= 5)) {
+				self.yaw(deltaMin < 0 ? 'ccw' : 'cw');
+			}
+
 			if (dT >= self.engageRadius) {
 				self.increaseThrust();
 			} else {
@@ -134,6 +128,7 @@ const fsmStates = {
 
 			if (dT < self.engageRadius) {
 				self.fsm.transition(FSMState.ENGAGE);
+				return;
 			}
 		}
 	},
@@ -152,10 +147,8 @@ const fsmStates = {
 			}
 	    	const aE = angleBetween(self.centre.x, self.centre.y, -self.currentTarget.centre.x , -self.currentTarget.centre.y);
 	    	const deltaA = angleDifference(self.heading, aE);
-			if (deltaA < 0) self.yaw('ccw');
-			if (deltaA > 0) self.yaw('cw');
+			deltaA !== 0 && self.yaw(deltaA < 0 ? 'ccw' : 'cw');			
 			self.increaseThrust();
-			self.fsm.transition(FSMState.ESCAPE);
 		}		
 	},
 	escape: {
@@ -175,10 +168,11 @@ const fsmStates = {
 			if (threats.length > 0) {
 		    	const angleThreat = angleBetween(self.centre.x, self.centre.y, threats[0].echo.centre.x, threats[0].echo.centre.y);
 				const escapeVector = angleDifference(self.heading, angleThreat) + 180 - 360;
-		  	(escapeVector < 0) ? self.yaw('ccw') : self.yaw('cw');
+		  		(escapeVector < 0) ? self.yaw('ccw') : self.yaw('cw');
 				self.increaseThrust();
 			} else {
-				self.fsm.transition(FSMState.NEUTRAL);
+				self.fsm.transition(self.role.initialState);
+				return;
 			}
 		}		
 	},
