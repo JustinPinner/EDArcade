@@ -154,6 +154,9 @@ GameObject.prototype.collide = function(otherGameObject) {
 					otherGameObject.collectWeapon(this);
 					this.disposable = true;
 					return;
+				} else if (this instanceof Pickup || otherGameObject instanceof Pickup) {
+					// pickups do not take/cause damage
+					return;
 				}
 				// Apply basic motion transference algorithm
 				// from https://gamedevelopment.tutsplus.com/tutorials/when-worlds-collide-simulating-circle-circle-collisions--gamedev-769)
@@ -194,13 +197,17 @@ GameObject.prototype.collide = function(otherGameObject) {
 
 
 GameObject.prototype.collisionDetect = function(x, y) {
+	if (this._fsm && this._fsm.state && !this._fsm.state.detectCollisions) {
+		return;
+	}
 	const self = this,
 		_x = x || self._coordinates.x,
 		_y = y || self._coordinates.y;
 	const candidates = game.objects.filter(function(obj) {
 		if (obj === self || 
 			(obj instanceof Munition && obj.shooter === self) ||
-			(self instanceof Munition && self.shooter === obj )) {
+			(self instanceof Munition && self.shooter === obj) ||
+			(obj.fsm && obj.fsm.state && !obj.fsm.state.detectCollisions)) {
 			return false;
 		}
 		// draw a circle to enclose the whole object
@@ -253,4 +260,7 @@ GameObject.prototype.updateAndDraw = function(debug) {
 	this.updatePosition();
 	this.collisionDetect();
 	this.draw(debug);
+	if (this._fsm && this._fsm.execute) {
+		this._fsm.execute();
+	}
 };

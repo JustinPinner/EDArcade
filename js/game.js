@@ -95,11 +95,11 @@ class Game {
   }
 
   get maxSpawnDistanceX() {
-    return this._viewport.width * 5;
+    return (this._viewport.width / 2) * 5;
   }
 
   get maxSpawnDistanceY() {
-    return this._viewport.height * 5;
+    return (this._viewport.height / 2) * 5;
   }
 
   get despawnRange() {

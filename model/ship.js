@@ -19,8 +19,8 @@ class Ship extends GameObject {
 		this._armour = shipType.armour;
 		this._hullIntegrity = 100;
 		this._coordinates = new Point2d(
-			this._player ? game.viewport.centre.x - (this._model.width / 2) : rand(game.maxSpawnDistanceX, true),
-			this._player ? game.viewport.centre.y - (this._model.height / 2) : rand(game.maxSpawnDistanceY, true)	
+			this._player ? game.viewport.centre.x - (this._model.width / 2) : game.playerShip.coordinates.x + rand(game.maxSpawnDistanceX, true),
+			this._player ? game.viewport.centre.y - (this._model.height / 2) : game.playerShip.coordinates.y + rand(game.maxSpawnDistanceY, true)	
 		);		
 		this._sprite = new Sprite(0, 0, shipType.width, shipType.height, shipType.name, shipType.cells);
 		this._sprite.loadImage();		
@@ -444,7 +444,7 @@ Ship.prototype.takeDamage = function(source) {
 			this._player = null;
 			this._fsm = new FSM(this, this._role.initialState);
 		}
-		this._fsm.transition(FSMState.EXPLODING);
+		this._fsm.transition(FSMState.EXPLODE);
 	}
 };
 
@@ -520,18 +520,18 @@ Ship.prototype.drawHud = function() {
 	// draw threat pointers
 	for (var i=0; i < this._contacts.length; i++) {
 		const ping = this._contacts[i];
-		const angle = angleBetween(this._coordinates.x, this._coordinates.y, ping.ship.centre.x, ping.ship.centre.y);
-		const distance = distanceBetweenObjects(this, ping.ship);
-		const threatLevel = ping.target || ping.ship.currentTarget && ping.ship.currentTarget === this ? 2 : ping.threat ? 1 : 0;
-		if (ping.ship.isOnScreen() && threatLevel > 0) {
-			origin = ping.ship.drawOriginCentre;
+		const angle = angleBetween(this._coordinates.x, this._coordinates.y, ping.echo.centre.x, ping.echo.centre.y);
+		const distance = distanceBetweenObjects(this, ping.echo);
+		const threatLevel = ping.target || ping.echo.currentTarget && ping.echo.currentTarget === this ? 2 : ping.threat ? 1 : 0;
+		if (ping.echo.isOnScreen() && threatLevel > 0) {
+			origin = ping.echo.drawOriginCentre;
 			// draw threat ring
 			game.viewport.context.moveTo(origin.x, origin.y);
 			game.viewport.context.beginPath();
 			game.viewport.context.strokeStyle = threatLevel < 2 ? 'orange' : 'red';
-			game.viewport.context.arc(origin.x, origin.y, ping.ship.model.width, 0, Math.PI * 2, false);
+			game.viewport.context.arc(origin.x, origin.y, ping.echo.model.width, 0, Math.PI * 2, false);
 			game.viewport.context.stroke();
-		} else if (!ping.ship.isOnScreen()) {
+		} else if (!ping.echo.isOnScreen()) {
 			// show off-screen marker
 			origin = this.drawOriginCentre;
 			game.viewport.context.fillStyle = threatLevel < 2 ? (threatLevel < 1 ? 'gray' : 'orange') : 'red';
@@ -694,32 +694,32 @@ class Scanner {
 Scanner.prototype.scan = function() {
   if (!this.lastScan || Date.now() - this.lastScan >= this.interval) {
     this.ship.contacts = [];
-		const nonMunitions = game.objects.filter(function(obj)	{
-			return !(obj instanceof Munition);
-		});
-		const scanLimit = this.ship.maximumWeaponRange * 10;	//todo - use a better scan limit
+	const nonMunitions = game.objects.filter(function(obj)	{
+		return !(obj instanceof Munition);
+	});
+	const scanLimit = this.ship.maximumWeaponRange * 10;	//todo - use a better scan limit
     for (var i = 0; i < nonMunitions.length; i++) {
-   		const range = distanceBetweenObjects(this.ship, game.objects[i]);
-   		if (game.objects[i] !== this.ship && range <= scanLimit) {
-				var threat = false;				
-				var target = false;
-				if (this.ship.role) {
-					threat = game.objects[i].currentTarget === this.ship || this.ship.role.threatStatus.filter(function(t) {
-						return t == game.objects[i].status;
-					}).length > 0 ? true : false;
-					target = this.ship.role.targetStatus.filter(function(t) {
-						return t == game.objects[i].status;
-					}).length > 0 ? true : this.ship.currentTarget === game.objects[i] ? true : false;
-				}
-      	const ping = {
-      		ship: game.objects[i],
-      		threat: threat,
-      		target: target,
-      		range: range
-      	};
-      	this.ship.contacts.push(ping);
-      }
-		}    	
+   		const range = distanceBetweenObjects(this.ship, nonMunitions[i]);
+   		if (nonMunitions[i] !== this.ship && range <= scanLimit) {
+			var threat = false;				
+			var target = false;
+			if (this.ship.role) {
+				threat = nonMunitions[i].currentTarget === this.ship || this.ship.role.threatStatus.filter(function(t) {
+					return t == nonMunitions[i].status;
+				}).length > 0 ? true : false;
+				target = this.ship.role.targetStatus.filter(function(t) {
+					return t == nonMunitions[i].status;
+				}).length > 0 ? true : this.ship.currentTarget === nonMunitions[i] ? true : false;
+			}
+			const ping = {
+				echo: nonMunitions[i],
+				threat: threat,
+				target: target,
+				range: range
+			};
+			this.ship.contacts.push(ping);
+		}
+	}    	
   	this.lastScan = Date.now();
   }
 }

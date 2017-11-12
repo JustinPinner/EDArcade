@@ -27,7 +27,7 @@ class Pickup extends GameObject {
 		this._payload = obj;
 		this._sprite = new Sprite(0, 0, flotsam.width, flotsam.height, obj.iconName);
 		this._sprite.loadImage();
-		this._ttl = 60;	
+		this._ttl = 10;	
 		this._lastTtlTick = null;	
 	}
 	get payload() {
