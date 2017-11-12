@@ -30,14 +30,11 @@ class ShipExplosionEffect extends Effect {
 			frameHeight: 204.8,
 			frameColumns: 5,
 			frameRows: 5,
+			framesRepeat: false,
 			lastFrameDrawn: 0
 		};
 		this._coordinates = new Point2d(drawOriginCentre.x - (this._sprite.width / 2), drawOriginCentre.y - (this._sprite.height / 2));
 		this._fsm = new FSM(this, FSMState.EFFECT);
-		this.updateAndDraw = function() {
-			this.updatePosition();
-			this._fsm.execute();
-		};
 		this.draw = function() {
 			var origin = this._coordinates;
 			var cell = ((this._sprite.cells.lastFrameDrawn || 0) * this._sprite.cells.frameWidth) / (this._sprite.cells.frameWidth * this._sprite.cells.frameColumns);
@@ -59,10 +56,11 @@ class ShipExplosionEffect extends Effect {
 				this.geometry.width, 
 				this.geometry.height);
 			this._sprite.cells.lastFrameDrawn = this._sprite.cells.lastFrameDrawn === this._sprite.cells.frameColumns * this._sprite.cells.frameRows ? 0 : this._sprite.cells.lastFrameDrawn += 1;
-			if (this.complete()) this._fsm.transition(FSMState.DIE);
+			if (this.complete()) this._fsm.transition(FSMState.DESPAWN);
 		};
 		this.complete = function() {
-			return this._sprite.cells.lastFrameDrawn >= this._sprite.cells.frameRows * this._sprite.cells.frameColumns && !this._sprite.cells.framesRepeat;
+			return this._sprite.cells.lastFrameDrawn >= this._sprite.cells.frameRows * this._sprite.cells.frameColumns && 
+				!this._sprite.cells.framesRepeat;
 		};
 	}
 }

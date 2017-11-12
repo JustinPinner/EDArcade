@@ -95,11 +95,17 @@ class Game {
   }
 
   get maxSpawnDistanceX() {
-    return this._viewport.width * 5;
+    return (this._viewport.width / 2) * 5;
   }
 
   get maxSpawnDistanceY() {
-    return this._viewport.height * 5;
+    return (this._viewport.height / 2) * 5;
+  }
+
+  get despawnRange() {
+    const maxX = this.maxSpawnDistanceX * 2;
+    const maxY = this.maxSpawnDistanceY * 2
+    return Math.sqrt((maxX * maxX)+(maxY * maxY));
   }
 
   get objects() {
@@ -128,11 +134,22 @@ Game.prototype.tick = function() {
   this._gameObjects = deadAndAlive[1];
   var npcCount = 0;
   for (var i = 0; i < this._gameObjects.length; i++) {
-    if (this._gameObjects[i].type === GameObjectTypes.SHIP && this._gameObjects[i].role !== ShipRoles.PLAYER) {
+    const gameObject = this._gameObjects[i];
+    if (gameObject.TTL) {
+      const now = Date.now();
+      if (!gameObject.lastTTLTick || (gameObject.lastTTLTick && now - gameObject.lastTTLTick >= 1000)) {
+        gameObject.lastTTLTick = Date.now();
+        gameObject.TTL -= 1;
+        if (gameObject.TTL <= 0) {
+          gameObject.disposable = true;
+        }
+      }
+    }
+    if (gameObject.type === GameObjectTypes.SHIP && gameObject.role !== ShipRoles.PLAYER) {
       npcCount++;
     }
-    this._gameObjects[i].updateAndDraw(debug);
-    if (this._gameObjects[i] === this._playerShip) {
+    gameObject.updateAndDraw(debug);
+    if (gameObject === this._playerShip) {
       const uiCoord = document.querySelector(".ui.debug.coord");
       if (uiCoord) {
         uiCoord.innerHTML = "<p>x:" + (this._playerShip.coordinates.x ? this._playerShip.coordinates.x.toFixed(1) : " ") + " y:" + (this._playerShip.coordinates.y ? this._playerShip.coordinates.y.toFixed(1) : " ") + "</p>";
