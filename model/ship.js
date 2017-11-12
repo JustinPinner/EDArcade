@@ -324,9 +324,9 @@ Ship.prototype.isTargetting = function(ship) {
 
 Ship.prototype.identifyTargets = function() {
 	for (var c = 0; c < this._contacts.length; c++) {
-		if (this._role && this._contacts[c].ship.role) {
+		if (this._role && this._contacts[c].echo.role) {
 			this._contacts[c].target = this._role.opponents.filter(function(opp){
-				return opp.roleName = this._contacts[c].ship.roleName;
+				return opp.roleName = this._contacts[c].echo.roleName;
 			}).length > 0 ? true : false;
 		}
 	}
