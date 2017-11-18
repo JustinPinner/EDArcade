@@ -49,12 +49,9 @@ const fsmStates = {
 		nextState: [FSMState.CHASE, FSMState.ENGAGE, FSMState.EVADE, FSMState.ESCAPE],
 		detectCollisions: true,
 		execute: function(self) {
-			if (self.targets.length > 0) {
-				const closestTarget = self.selectClosestTarget();
-				if (closestTarget) {
-					self.currentTarget = closestTarget.echo;
-					self.fsm.transition(FSMState.CHASE);
-				}
+			self.selectClosestTarget();
+			if (self.currentTarget) {
+				self.fsm.transition(FSMState.CHASE);
 			}
 		}
 	},
@@ -67,10 +64,7 @@ const fsmStates = {
 				self.fsm.transition(FSMState.HUNT);
 				return;
 			}
-			const closestTarget = self.selectClosestTarget();
-			if (!self.currentTarget || self.currentTarget !== closestTarget) {
-				self.currentTarget = closestTarget.echo;
-			}
+			self.selectClosestTarget();
 			const combatSpeedRange = {
 				min: self.model.maxSpeed * 0.4,
 				max: self.model.maxSpeed * 0.6
@@ -81,7 +75,7 @@ const fsmStates = {
 				self.decreaseThrust();
 			}
 	    
-			const aTmin = angleBetween(self.centre.x, self.centre.y, self.currentTarget.centre.x, self.currentTarget.centre.y);
+			const aTmin = angleBetween(self.centre.x, self.centre.y, self.currentTarget.echo.centre.x, self.currentTarget.echo.centre.y);
 
 			const deltaMin = angleDifference(self.heading, aTmin);
 
@@ -89,7 +83,7 @@ const fsmStates = {
 				self.yaw(deltaMin < 0 ? 'ccw' : 'cw');
 			}
 
-			const dT = distanceBetweenObjects(self, self.currentTarget);
+			const dT = distanceBetweenObjects(self, self.currentTarget.echo);
 			if (dT <= self.maximumWeaponRange) {
 				self.fireWeapons();
 			}
@@ -112,8 +106,8 @@ const fsmStates = {
 				return;
 			} 
 
-			const dT = distanceBetweenObjects(self, self.currentTarget);
-			const aTmin = angleBetween(self.centre.x, self.centre.y, self.currentTarget.centre.x, self.currentTarget.centre.y);
+			const dT = distanceBetweenObjects(self, self.currentTarget.echo);
+			const aTmin = angleBetween(self.centre.x, self.centre.y, self.currentTarget.echo.centre.x, self.currentTarget.echo.centre.y);
 			const deltaMin = angleDifference(self.heading, aTmin);
 		  
 			if (Math.abs(deltaMin >= 5)) {
@@ -141,15 +135,11 @@ const fsmStates = {
 				self.fsm.transition(self.role.initialState);
 				return;
 			}
-			if (distanceBetweenObjects(self, self.currentTarget) >= self.engageRadius) {
-				if (self.shield.charge <= 25) {	//TODO: vary by NPC agression
-					self.fsm.transition(FSMState.ESCAPE);
-					return;
-				}	
+			if (distanceBetweenObjects(self, self.currentTarget.echo) >= self.engageRadius) {
 				self.fsm.transition(FSMState.CHASE);
 				return;
 			}
-	    	const aE = angleBetween(self.centre.x, self.centre.y, -self.currentTarget.centre.x , -self.currentTarget.centre.y);
+	    	const aE = angleBetween(self.centre.x, self.centre.y, -self.currentTarget.echo.centre.x , -self.currentTarget.echo.centre.y);
 	    	const deltaA = angleDifference(self.heading, aE);
 			deltaA !== 0 && self.yaw(deltaA < 0 ? 'ccw' : 'cw');			
 			self.increaseThrust();
@@ -175,10 +165,6 @@ const fsmStates = {
 		  		(escapeVector < 0) ? self.yaw('ccw') : self.yaw('cw');
 				self.increaseThrust();
 			} else {
-				if (self.shield.charge <= 30) {
-					self.fsm.transition(FSMState.HEAL);
-					return;
-				}	
 				self.fsm.transition(self.role.initialState);
 				return;
 			}
@@ -212,9 +198,6 @@ const fsmStates = {
 				} else if (sortedPickups[0].range <= 50) {
 					self.decreaseThrust();
 				}									
-			}
-			if (self.shield.charge >= (10 - self.aggression) * 10) {
-				self.fsm.demotivate();
 			}
 		}				
 	},
@@ -392,7 +375,7 @@ const forceableStates = [
 	FSMState.HEAL
 ]
 
-const nonNegotiableStates = [
+const nonNegotiableStateModes = [
 	FSMState.EXPLODE,
 	FSMState.EXPLODING, 
 	FSMState.DIE, 
@@ -498,13 +481,15 @@ FSM.prototype.execute = function() {
 		if (this._gameObject instanceof Ship && distanceBetweenObjects(this._gameObject, game.playerShip) > game.despawnRange) {
 			this.transition(FSMState.DESPAWN);
 		}
-		this.reflex();
+		if (this._gameObject instanceof Ship) {
+			this.reflex();
+		}
 		this._state.execute && this._state.execute(this._gameObject);
 	}
 }
 
 FSM.prototype.reflex = function() {
-	if (nonNegotiableStates.includes(this._state)) {
+	if (nonNegotiableStateModes.includes(this._state.mode)) {
 		return;
 	}
 	const actions = this._motivations.sort(function(a, b) {
@@ -518,15 +503,15 @@ FSM.prototype.reflex = function() {
 	});
 	if (actions[0].weight >= actions[0].threshold(this._aggression)) {
 		const nextState = (actions[0].state || this.gameObject.role.initialState);
-		this.transition(fsmStates[nextState]);
+		this.transition(nextState);
 	}
 }
 
-FSM.prototype.transition = function(newState) {
- 	if ((this._state.nextState && (this._state.nextState.includes(newState))) || forceableStates.includes(newState)) {
-		this._state = fsmStates[newState];
+FSM.prototype.transition = function(newStateId) {
+ 	if (this._state && (this._state.nextState.includes(newStateId) || forceableStates.includes(newStateId))) {
+		this._state = fsmStates[newStateId];
 	} else {
-		this._state = this._startState;
+		this._state = fsmStates[this._startState];
 	}
 }
 

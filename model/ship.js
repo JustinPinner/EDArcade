@@ -13,6 +13,7 @@ class Ship extends GameObject {
 		this._fsm = this._player ? null : new FSM(this, this.role.initialState);
 		this._status = this._role.initialStatus;
 		this._contacts = [];
+		this._attackers = [];
 		this._currentTarget = null;
 		this._scanner = new Scanner(this);
 		this._shield = new Shield(this);
@@ -103,6 +104,9 @@ class Ship extends GameObject {
 		});
 		return scannedTargets;
 	}
+	get attackers() {
+		return this._attackers;
+	}
 	get currentTarget() {
 		return this._currentTarget;
 	}
@@ -132,6 +136,9 @@ class Ship extends GameObject {
 			}
 		}
 		return range;
+	}
+	get maximumScanRange() {
+		return this.maximumWeaponRange * 10;
 	}
 	get role() {
 		return this._role;
@@ -298,7 +305,7 @@ Ship.prototype.isOnScreen = function(debug) {
 
 Ship.prototype.isKnown = function(ship) {
 	for (var n = 0; n < this.targets.length; n++) {
-		if (this.targets[n] === ship) {
+		if (this.targets[n].echo === ship) {
 			return true;
 		}
 	}
@@ -318,26 +325,28 @@ Ship.prototype.isTargetedBy = function(ship) {
 
 Ship.prototype.isTargetting = function(ship) {
 	for (var t = 0; t < this.targets.length; t++) {
-		if (this.targets[t] === ship) {
+		if (this.targets[t].echo === ship) {
 			return true;
 		}
 	}
 	return false;
 }
 
-// Ship.prototype.identifyTargets = function() {
-// 	const self = this;
-// 	for (var c = 0; c < self._contacts.length; c++) {
-// 		if (self._role && self._contacts[c].echo.role) {
-// 			self._contacts[c].target = self._role.targetStatus.filter(function(roleName) {
-// 				return roleName.toLowerCase() == self._contacts[c].echo.role.roleName.toLowerCase();
-// 			}).length > 0 ? true : false;
-// 		}
-// 	}
-// };
-
 Ship.prototype.selectClosestTarget = function() {
-	return this.targets.length > 0 ? this.targets[0] : null;
+	for (var i = 0; i < this.attackers.length; i++) {
+		if (distanceBetweenObjects(this, this.attackers[i].echo) <= this.maximumScanRange) {
+			this.currentTarget = this.attackers[i];
+			break;
+		}	
+	}
+	if (!this.currentTarget) {
+		for (var i = 0; i < this.targets.length; i++) {
+			if (distanceBetweenObjects(this, this.targets[i].echo) <= this.maximumScanRange) {
+				this.currentTarget = this.targets[i];
+				break;
+			}	
+		}
+	}
 };
 
 Ship.prototype.isInFrontOf = function(ship) {
@@ -434,16 +443,29 @@ Ship.prototype.takeDamage = function(source) {
 	// what hit us?
 	if (source instanceof Munition) {
 		source.shooter.registerHit(this);
+		for (var i = 0; i < this.contacts.length; i++) {
+			if (this.contacts[i].echo === source.shooter) {
+				let identified = false;
+				for (j = 0; j < this.attackers.length; j++) {
+					if(this.attackers[j].echo === source.shooter) {
+						identified = true;
+						break;
+					}
+				}
+				if (!identified) {
+					this.attackers.push(this.contacts[i]);
+				}
+			}
+		}		
+		if (this.fsm) {
+			this.fsm.underAttack();
+		}
 		if (this._shield && this._shield.charge > 0) {
 			this._shield.impact(source);
 		} else if (this._armour && this._armour > 0) {
 			this._armour -= source.strength;
 		} else if (this._hullIntegrity && this._hullIntegrity > 0) {
 			this._hullIntegrity -= source.strength;
-		}
-		this.currentTarget = source.shooter;
-		if (this.fsm) {
-			this.fsm.underAttack();
 		}
 	}
 	if (this._hullIntegrity <= 0) {
@@ -452,7 +474,7 @@ Ship.prototype.takeDamage = function(source) {
 			this._player = null;
 			this._fsm = new FSM(this, this._role.initialState);
 		}
-		this._fsm.transition(FSMState.EXPLODE);
+		this.fsm.transition(FSMState.EXPLODE);
 	}
 };
 
@@ -460,7 +482,9 @@ Ship.prototype.registerHit = function(obj) {
 	if (obj.status !== PilotStatus.WANTED) {
 		this._status = PilotStatus.WANTED;
 	}
-	this._currentTarget = obj;
+	if ((!this._currentTarget) || this._currentTarget.echo !== obj) {
+		this._currentTarget = this.scanner.identify(obj);
+	}
 };
 
 Ship.prototype.matchTargetVector = function(ship) {
@@ -539,7 +563,7 @@ Ship.prototype.drawHud = function() {
 		const ping = this._contacts[i];
 		const angle = angleBetween(this._coordinates.x, this._coordinates.y, ping.echo.centre.x, ping.echo.centre.y);
 		const distance = distanceBetweenObjects(this, ping.echo);
-		const threatLevel = ping.target || ping.echo.currentTarget && ping.echo.currentTarget === this ? 2 : ping.threat ? 1 : 0;
+		const threatLevel = ping.target || ping.echo.currentTarget && ping.echo.currentTarget.echo === this ? 2 : ping.threat ? 1 : 0;
 		if (ping.echo.isOnScreen() && threatLevel > 0) {
 			origin = ping.echo.drawOriginCentre;
 			// draw threat ring
@@ -656,17 +680,17 @@ Scanner.prototype.scan = function() {
 	const nonMunitions = game.objects.filter(function(obj)	{
 		return !(obj instanceof Munition);
 	});
-	const scanLimit = this.ship.maximumWeaponRange * 10;	//todo - use a better scan limit
+	const scanLimit = this.ship.maximumScanRange;	//todo - use a better scan limit
     for (var i = 0; i < nonMunitions.length; i++) {
    		const range = distanceBetweenObjects(this.ship, nonMunitions[i]);
    		if (nonMunitions[i] !== this.ship && range <= scanLimit) {
 			let threat = false;				
 			let target = false;
 			if (this.ship.role) {
-				threat = nonMunitions[i].currentTarget === this.ship || this.ship.role.threatStatus.filter(function(t) {
+				threat = (nonMunitions[i].currentTarget && nonMunitions[i].currentTarget.echo === this.ship) || this.ship.role.threatStatus.filter(function(t) {
 					return t == nonMunitions[i].status;
 				}).length > 0 ? true : false;
-				target = nonMunitions[i].currentTarget === this.ship || this.ship.role.targetStatus.filter(function(t) {
+				target = (nonMunitions[i].currentTarget && nonMunitions[i].currentTarget.echo === this.ship) || this.ship.role.targetStatus.filter(function(t) {
 					return t == nonMunitions[i].status;
 				}).length > 0 ? true : false;
 			}
@@ -683,6 +707,17 @@ Scanner.prototype.scan = function() {
 	}    	
   	this.lastScan = Date.now();
   }
+}
+
+Scanner.prototype.identify = function(obj) {
+	let match;
+	for (i = 0; i < this.ship.contacts.length; i++) {
+		if (this.ship.contacts[i].echo === obj) {
+			match = this.ship.contacts[i];
+			break;
+		}
+	}
+	return match;
 }
 
 class Shield {

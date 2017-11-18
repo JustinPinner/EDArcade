@@ -11,13 +11,13 @@ const ShieldBoost = {
 	iconName: 'ShieldBoost',
 	execute: function(recipient) {
 		let effect = randRangeInt(30, 100);
-		let required = 100 - recipient.hullIntegrity;
+		let required = 100 - recipient.shield.charge;
 		let apply = 0;
 		if(required > 0) {
 			apply = effect - required <= 0 ? effect : effect - required
 			recipient.shield.charge += apply;
 			effect -= apply;
-			recipient.fsm.motivate();
+			recipient.fsm && recipient.fsm.motivate();
 		}
 	}			
 }
@@ -32,7 +32,7 @@ const HullRepair = {
 			apply = effect - required <= 0 ? effect : effect - required
 			recipient.hullIntegrity += apply;
 			effect -= apply;
-			recipient.fsm.motivate();
+			recipient.fsm && recipient.fsm.motivate();
 		}
 		if(effect > 0) {
 			required = recipient.model.armour - recipient.armour;
@@ -40,7 +40,7 @@ const HullRepair = {
 				apply = effect - required <= 0 ? effect : effect - required;
 				recipient.armour += apply;
 				effect -= apply;
-				recipient.fsm.motivate();
+				recipient.fsm && recipient.fsm.motivate();
 			}				
 		}
 	}
