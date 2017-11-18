@@ -1,4 +1,3 @@
-
 const FSMState = {
 	PLAYER: 'player',
 	NEUTRAL: 'neutral',
@@ -7,6 +6,7 @@ const FSMState = {
 	CHASE: 'chase',
 	EVADE: 'evade',
 	ESCAPE: 'escape',
+	HEAL: 'heal',
 	EXPLODE: 'explode',
 	EXPLODING: 'exploding',
 	DIE: 'die',
@@ -18,13 +18,6 @@ const FSMState = {
 	IMPACT: 'munitionImpact',
 	EFFECT: 'effectPlay'
 }
-
-const forceableStates = [
-	FSMState.EXPLODE,
-	FSMState.EXPLODING, 
-	FSMState.DIE, 
-	FSMState.DESPAWN
-];
 
 const fsmStates = {
 	player: {
@@ -55,10 +48,13 @@ const fsmStates = {
 		mode: FSMState.HUNT,
 		nextState: [FSMState.CHASE, FSMState.ENGAGE, FSMState.EVADE, FSMState.ESCAPE],
 		detectCollisions: true,
-		execute: function(self) {		  
-			if (!self.currentTarget && self.threats.length > 0) {
-				self.currentTarget = self.threats[0].echo;
-				self.fsm.transition(FSMState.CHASE);
+		execute: function(self) {
+			if (self.targets.length > 0) {
+				const closestTarget = self.selectClosestTarget();
+				if (closestTarget) {
+					self.currentTarget = closestTarget.echo;
+					self.fsm.transition(FSMState.CHASE);
+				}
 			}
 		}
 	},
@@ -67,9 +63,13 @@ const fsmStates = {
 		nextState: [FSMState.CHASE, FSMState.HUNT, FSMState.EVADE, FSMState.ESCAPE],
 		detectCollisions: true,
 		execute: function(self) {
-			if (!self.currentTarget) {
+			if (self.targets.length < 1) {
 				self.fsm.transition(FSMState.HUNT);
 				return;
+			}
+			const closestTarget = self.selectClosestTarget();
+			if (!self.currentTarget || self.currentTarget !== closestTarget) {
+				self.currentTarget = closestTarget.echo;
 			}
 			const combatSpeedRange = {
 				min: self.model.maxSpeed * 0.4,
@@ -142,7 +142,11 @@ const fsmStates = {
 				return;
 			}
 			if (distanceBetweenObjects(self, self.currentTarget) >= self.engageRadius) {
-				self._fsm.transition(FSMState.CHASE);
+				if (self.shield.charge <= 25) {	//TODO: vary by NPC agression
+					self.fsm.transition(FSMState.ESCAPE);
+					return;
+				}	
+				self.fsm.transition(FSMState.CHASE);
 				return;
 			}
 	    	const aE = angleBetween(self.centre.x, self.centre.y, -self.currentTarget.centre.x , -self.currentTarget.centre.y);
@@ -171,10 +175,48 @@ const fsmStates = {
 		  		(escapeVector < 0) ? self.yaw('ccw') : self.yaw('cw');
 				self.increaseThrust();
 			} else {
+				if (self.shield.charge <= 30) {
+					self.fsm.transition(FSMState.HEAL);
+					return;
+				}	
 				self.fsm.transition(self.role.initialState);
 				return;
 			}
 		}		
+	},
+	heal: {
+		mode: FSMState.HEAL,
+		nextState: [FSMState.NEUTRAL, FSMState.HUNT],
+		detectCollisions: true,
+		execute: function(self) {
+			const pickups = self.contacts.filter(function(ping) {
+				return ping instanceof PowerUp;
+			});
+			if (pickups.length > 0) {
+				const sortedPickups = pickups.sort(function(a, b) {
+					if (a.range < b.range) {
+						return -1;
+					}
+					if (a.range > b.range) {
+						return 1;
+					}
+					return 0;
+				});
+				const aTmin = angleBetween(self.centre.x, self.centre.y, sortedPickups[0].echo.centre.x, sortedPickups[0].echo.centre.y);
+				const deltaMin = angleDifference(self.heading, aTmin);			  
+				if (Math.abs(deltaMin >= 5)) {
+					self.yaw(deltaMin < 0 ? 'ccw' : 'cw');
+				}
+				if (sortedPickups[0].range >= 500) {
+					self.increaseThrust();
+				} else if (sortedPickups[0].range <= 50) {
+					self.decreaseThrust();
+				}									
+			}
+			if (self.shield.charge >= (10 - self.aggression) * 10) {
+				self.fsm.demotivate();
+			}
+		}				
 	},
 	explode: {
 		mode: FSMState.EXPLODE,
@@ -195,6 +237,7 @@ const fsmStates = {
 			if (self.dumpWeapons) {
 				self.dumpWeapons();
 			}
+			self.spawnRandomPowerUps(self);
 			self.fsm.transition(FSMState.DIE);			
 		}
 	},
@@ -273,12 +316,156 @@ const fsmStates = {
 	}
 }
 
+const PilotStatus = {
+	CLEAN: 'clean',
+	VIGILANTE: 'vigilante',
+	SECURITY: 'security',
+	WANTED: 'wanted'
+}
+
+const NonPilotStatus = {
+	CARGO: 'cargo',
+	MINERAL: 'mineral'
+}
+
+const PilotRoles = {
+	TRADER: {
+		roleName: 'Trader',
+		initialState: FSMState.NEUTRAL,
+		initialStatus: PilotStatus.CLEAN,
+		threatStatus: [PilotStatus.WANTED],
+		targetStatus: [NonPilotStatus.CARGO],
+		minAggression: 1,
+		maxAggression: 7
+	},
+	MINER: {
+		roleName: 'Miner',
+		initialState: FSMState.NEUTRAL,
+		initialStatus: PilotStatus.CLEAN,
+		threatStatus: [PilotStatus.WANTED],
+		targetStatus: [NonPilotStatus.MINERAL],
+		minAggression: 1,
+		maxAggression: 5
+	},
+	BOUNTYHUNTER: {
+		roleName: 'Bounty Hunter',
+		initialState: FSMState.HUNT,
+		initialStatus: PilotStatus.VIGILANTE,
+		threatStatus: [PilotStatus.WANTED],
+		targetStatus: [PilotStatus.WANTED],
+		minAggression: 5,
+		maxAggression: 9
+	},
+	SECURITY: {
+		roleName: 'Security Service',
+		initialState: FSMState.HUNT,
+		initialStatus: PilotStatus.SECURITY,
+		threatStatus: [PilotStatus.WANTED],
+		targetStatus: [PilotStatus.WANTED],
+		minAggression: 7,
+		maxAggression: 9
+	},
+	PIRATE: {
+		roleName: 'Pirate',
+		initialState: FSMState.HUNT,
+		initialStatus: PilotStatus.WANTED,
+		threatStatus: [PilotStatus.SECURITY, PilotStatus.VIGILANTE],
+		targetStatus: [PilotStatus.CLEAN, PilotStatus.WANTED],
+		minAggression: 8,
+		maxAggression: 9
+	},
+	PLAYER: {
+		// always last in the list
+		roleName: 'Player',
+		initialState: FSMState.PLAYER,
+		initialStatus: PilotStatus.CLEAN,
+		threatStatus: [PilotStatus.WANTED],
+		targetStatus: []
+	}
+}
+
+const forceableStates = [
+	FSMState.EXPLODE,
+	FSMState.EXPLODING, 
+	FSMState.DIE, 
+	FSMState.DESPAWN,
+	FSMState.HEAL
+]
+
+const nonNegotiableStates = [
+	FSMState.EXPLODE,
+	FSMState.EXPLODING, 
+	FSMState.DIE, 
+	FSMState.DESPAWN
+]
+
+const motivations = {
+	FIGHT: {
+		name: 'fight',
+		trigger: function(fsm) {
+			const aggression = fsm.aggression;
+			const shieldPercent = fsm.gameObject.shield.charge;
+			const hullPercent = fsm.gameObject.hullIntegrity;
+			const armourPercent = (fsm.gameObject.armour / fsm.gameObject.model.armour) * 100;
+			const minPercent = 100 - (aggression * 10);
+			return shieldPercent >= minPercent && hullPercent >= minPercent && armourPercent >= minPercent;
+		},
+		weight: 0,
+		threshold: function (aggression) {
+			return 9 - aggression;
+		},
+		state: FSMState.ENGAGE
+	},
+	FLIGHT: {
+		name: 'flight',
+		trigger: function(fsm) {
+			const aggression = fsm.aggression;
+			const shieldPercent = fsm.gameObject.shield.charge;
+			const hullPercent = fsm.gameObject.hullIntegrity;
+			const armourPercent = (fsm.gameObject.armour / fsm.gameObject.model.armour) * 100;
+			const minPercent = 100 - (aggression * 10);
+			return shieldPercent <= minPercent && hullPercent <= minPercent && armourPercent <= minPercent;
+		},
+		weight: 0,
+		threshold: function(aggression) {
+			return aggression;
+		},
+		state: FSMState.ESCAPE
+	},
+	RECOVER: {
+		name: 'recover',
+		weight: 0,
+		trigger: function(fsm) {
+			const aggression = fsm.aggression;
+			const shieldPercent = fsm.gameObject.shield.charge;
+			const hullPercent = fsm.gameObject.hullIntegrity;
+			const armourPercent = (fsm.gameObject.armour / fsm.gameObject.model.armour) * 100;
+			const minPercent = 100 - (aggression * 10);
+			return shieldPercent >= minPercent && hullPercent >= minPercent && armourPercent >= minPercent;
+		},
+		threshold: function(aggression) {
+			return aggression / 2;
+		},
+		state: FSMState.HEAL
+	},
+	NORMAL: {
+		name: 'normal',
+		weight: 0,
+		threshold: function(aggression) {
+			return 0;
+		},
+		state: null
+	}
+}
+
 class FSM {
 	constructor(gameObject, currentState) {
 		this._gameObject = gameObject;
 		this._state = fsmStates[currentState];
 		this._startState = currentState;
 		this._lastTransitionTime = null;
+		this._motivations = [motivations.FIGHT, motivations.FLIGHT, motivations.RECOVER];
+		this._aggression = randRangeInt(gameObject.role.minAggression, gameObject.role.maxAggression);
 	}
 	get gameObject() {
 		return this._gameObject;
@@ -292,11 +479,17 @@ class FSM {
 	get lastTransitionTime() {
 		return this._lastTransitionTime;
 	}
+	get aggression() {
+		return this._aggression;
+	}
 	set state(newState) {
 		this._state = newState;
 	}
 	set lastTransitionTime(transitionTime) {
 		this._lastTransitionTime = transitionTime;
+	}
+	set aggression(val) {
+		this._aggression = val;
 	}
 }
 
@@ -305,14 +498,63 @@ FSM.prototype.execute = function() {
 		if (this._gameObject instanceof Ship && distanceBetweenObjects(this._gameObject, game.playerShip) > game.despawnRange) {
 			this.transition(FSMState.DESPAWN);
 		}
+		this.reflex();
 		this._state.execute && this._state.execute(this._gameObject);
 	}
 }
 
+FSM.prototype.reflex = function() {
+	if (nonNegotiableStates.includes(this._state)) {
+		return;
+	}
+	const actions = this._motivations.sort(function(a, b) {
+		if (a.weight < b.weight) {
+			return -1;
+		}
+		if (a.weight > b.weight) {
+			return 1;
+		}
+		return 0;
+	});
+	if (actions[0].weight >= actions[0].threshold(this._aggression)) {
+		const nextState = (actions[0].state || this.gameObject.role.initialState);
+		this.transition(fsmStates[nextState]);
+	}
+}
+
 FSM.prototype.transition = function(newState) {
-	if ((this._state.nextState && (this._state.nextState.includes(newState))) || forceableStates.includes(newState)) {
+ 	if ((this._state.nextState && (this._state.nextState.includes(newState))) || forceableStates.includes(newState)) {
 		this._state = fsmStates[newState];
 	} else {
 		this._state = this._startState;
+	}
+}
+
+FSM.prototype.motivate = function(state) {
+	const _state = state ? state : FSMState.NORMAL;
+	for (m in this._motivations) {
+		if (this._motivations[m].state === _state) {
+			this._motivations[m].weight += 1;
+		} else {
+			this._motivations[m].weight -= this._motivations[m].weight < 1 ? 0 : 1;
+		}
+	}
+}
+
+FSM.prototype.demotivate = function() {
+	for (m in this._motivations) {
+		if (this._motivations[m].state === null) {
+			this._motivations[m].weight = 1;
+		} else {
+			this._motivations[m].weight = 0;
+		}
+	}
+}
+
+FSM.prototype.underAttack = function() {
+	for (m in this._motivations) {
+		if (this._motivations[m].trigger && this._motivations[m].trigger(this)) {
+			this._motivations[m].weight = 9;
+		}
 	}
 }

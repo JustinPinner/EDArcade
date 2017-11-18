@@ -145,7 +145,7 @@ Game.prototype.tick = function() {
         }
       }
     }
-    if (gameObject.type === GameObjectTypes.SHIP && gameObject.role !== ShipRoles.PLAYER) {
+    if (gameObject.type === GameObjectTypes.SHIP && gameObject.role !== PilotRoles.PLAYER) {
       npcCount++;
     }
     gameObject.updateAndDraw(debug);
@@ -179,7 +179,7 @@ Game.prototype.tick = function() {
   // spawn new / maintain min. NPC ships
   for (var i = npcCount; i < minNPC; i++) {
     const spawnShipType = ShipTypes[Object.keys(ShipTypes)[Math.floor(rand(Object.keys(ShipTypes).length))]];
-    const spawnShipRole = ShipRoles[Object.keys(ShipRoles)[Math.floor(rand(Object.keys(ShipRoles).length - 1))]];
+    const spawnShipRole = PilotRoles[Object.keys(PilotRoles)[Math.floor(rand(Object.keys(PilotRoles).length - 1))]];
     const newShip = new Ship(spawnShipType, 'NPC' + i, spawnShipRole);
     this._gameObjects.push(newShip);
   }

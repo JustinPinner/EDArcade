@@ -9,7 +9,7 @@ class Ship extends GameObject {
 		this._heading = this._player ? 270 : rand(359);
 		this._thrust = 0;
 		this._direction = this._heading;
-		this._role = this._player ? ShipRoles.PLAYER : role;
+		this._role = this._player ? PilotRoles.PLAYER : role;
 		this._fsm = this._player ? null : new FSM(this, this.role.initialState);
 		this._status = this._role.initialStatus;
 		this._contacts = [];
@@ -162,6 +162,9 @@ class Ship extends GameObject {
 	}
 	set currentTarget(ping) {
 		this._currentTarget = ping;
+	}
+	set armour(val) {
+		this._armour = val;
 	}
 };
 
@@ -322,18 +325,19 @@ Ship.prototype.isTargetting = function(ship) {
 	return false;
 }
 
-Ship.prototype.identifyTargets = function() {
-	for (var c = 0; c < this._contacts.length; c++) {
-		if (this._role && this._contacts[c].echo.role) {
-			this._contacts[c].target = this._role.opponents.filter(function(opp){
-				return opp.roleName = this._contacts[c].echo.roleName;
-			}).length > 0 ? true : false;
-		}
-	}
-};
+// Ship.prototype.identifyTargets = function() {
+// 	const self = this;
+// 	for (var c = 0; c < self._contacts.length; c++) {
+// 		if (self._role && self._contacts[c].echo.role) {
+// 			self._contacts[c].target = self._role.targetStatus.filter(function(roleName) {
+// 				return roleName.toLowerCase() == self._contacts[c].echo.role.roleName.toLowerCase();
+// 			}).length > 0 ? true : false;
+// 		}
+// 	}
+// };
 
 Ship.prototype.selectClosestTarget = function() {
-	return this._targets.length > 0 ? this._targets[0] : null;
+	return this.targets.length > 0 ? this.targets[0] : null;
 };
 
 Ship.prototype.isInFrontOf = function(ship) {
@@ -432,10 +436,14 @@ Ship.prototype.takeDamage = function(source) {
 		source.shooter.registerHit(this);
 		if (this._shield && this._shield.charge > 0) {
 			this._shield.impact(source);
-		} else if (this._model.armour && this._model.armour > 0) {
-			this._model.armour -= source.strength * 10;
+		} else if (this._armour && this._armour > 0) {
+			this._armour -= source.strength;
 		} else if (this._hullIntegrity && this._hullIntegrity > 0) {
-			this._hullIntegrity -= source.strength * 10;
+			this._hullIntegrity -= source.strength;
+		}
+		this.currentTarget = source.shooter;
+		if (this.fsm) {
+			this.fsm.underAttack();
 		}
 	}
 	if (this._hullIntegrity <= 0) {
@@ -467,8 +475,13 @@ Ship.prototype.dumpWeapons = function() {
 	for (hardpoint in this._hardpoints) {
 		if (this._hardpoints[hardpoint].loaded && this._hardpoints[hardpoint].weapon) {
 			const pickup = new Pickup(this._hardpoints[hardpoint].weapon);
+			pickup.source = this;
+			const ttl = randInt(30);
+			if (ttl > pickup.TTL) {
+				pickup.TTL = ttl;
+			}
 			pickup.coordinates = this._hardpoints[hardpoint].coordinates;
-			pickup.velocity = new Vector2d(Math.random(this._velocity.x * 0.8), Math.random(this._velocity.y * 0.8));
+			pickup.velocity = new Vector2d(rand(this._velocity.x * 0.8, true), rand(this._velocity.y * 0.8, true));
 			game.objects.push(pickup);
 		}
 	}		
@@ -486,6 +499,10 @@ Ship.prototype.collectWeapon = function(pickup) {
 			break;
 		}
 	}	
+}
+
+Ship.prototype.collectPowerUp = function(pickup) {
+	pickup.payload.execute(this);
 }
 
 Ship.prototype.draw = function(debug) {
@@ -626,64 +643,6 @@ const ShipTypes = {
 	VIPER3: Viper3
 }
 
-const PilotStatus = {
-	CLEAN: 'clean',
-	VIGILANTE: 'vigilante',
-	SECURITY: 'security',
-	WANTED: 'wanted'
-}
-
-const NonPilotStatus = {
-	CARGO: 'cargo',
-	MINERAL: 'mineral'
-}
-
-const ShipRoles = {
-	TRADER: {
-		roleName: 'Trader',
-		initialState: FSMState.NEUTRAL,
-		initialStatus: PilotStatus.CLEAN,
-		threatStatus: [PilotStatus.WANTED],
-		targetStatus: [NonPilotStatus.CARGO]
-	},
-	MINER: {
-		roleName: 'Miner',
-		initialState: FSMState.NEUTRAL,
-		initialStatus: PilotStatus.CLEAN,
-		threatStatus: [PilotStatus.WANTED],
-		targetStatus: [NonPilotStatus.MINERAL]
-	},
-	BOUNTYHUNTER: {
-		roleName: 'Bounty Hunter',
-		initialState: FSMState.HUNT,
-		initialStatus: PilotStatus.VIGILANTE,
-		threatStatus: [PilotStatus.WANTED],
-		targetStatus: [PilotStatus.WANTED]
-	},
-	SECURITY: {
-		roleName: 'Security Service',
-		initialState: FSMState.HUNT,
-		initialStatus: PilotStatus.SECURITY,
-		threatStatus: [PilotStatus.WANTED],
-		targetStatus: [PilotStatus.WANTED]
-	},
-	PIRATE: {
-		roleName: 'Pirate',
-		initialState: FSMState.HUNT,
-		initialStatus: PilotStatus.WANTED,
-		threatStatus: [PilotStatus.SECURITY, PilotStatus.VIGILANTE],
-		targetStatus: [PilotStatus.CLEAN, PilotStatus.WANTED]
-	},
-	PLAYER: {
-		// always last in the list
-		roleName: 'Player',
-		initialState: FSMState.PLAYER,
-		initialStatus: PilotStatus.CLEAN,
-		threatStatus: [PilotStatus.WANTED],
-		targetStatus: []
-	}
-}
-
 class Scanner {
 	constructor(ship) {
 		this.ship = ship;
@@ -701,20 +660,22 @@ Scanner.prototype.scan = function() {
     for (var i = 0; i < nonMunitions.length; i++) {
    		const range = distanceBetweenObjects(this.ship, nonMunitions[i]);
    		if (nonMunitions[i] !== this.ship && range <= scanLimit) {
-			var threat = false;				
-			var target = false;
+			let threat = false;				
+			let target = false;
 			if (this.ship.role) {
 				threat = nonMunitions[i].currentTarget === this.ship || this.ship.role.threatStatus.filter(function(t) {
 					return t == nonMunitions[i].status;
 				}).length > 0 ? true : false;
-				target = this.ship.role.targetStatus.filter(function(t) {
+				target = nonMunitions[i].currentTarget === this.ship || this.ship.role.targetStatus.filter(function(t) {
 					return t == nonMunitions[i].status;
-				}).length > 0 ? true : this.ship.currentTarget === nonMunitions[i] ? true : false;
+				}).length > 0 ? true : false;
 			}
+			const pickup = nonMunitions[i] instanceof Pickup;
 			const ping = {
 				echo: nonMunitions[i],
 				threat: threat,
 				target: target,
+				pickup: pickup,
 				range: range
 			};
 			this.ship.contacts.push(ping);
@@ -732,6 +693,7 @@ class Shield {
 }
 
 Shield.prototype.impact = function(source) {
-	this.charge -= source.strength * 3;
+	const newCharge = this.charge - source.strength;
+	this.charge = newCharge < 0 ? 0 : newCharge
 }
 

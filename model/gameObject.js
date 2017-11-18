@@ -48,9 +48,10 @@ class GameObject {
 		return this._velocity;
 	}
 	get speed() {
-		const currentPos = this.centre;
-		const nextPos = new Point2d(currentPos.x + this._velocity.x, currentPos.y + this._velocity.y);	
-		return Math.abs(distanceBetweenPoints(currentPos, nextPos) * fps);
+		// const currentPos = this.centre;
+		// const nextPos = new Point2d(currentPos.x + this._velocity.x, currentPos.y + this._velocity.y);	
+		// return Math.abs(distanceBetweenPoints(currentPos, nextPos) * fps);
+		return this._velocity.length * fps;
 	}
 	get drawOriginCentre() {
 		return {
@@ -140,20 +141,26 @@ GameObject.prototype.collide = function(otherGameObject) {
 			const dy = this.collisionCentres[myCentre].y - otherGameObject.collisionCentres[theirCentre].y;
 			const distance = Math.sqrt((dx * dx) + (dy * dy));		
 			if (distance <= this.collisionCentres[myCentre].radius + otherGameObject.collisionCentres[theirCentre].radius) {
-				if (otherGameObject instanceof Pickup && 
-					otherGameObject.payload instanceof Weapon && 
-					this instanceof Ship && 
-					otherGameObject.payload.parent.parent !== this) {
-					this.collectWeapon(otherGameObject);
-					otherGameObject.disposable = true;
-					return;
-				} else if (this instanceof Pickup && 
-					this.payload instanceof Weapon && 
-					otherGameObject instanceof Ship &&
-					this.payload.parent.parent !== otherGameObject) {
-					otherGameObject.collectWeapon(this);
-					this.disposable = true;
-					return;
+				if (otherGameObject instanceof Pickup && this instanceof Ship) {
+					if (otherGameObject.source !== this) {
+						if (otherGameObject.payload instanceof Weapon) {
+							this.collectWeapon(otherGameObject);
+						} else {
+							this.collectPowerUp(otherGameObject);
+						}
+						otherGameObject.disposable = true;
+						return;
+					}	
+				} else if (this instanceof Pickup && otherGameObject instanceof Ship) {
+					if (this.source !== otherGameObject) {
+						if (this.payload instanceof Weapon) {
+							otherGameObject.collectWeapon(this);							
+						} else {
+							otherGameObject.collectPowerUp(this);
+						}
+						this.disposable = true;
+						return;
+					}
 				} else if (this instanceof Pickup || otherGameObject instanceof Pickup) {
 					// pickups do not take/cause damage
 					return;
@@ -263,4 +270,17 @@ GameObject.prototype.updateAndDraw = function(debug) {
 	if (this._fsm && this._fsm.execute) {
 		this._fsm.execute();
 	}
+};
+
+GameObject.prototype.spawnRandomPowerUps = function(benefactor) {
+	// more than one?
+	const spawnPowerUpType = [Object.keys(PowerUpTypes)[Math.floor(rand(Object.keys(PowerUpTypes).length))]];	
+	const pickup = new Pickup(PowerUpTypes[spawnPowerUpType].payload);
+	const t = randInt(30);
+	if (t > pickup.TTL) {
+		pickup.TTL = t;
+	}
+	pickup.coordinates = benefactor.coordinates;
+	pickup.velocity = new Vector2d(Math.random(benefactor.velocity.x * 0.8), Math.random(benefactor.velocity.y * 0.8));
+	game.objects.push(pickup);
 };
