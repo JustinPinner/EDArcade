@@ -48,6 +48,9 @@ class Weapon {
 	get size() {
 		return this._size;
 	}
+	get mount() {
+		return this._mount;
+	}
 	set lastFiredTime(val) {
 		this._lastFiredTime = val;
 	}
@@ -142,7 +145,7 @@ class LaserBeam extends Munition {
 		this._strength = LaserBeams[type][size].strength;
 		this._hardpoint = hardpoint;
 		this._coordinates = hardpoint.coordinatesWithRotation;
-		this._heading = hardpoint.parent.heading;
+		this._heading = (hardpoint.parent.currentTarget && hardpoint.weapon.mount == HardpointMountTypes.TURRET) ? angleBetween(hardpoint.parent.centre.x, hardpoint.parent.centre.y, hardpoint.parent.currentTarget.echo.centre.x, hardpoint.parent.currentTarget.echo.centre.y) + 180 - 360 : hardpoint.parent.heading;
 		this._velocity = new Vector2d(0, 0);
 	}
 	get drawOrigin() {
@@ -159,8 +162,8 @@ class LaserBeam extends Munition {
 				if (this._hardpoint.parent.currentTarget) {
 					const angle = angleBetween(this._hardpoint.coordinates.x, 
 						this._hardpoint.coordinates.y, 
-						this._hardpoint.parent.currentTarget.centre.x, 
-						this._hardpoint.parent.currentTarget.centre.y);
+						this._hardpoint.parent.currentTarget.echo.centre.x, 
+						this._hardpoint.parent.currentTarget.echo.centre.y);
 					this._heading = (angle + 180) - 360;
 					return this._heading;
 					break;
@@ -185,7 +188,7 @@ class LaserBeam extends Munition {
 	}
 }
 
-LaserBeam.prototype.takeDamage = function(source) {
+LaserBeam.prototype.takeHit = function(source) {
 	// if we hit something - we die
 	this.fsm.transition(FSMState.DIE);
 }

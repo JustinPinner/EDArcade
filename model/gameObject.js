@@ -195,8 +195,8 @@ GameObject.prototype.collide = function(otherGameObject) {
 				otherGameObject.velocity.x = newVelX2;
 				otherGameObject.velocity.y = newVelY2;
 				// Apply damage
-				otherGameObject.takeDamage(this);
-				this.takeDamage(otherGameObject);						
+				otherGameObject.takeHit(this);
+				this.takeHit(otherGameObject);						
 			}
 		}
 	}			
@@ -242,7 +242,7 @@ GameObject.prototype.collisionDetect = function(x, y) {
 }
 
 // abstract
-GameObject.prototype.takeDamage = function(source) {};
+GameObject.prototype.takeHit = function(source) {};
 
 GameObject.prototype.isOnScreen = function(debug) {
 	return game.viewport.contains(this._coordinates.x, this._coordinates.y, this.geometry.width, this.geometry.height);	

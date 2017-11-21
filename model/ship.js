@@ -439,7 +439,7 @@ Ship.prototype.fireWeapons = function() {
 	}	
 };
 	
-Ship.prototype.takeDamage = function(source) {
+Ship.prototype.takeHit = function(source) {
 	// what hit us?
 	if (source instanceof Munition) {
 		source.shooter.registerHit(this);
