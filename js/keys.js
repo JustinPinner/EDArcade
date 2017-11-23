@@ -13,6 +13,7 @@ class KeyHandler {
       BOOST: 'SHIFTLEFT',
       THRUST: 'SPACE',
       SHIFTRIGHT: 'SHIFTRIGHT',
+      TARGET: 'KEYT',
       FIRE: 'ENTER',
       FLIGHTASSIST: 'KEYZ',
       STOP: 'BACKSPACE',
@@ -23,6 +24,7 @@ class KeyHandler {
     this._keyLeft = false;
     this._keyRight = false;
     this._keyBoost = false;
+    this._keySwitchTarget = false;
     this._keyFire = false;
     this._keyFlightAssist = false;
     this._keyThrust = false;
@@ -43,6 +45,9 @@ class KeyHandler {
   }
   get boost() {
     return this._keyBoost;
+  }
+  get switchTarget() {
+    return this._keySwitchTarget;
   }
   get fire() {
     return this._keyFire;
@@ -85,6 +90,10 @@ KeyHandler.prototype.handleKeyDown = function(e) {
       break;
     case this._keys.BOOST:
       this._keyBoost = true;
+      e.preventDefault();
+      break;
+    case this._keys.TARGET:
+      this._keySwitchTarget = true;
       e.preventDefault();
       break;
     case this._keys.FIRE:
@@ -135,6 +144,10 @@ KeyHandler.prototype.handleKeyUp = function(e) {
       break;
     case this._keys.BOOST:
       this._keyBoost = false;
+      e.preventDefault();
+      break;
+    case this._keys.TARGET:
+      this._keySwitchTarget = false;
       e.preventDefault();
       break;
     case this._keys.FIRE:

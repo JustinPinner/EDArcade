@@ -213,6 +213,9 @@ Ship.prototype.playerUpdate = function() {
 	if (game.keys.boost) {
 		this.boost();
 	}
+	if (game.keys.switchTarget) {
+		this.selectClosestTarget();
+	}
 	if (game.keys.fire) {
 		this.fireWeapons();
 	}
@@ -343,6 +346,14 @@ Ship.prototype.selectClosestTarget = function() {
 		for (var i = 0; i < this.targets.length; i++) {
 			if (distanceBetweenObjects(this, this.targets[i].echo) <= this.maximumScanRange) {
 				this.currentTarget = this.targets[i];
+				break;
+			}	
+		}
+	}
+	if (!this.currentTarget) {
+		for (var i = 0; i < this.threats.length; i++) {
+			if (distanceBetweenObjects(this, this.threats[i].echo) <= this.maximumScanRange) {
+				this.currentTarget = this.threats[i];
 				break;
 			}	
 		}
@@ -563,21 +574,25 @@ Ship.prototype.drawHud = function() {
 		const ping = this._contacts[i];
 		const angle = angleBetween(this._coordinates.x, this._coordinates.y, ping.echo.centre.x, ping.echo.centre.y);
 		const distance = distanceBetweenObjects(this, ping.echo);
-		const threatLevel = ping.target || ping.echo.currentTarget && ping.echo.currentTarget.echo === this ? 2 : ping.threat ? 1 : 0;
-		if (ping.echo.isOnScreen() && threatLevel > 0) {
+		let threatType;
+		threatType = ping.target || ping.echo.currentTarget && ping.echo.currentTarget.echo === this ? ThreatTypes.MEDIUM : ping.threat ? ThreatTypes.LOW : ThreatTypes.NONE;
+		if (game.playerShip.currentTarget && game.playerShip.currentTarget.echo === ping.echo) {
+			threatType = ThreatTypes.TARGET;
+		}
+		if (ping.echo.isOnScreen()) {
 			origin = ping.echo.drawOriginCentre;
 			// draw threat ring
 			game.viewport.context.moveTo(origin.x, origin.y);
 			game.viewport.context.beginPath();
-			game.viewport.context.strokeStyle = threatLevel < 2 ? 'orange' : 'red';
+			game.viewport.context.strokeStyle = ThreatColour[threatType];
 			game.viewport.context.arc(origin.x, origin.y, ping.echo.model.width, 0, Math.PI * 2, false);
 			game.viewport.context.stroke();
 		} else if (!ping.echo.isOnScreen()) {
 			// show off-screen marker
 			origin = this.drawOriginCentre;
-			game.viewport.context.fillStyle = threatLevel < 2 ? (threatLevel < 1 ? 'gray' : 'orange') : 'red';
+			game.viewport.context.fillStyle = ThreatColour[threatType];
 			game.viewport.context.font = '24px serif';
-			const symbol = threatLevel < 1 ? '[]' : '!';
+			const symbol = ThreatMarker[threatType];
 			var symbol_x = origin.x - dir_x(distance, angle);
 			if (symbol_x < 0) symbol_x = ScreenBorder.HORIZONTAL;
 			if (symbol_x > game.viewport.width) symbol_x = game.viewport.width - ScreenBorder.HORIZONTAL;
@@ -657,6 +672,27 @@ Ship.prototype.drawDebug = function() {
 
 }
 
+const ThreatTypes = {
+	NONE: 'NONE',
+	LOW: 'LOW',
+	MEDIUM: 'MEDIUM',
+	TARGET: 'TARGET'
+}
+
+const ThreatColour = {
+	NONE: 'gray',
+	LOW: 'yellow',
+	MEDIUM: 'orange',
+	TARGET: 'red' 
+}
+
+const ThreatMarker = {
+	NONE: '[]',
+	LOW: '!',
+	MEDIUM: 'X',
+	TARGET: '0'
+}
+
 const ShipTypes = {
 	SIDEWINDER: SideWinder,
 	COBRA3: Cobra3,
@@ -687,12 +723,15 @@ Scanner.prototype.scan = function() {
 			let threat = false;				
 			let target = false;
 			if (this.ship.role) {
-				threat = (nonMunitions[i].currentTarget && nonMunitions[i].currentTarget.echo === this.ship) || this.ship.role.threatStatus.filter(function(t) {
-					return t == nonMunitions[i].status;
-				}).length > 0 ? true : false;
-				target = (nonMunitions[i].currentTarget && nonMunitions[i].currentTarget.echo === this.ship) || this.ship.role.targetStatus.filter(function(t) {
-					return t == nonMunitions[i].status;
-				}).length > 0 ? true : false;
+				threat = (nonMunitions[i].currentTarget && nonMunitions[i].currentTarget.echo === this.ship) || 
+					(this.ship.role.threatStatus.filter(function(t) {
+						return t == nonMunitions[i].status;
+					}).length > 0 ? true : false);
+				target = (this.ship.currentTarget && this.ship.currentTarget.echo === nonMunitions[i]) || 
+					(nonMunitions[i].currentTarget && nonMunitions[i].currentTarget.echo === this.ship) || 
+					(this.ship.role.targetStatus.filter(function(t) {
+						return t == nonMunitions[i].status;
+					}).length > 0 ? true : false);
 			}
 			const pickup = nonMunitions[i] instanceof Pickup;
 			const ping = {
