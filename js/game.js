@@ -65,7 +65,12 @@ class Game {
         vpCanvasElement.width = this._viewport.width;
         vpCanvasElement.height = this._viewport.height;
     }
-    
+
+    const uiVersion = document.querySelector(".ui.debug.version");      
+    if (uiVersion) {
+      uiVersion.innerHTML = "<p>version:" + version + "</p>";
+    }
+  
     this._player = new Player(playerName);
     this._playerShip = null;
     this._playerShipName = shipName;
@@ -170,10 +175,6 @@ Game.prototype.tick = function() {
       const uiInputs = document.querySelector(".ui.debug.inputs");
       if (uiInputs) {
         uiInputs.innerHTML = "<p>thrust:" + (this._playerShip.thrust ? this._playerShip.thrust.toFixed(1) : " ") + "</p>";
-      }
-      const uiVersion = document.querySelector(".ui.debug.version");      
-      if (uiVersion) {
-        uiVersion.innerHTML = "<p>version:" + version + "</p>";
       }
     }
   }
