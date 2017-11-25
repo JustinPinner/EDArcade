@@ -1,4 +1,5 @@
 // js/game.js
+const version = '0.1.6';
 
 const debug = document.location.search.substr(1).indexOf("debug") > -1;
 
@@ -169,7 +170,11 @@ Game.prototype.tick = function() {
       const uiInputs = document.querySelector(".ui.debug.inputs");
       if (uiInputs) {
         uiInputs.innerHTML = "<p>thrust:" + (this._playerShip.thrust ? this._playerShip.thrust.toFixed(1) : " ") + "</p>";
-      }      
+      }
+      const uiVersion = document.querySelector(".ui.debug.version");      
+      if (uiVersion) {
+        uiVersion.innerHTML = "<p>version:" + version + "</p>";
+      }
     }
   }
   const uiNpcs = document.querySelector(".ui.debug.npcs");
