@@ -1,4 +1,5 @@
 // js/game.js
+const version = '0.1.6';
 
 const debug = document.location.search.substr(1).indexOf("debug") > -1;
 
@@ -64,7 +65,12 @@ class Game {
         vpCanvasElement.width = this._viewport.width;
         vpCanvasElement.height = this._viewport.height;
     }
-    
+
+    const uiVersion = document.querySelector(".ui.debug.version");      
+    if (uiVersion) {
+      uiVersion.innerHTML = "<p>version:" + version + "</p>";
+    }
+  
     this._player = new Player(playerName);
     this._playerShip = null;
     this._playerShipName = shipName;
@@ -145,7 +151,7 @@ Game.prototype.tick = function() {
         }
       }
     }
-    if (gameObject.type === GameObjectTypes.SHIP && gameObject.role !== ShipRoles.PLAYER) {
+    if (gameObject.type === GameObjectTypes.SHIP && gameObject.role !== PilotRoles.PLAYER) {
       npcCount++;
     }
     gameObject.updateAndDraw(debug);
@@ -169,7 +175,7 @@ Game.prototype.tick = function() {
       const uiInputs = document.querySelector(".ui.debug.inputs");
       if (uiInputs) {
         uiInputs.innerHTML = "<p>thrust:" + (this._playerShip.thrust ? this._playerShip.thrust.toFixed(1) : " ") + "</p>";
-      }      
+      }
     }
   }
   const uiNpcs = document.querySelector(".ui.debug.npcs");
@@ -179,7 +185,7 @@ Game.prototype.tick = function() {
   // spawn new / maintain min. NPC ships
   for (var i = npcCount; i < minNPC; i++) {
     const spawnShipType = ShipTypes[Object.keys(ShipTypes)[Math.floor(rand(Object.keys(ShipTypes).length))]];
-    const spawnShipRole = ShipRoles[Object.keys(ShipRoles)[Math.floor(rand(Object.keys(ShipRoles).length - 1))]];
+    const spawnShipRole = PilotRoles[Object.keys(PilotRoles)[Math.floor(rand(Object.keys(PilotRoles).length - 1))]];
     const newShip = new Ship(spawnShipType, 'NPC' + i, spawnShipRole);
     this._gameObjects.push(newShip);
   }

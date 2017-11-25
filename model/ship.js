@@ -9,10 +9,11 @@ class Ship extends GameObject {
 		this._heading = this._player ? 270 : rand(359);
 		this._thrust = 0;
 		this._direction = this._heading;
-		this._role = this._player ? ShipRoles.PLAYER : role;
+		this._role = this._player ? PilotRoles.PLAYER : role;
 		this._fsm = this._player ? null : new FSM(this, this.role.initialState);
 		this._status = this._role.initialStatus;
 		this._contacts = [];
+		this._attackers = [];
 		this._currentTarget = null;
 		this._scanner = new Scanner(this);
 		this._shield = new Shield(this);
@@ -103,6 +104,9 @@ class Ship extends GameObject {
 		});
 		return scannedTargets;
 	}
+	get attackers() {
+		return this._attackers;
+	}
 	get currentTarget() {
 		return this._currentTarget;
 	}
@@ -133,6 +137,9 @@ class Ship extends GameObject {
 		}
 		return range;
 	}
+	get maximumScanRange() {
+		return this.maximumWeaponRange * 10;
+	}
 	get role() {
 		return this._role;
 	}
@@ -162,6 +169,9 @@ class Ship extends GameObject {
 	}
 	set currentTarget(ping) {
 		this._currentTarget = ping;
+	}
+	set armour(val) {
+		this._armour = val;
 	}
 };
 
@@ -202,6 +212,9 @@ Ship.prototype.playerUpdate = function() {
 	}
 	if (game.keys.boost) {
 		this.boost();
+	}
+	if (game.keys.switchTarget) {
+		this.selectClosestTarget();
 	}
 	if (game.keys.fire) {
 		this.fireWeapons();
@@ -295,7 +308,7 @@ Ship.prototype.isOnScreen = function(debug) {
 
 Ship.prototype.isKnown = function(ship) {
 	for (var n = 0; n < this.targets.length; n++) {
-		if (this.targets[n] === ship) {
+		if (this.targets[n].echo === ship) {
 			return true;
 		}
 	}
@@ -315,25 +328,36 @@ Ship.prototype.isTargetedBy = function(ship) {
 
 Ship.prototype.isTargetting = function(ship) {
 	for (var t = 0; t < this.targets.length; t++) {
-		if (this.targets[t] === ship) {
+		if (this.targets[t].echo === ship) {
 			return true;
 		}
 	}
 	return false;
 }
 
-Ship.prototype.identifyTargets = function() {
-	for (var c = 0; c < this._contacts.length; c++) {
-		if (this._role && this._contacts[c].echo.role) {
-			this._contacts[c].target = this._role.opponents.filter(function(opp){
-				return opp.roleName = this._contacts[c].echo.roleName;
-			}).length > 0 ? true : false;
+Ship.prototype.selectClosestTarget = function() {
+	for (var i = 0; i < this.attackers.length; i++) {
+		if (distanceBetweenObjects(this, this.attackers[i].echo) <= this.maximumScanRange) {
+			this.currentTarget = this.attackers[i];
+			break;
+		}	
+	}
+	if (!this.currentTarget) {
+		for (var i = 0; i < this.targets.length; i++) {
+			if (distanceBetweenObjects(this, this.targets[i].echo) <= this.maximumScanRange) {
+				this.currentTarget = this.targets[i];
+				break;
+			}	
 		}
 	}
-};
-
-Ship.prototype.selectClosestTarget = function() {
-	return this._targets.length > 0 ? this._targets[0] : null;
+	if (!this.currentTarget) {
+		for (var i = 0; i < this.threats.length; i++) {
+			if (distanceBetweenObjects(this, this.threats[i].echo) <= this.maximumScanRange) {
+				this.currentTarget = this.threats[i];
+				break;
+			}	
+		}
+	}
 };
 
 Ship.prototype.isInFrontOf = function(ship) {
@@ -426,16 +450,33 @@ Ship.prototype.fireWeapons = function() {
 	}	
 };
 	
-Ship.prototype.takeDamage = function(source) {
+Ship.prototype.takeHit = function(source) {
 	// what hit us?
 	if (source instanceof Munition) {
 		source.shooter.registerHit(this);
+		for (var i = 0; i < this.contacts.length; i++) {
+			if (this.contacts[i].echo === source.shooter) {
+				let identified = false;
+				for (j = 0; j < this.attackers.length; j++) {
+					if(this.attackers[j].echo === source.shooter) {
+						identified = true;
+						break;
+					}
+				}
+				if (!identified) {
+					this.attackers.push(this.contacts[i]);
+				}
+			}
+		}		
+		if (this.fsm) {
+			this.fsm.underAttack();
+		}
 		if (this._shield && this._shield.charge > 0) {
 			this._shield.impact(source);
-		} else if (this._model.armour && this._model.armour > 0) {
-			this._model.armour -= source.strength * 10;
+		} else if (this._armour && this._armour > 0) {
+			this._armour -= source.strength;
 		} else if (this._hullIntegrity && this._hullIntegrity > 0) {
-			this._hullIntegrity -= source.strength * 10;
+			this._hullIntegrity -= source.strength;
 		}
 	}
 	if (this._hullIntegrity <= 0) {
@@ -444,7 +485,7 @@ Ship.prototype.takeDamage = function(source) {
 			this._player = null;
 			this._fsm = new FSM(this, this._role.initialState);
 		}
-		this._fsm.transition(FSMState.EXPLODE);
+		this.fsm.transition(FSMState.EXPLODE);
 	}
 };
 
@@ -452,7 +493,9 @@ Ship.prototype.registerHit = function(obj) {
 	if (obj.status !== PilotStatus.WANTED) {
 		this._status = PilotStatus.WANTED;
 	}
-	this._currentTarget = obj;
+	if ((!this._currentTarget) || this._currentTarget.echo !== obj) {
+		this._currentTarget = this.scanner.identify(obj);
+	}
 };
 
 Ship.prototype.matchTargetVector = function(ship) {
@@ -467,8 +510,13 @@ Ship.prototype.dumpWeapons = function() {
 	for (hardpoint in this._hardpoints) {
 		if (this._hardpoints[hardpoint].loaded && this._hardpoints[hardpoint].weapon) {
 			const pickup = new Pickup(this._hardpoints[hardpoint].weapon);
+			pickup.source = this;
+			const ttl = randInt(30);
+			if (ttl > pickup.TTL) {
+				pickup.TTL = ttl;
+			}
 			pickup.coordinates = this._hardpoints[hardpoint].coordinates;
-			pickup.velocity = new Vector2d(Math.random(this._velocity.x * 0.8), Math.random(this._velocity.y * 0.8));
+			pickup.velocity = new Vector2d(rand(this._velocity.x * 0.8, true), rand(this._velocity.y * 0.8, true));
 			game.objects.push(pickup);
 		}
 	}		
@@ -486,6 +534,10 @@ Ship.prototype.collectWeapon = function(pickup) {
 			break;
 		}
 	}	
+}
+
+Ship.prototype.collectPowerUp = function(pickup) {
+	pickup.payload.execute(this);
 }
 
 Ship.prototype.draw = function(debug) {
@@ -522,21 +574,25 @@ Ship.prototype.drawHud = function() {
 		const ping = this._contacts[i];
 		const angle = angleBetween(this._coordinates.x, this._coordinates.y, ping.echo.centre.x, ping.echo.centre.y);
 		const distance = distanceBetweenObjects(this, ping.echo);
-		const threatLevel = ping.target || ping.echo.currentTarget && ping.echo.currentTarget === this ? 2 : ping.threat ? 1 : 0;
-		if (ping.echo.isOnScreen() && threatLevel > 0) {
+		let threatType;
+		threatType = ping.target || ping.echo.currentTarget && ping.echo.currentTarget.echo === this ? ThreatTypes.MEDIUM : ping.threat ? ThreatTypes.LOW : ThreatTypes.NONE;
+		if (game.playerShip.currentTarget && game.playerShip.currentTarget.echo === ping.echo) {
+			threatType = ThreatTypes.TARGET;
+		}
+		if (ping.echo.isOnScreen() && threatType !== ThreatTypes.NONE) {
 			origin = ping.echo.drawOriginCentre;
 			// draw threat ring
 			game.viewport.context.moveTo(origin.x, origin.y);
 			game.viewport.context.beginPath();
-			game.viewport.context.strokeStyle = threatLevel < 2 ? 'orange' : 'red';
+			game.viewport.context.strokeStyle = ThreatColour[threatType];
 			game.viewport.context.arc(origin.x, origin.y, ping.echo.model.width, 0, Math.PI * 2, false);
 			game.viewport.context.stroke();
 		} else if (!ping.echo.isOnScreen()) {
 			// show off-screen marker
 			origin = this.drawOriginCentre;
-			game.viewport.context.fillStyle = threatLevel < 2 ? (threatLevel < 1 ? 'gray' : 'orange') : 'red';
+			game.viewport.context.fillStyle = ThreatColour[threatType];
 			game.viewport.context.font = '24px serif';
-			const symbol = threatLevel < 1 ? '[]' : '!';
+			const symbol = ThreatMarker[threatType];
 			var symbol_x = origin.x - dir_x(distance, angle);
 			if (symbol_x < 0) symbol_x = ScreenBorder.HORIZONTAL;
 			if (symbol_x > game.viewport.width) symbol_x = game.viewport.width - ScreenBorder.HORIZONTAL;
@@ -616,6 +672,27 @@ Ship.prototype.drawDebug = function() {
 
 }
 
+const ThreatTypes = {
+	NONE: 'NONE',
+	LOW: 'LOW',
+	MEDIUM: 'MEDIUM',
+	TARGET: 'TARGET'
+}
+
+const ThreatColour = {
+	NONE: 'gray',
+	LOW: 'yellow',
+	MEDIUM: 'orange',
+	TARGET: 'red' 
+}
+
+const ThreatMarker = {
+	NONE: '[]',
+	LOW: '!',
+	MEDIUM: 'X',
+	TARGET: '0'
+}
+
 const ShipTypes = {
 	SIDEWINDER: SideWinder,
 	COBRA3: Cobra3,
@@ -624,64 +701,6 @@ const ShipTypes = {
 	ANACONDA: Anaconda,
 	TYPE6: Type6,
 	VIPER3: Viper3
-}
-
-const PilotStatus = {
-	CLEAN: 'clean',
-	VIGILANTE: 'vigilante',
-	SECURITY: 'security',
-	WANTED: 'wanted'
-}
-
-const NonPilotStatus = {
-	CARGO: 'cargo',
-	MINERAL: 'mineral'
-}
-
-const ShipRoles = {
-	TRADER: {
-		roleName: 'Trader',
-		initialState: FSMState.NEUTRAL,
-		initialStatus: PilotStatus.CLEAN,
-		threatStatus: [PilotStatus.WANTED],
-		targetStatus: [NonPilotStatus.CARGO]
-	},
-	MINER: {
-		roleName: 'Miner',
-		initialState: FSMState.NEUTRAL,
-		initialStatus: PilotStatus.CLEAN,
-		threatStatus: [PilotStatus.WANTED],
-		targetStatus: [NonPilotStatus.MINERAL]
-	},
-	BOUNTYHUNTER: {
-		roleName: 'Bounty Hunter',
-		initialState: FSMState.HUNT,
-		initialStatus: PilotStatus.VIGILANTE,
-		threatStatus: [PilotStatus.WANTED],
-		targetStatus: [PilotStatus.WANTED]
-	},
-	SECURITY: {
-		roleName: 'Security Service',
-		initialState: FSMState.HUNT,
-		initialStatus: PilotStatus.SECURITY,
-		threatStatus: [PilotStatus.WANTED],
-		targetStatus: [PilotStatus.WANTED]
-	},
-	PIRATE: {
-		roleName: 'Pirate',
-		initialState: FSMState.HUNT,
-		initialStatus: PilotStatus.WANTED,
-		threatStatus: [PilotStatus.SECURITY, PilotStatus.VIGILANTE],
-		targetStatus: [PilotStatus.CLEAN, PilotStatus.WANTED]
-	},
-	PLAYER: {
-		// always last in the list
-		roleName: 'Player',
-		initialState: FSMState.PLAYER,
-		initialStatus: PilotStatus.CLEAN,
-		threatStatus: [PilotStatus.WANTED],
-		targetStatus: []
-	}
 }
 
 class Scanner {
@@ -697,24 +716,29 @@ Scanner.prototype.scan = function() {
 	const nonMunitions = game.objects.filter(function(obj)	{
 		return !(obj instanceof Munition);
 	});
-	const scanLimit = this.ship.maximumWeaponRange * 10;	//todo - use a better scan limit
+	const scanLimit = this.ship.maximumScanRange;	//todo - use a better scan limit
     for (var i = 0; i < nonMunitions.length; i++) {
    		const range = distanceBetweenObjects(this.ship, nonMunitions[i]);
    		if (nonMunitions[i] !== this.ship && range <= scanLimit) {
-			var threat = false;				
-			var target = false;
+			let threat = false;				
+			let target = false;
 			if (this.ship.role) {
-				threat = nonMunitions[i].currentTarget === this.ship || this.ship.role.threatStatus.filter(function(t) {
-					return t == nonMunitions[i].status;
-				}).length > 0 ? true : false;
-				target = this.ship.role.targetStatus.filter(function(t) {
-					return t == nonMunitions[i].status;
-				}).length > 0 ? true : this.ship.currentTarget === nonMunitions[i] ? true : false;
+				threat = (nonMunitions[i].currentTarget && nonMunitions[i].currentTarget.echo === this.ship) || 
+					(this.ship.role.threatStatus.filter(function(t) {
+						return t == nonMunitions[i].status;
+					}).length > 0 ? true : false);
+				target = (this.ship.currentTarget && this.ship.currentTarget.echo === nonMunitions[i]) || 
+					(nonMunitions[i].currentTarget && nonMunitions[i].currentTarget.echo === this.ship) || 
+					(this.ship.role.targetStatus.filter(function(t) {
+						return t == nonMunitions[i].status;
+					}).length > 0 ? true : false);
 			}
+			const pickup = nonMunitions[i] instanceof Pickup;
 			const ping = {
 				echo: nonMunitions[i],
 				threat: threat,
 				target: target,
+				pickup: pickup,
 				range: range
 			};
 			this.ship.contacts.push(ping);
@@ -722,6 +746,17 @@ Scanner.prototype.scan = function() {
 	}    	
   	this.lastScan = Date.now();
   }
+}
+
+Scanner.prototype.identify = function(obj) {
+	let match;
+	for (i = 0; i < this.ship.contacts.length; i++) {
+		if (this.ship.contacts[i].echo === obj) {
+			match = this.ship.contacts[i];
+			break;
+		}
+	}
+	return match;
 }
 
 class Shield {
@@ -732,6 +767,7 @@ class Shield {
 }
 
 Shield.prototype.impact = function(source) {
-	this.charge -= source.strength * 3;
+	const newCharge = this.charge - source.strength;
+	this.charge = newCharge < 0 ? 0 : newCharge
 }
 
