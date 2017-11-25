@@ -579,7 +579,7 @@ Ship.prototype.drawHud = function() {
 		if (game.playerShip.currentTarget && game.playerShip.currentTarget.echo === ping.echo) {
 			threatType = ThreatTypes.TARGET;
 		}
-		if (ping.echo.isOnScreen()) {
+		if (ping.echo.isOnScreen() && threatType !== ThreatTypes.NONE) {
 			origin = ping.echo.drawOriginCentre;
 			// draw threat ring
 			game.viewport.context.moveTo(origin.x, origin.y);
