@@ -195,6 +195,9 @@ LaserBeam.prototype.takeHit = function(source) {
 
 LaserBeam.prototype.draw = function(debug) {
 	if (!this.isOnScreen(debug)) {
+		if (this.shooter === game.playerShip) {
+			this.fsm.transition(FSMState.DIE);
+		}
 		return;
 	}
 	const x = -game.viewport.coordinates.x + this._coordinates.x,
