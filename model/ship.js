@@ -176,6 +176,7 @@ class Ship extends GameObject {
 };
 
 Ship.prototype.updateAndDraw = function(debug) {
+	if (this.disposable) return;
 	this._scanner.scan();
 	if (this._player) {
 		this.playerUpdate();
@@ -713,29 +714,27 @@ class Scanner {
 Scanner.prototype.scan = function() {
   if (!this.lastScan || Date.now() - this.lastScan >= this.interval) {
     this.ship.contacts = [];
-	const nonMunitions = game.objects.filter(function(obj)	{
-		return !(obj instanceof Munition);
-	});
+	const scannableItems = game.filterObjects([Ship,Pickup]);
 	const scanLimit = this.ship.maximumScanRange;	//todo - use a better scan limit
-    for (var i = 0; i < nonMunitions.length; i++) {
-   		const range = distanceBetweenObjects(this.ship, nonMunitions[i]);
-   		if (nonMunitions[i] !== this.ship && range <= scanLimit) {
+    for (var i = 0; i < scannableItems.length; i++) {
+   		const range = distanceBetweenObjects(this.ship, scannableItems[i]);
+   		if (scannableItems[i] !== this.ship && range <= scanLimit) {
 			let threat = false;				
 			let target = false;
 			if (this.ship.role) {
-				threat = (nonMunitions[i].currentTarget && nonMunitions[i].currentTarget.echo === this.ship) || 
+				threat = (scannableItems[i].currentTarget && scannableItems[i].currentTarget.echo === this.ship) || 
 					(this.ship.role.threatStatus.filter(function(t) {
-						return t == nonMunitions[i].status;
+						return t == scannableItems[i].status;
 					}).length > 0 ? true : false);
-				target = (this.ship.currentTarget && this.ship.currentTarget.echo === nonMunitions[i]) || 
-					(nonMunitions[i].currentTarget && nonMunitions[i].currentTarget.echo === this.ship) || 
+				target = (this.ship.currentTarget && this.ship.currentTarget.echo === scannableItems[i]) || 
+					(scannableItems[i].currentTarget && scannableItems[i].currentTarget.echo === this.ship) || 
 					(this.ship.role.targetStatus.filter(function(t) {
-						return t == nonMunitions[i].status;
+						return t == scannableItems[i].status;
 					}).length > 0 ? true : false);
 			}
-			const pickup = nonMunitions[i] instanceof Pickup;
+			const pickup = scannableItems[i] instanceof Pickup;
 			const ping = {
-				echo: nonMunitions[i],
+				echo: scannableItems[i],
 				threat: threat,
 				target: target,
 				pickup: pickup,

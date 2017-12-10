@@ -103,7 +103,7 @@ class Munition extends GameObject {
 	constructor(type, model, effect, role) {
 		super(GameObjectTypes.MUNITION, model, type, role);
 		this._munitionType = type;
-		this._munitionEffect = effect;
+		this._munitionEffect = effect || model.effect;
 		this._munitionRole = role;
 		this._coordinates = {
 			x: null,
@@ -132,15 +132,16 @@ class Munition extends GameObject {
 }
 
 Munition.prototype.updateAndDraw = function(debug) {
+	if (this.disposable) return;
 	this.updatePosition();
 	this.collisionDetect();
-	this.draw();
+	this.draw(debug);
 	this._fsm.execute();
 }
 
 class LaserBeam extends Munition {
-	constructor(type, size, hardpoint) {
-		super(WeaponClasses.ENERGY, LaserBeams[type][size], DamageTypes.POINT, MunitionRoles.BEAM);
+	constructor(type, size, hardpoint, customEffect) {
+		super(WeaponClasses.ENERGY, LaserBeams[type][size], customEffect || EffectTypes.laserStrike, MunitionRoles.BEAM);
 		this._colour = LaserBeams[type][size].colour;
 		this._strength = LaserBeams[type][size].strength;
 		this._hardpoint = hardpoint;
@@ -190,13 +191,16 @@ class LaserBeam extends Munition {
 
 LaserBeam.prototype.takeHit = function(source) {
 	// if we hit something - we die
-	this.fsm.transition(FSMState.DIE);
+	if (this.isOnScreen(debug)) {
+		game.objects.push(new LaserStrike(this.coordinates));
+	}
+	this._fsm.transition(FSMState.DIE);
 }
 
 LaserBeam.prototype.draw = function(debug) {
 	if (!this.isOnScreen(debug)) {
 		if (this.shooter === game.playerShip) {
-			this.fsm.transition(FSMState.DIE);
+			this._fsm.transition(FSMState.DIE);
 		}
 		return;
 	}

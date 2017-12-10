@@ -257,7 +257,7 @@ const fsmStates = {
 		execute: function(self) {
 			self.velocity.x = dir_x(self.model.maxSpeed, self.heading);
 			self.velocity.y = dir_y(self.model.maxSpeed, self.heading);
-			if(distanceBetweenObjects(self, self.hardpoint.parent) > game.viewport.width * 5) {
+			if(distanceBetweenObjects(self, self.hardpoint.parent) > self.hardpoint.weapon.range) {
 				self.fsm.transition(FSMState.DIE);
 			}
 		}
@@ -272,6 +272,7 @@ const fsmStates = {
 		mode: FSMState.DESPAWN,
 		nextState: [],
 		detectCollisions: false,
+		executeOnTransition: true,
 		execute: function(self) {
 			self.disposable = true;
 		}
@@ -448,7 +449,9 @@ class FSM {
 		this._startState = currentState;
 		this._lastTransitionTime = null;
 		this._motivations = [motivations.FIGHT, motivations.FLIGHT, motivations.RECOVER];
-		this._aggression = randRangeInt(gameObject.role.minAggression, gameObject.role.maxAggression);
+		this._aggression = gameObject.role && gameObject.role.minAggression && gameObject.role.maxAggression ? 
+			randRangeInt(gameObject.role.minAggression, gameObject.role.maxAggression) :
+			0;
 	}
 	get gameObject() {
 		return this._gameObject;
@@ -476,13 +479,15 @@ class FSM {
 	}
 }
 
-FSM.prototype.execute = function() {
+FSM.prototype.execute = function(unconditionally = false) {
 	if (this._gameObject) {
-		if (this._gameObject instanceof Ship && distanceBetweenObjects(this._gameObject, game.playerShip) > game.despawnRange) {
-			this.transition(FSMState.DESPAWN);
-		}
-		if (this._gameObject instanceof Ship) {
-			this.reflex();
+		if (!unconditionally) {
+			if (this._gameObject instanceof Ship && distanceBetweenObjects(this._gameObject, game.playerShip) > game.despawnRange) {
+				this.transition(FSMState.DESPAWN);
+			}
+			if (this._gameObject instanceof Ship) {
+				this.reflex();
+			}
 		}
 		this._state.execute && this._state.execute(this._gameObject);
 	}
@@ -512,6 +517,9 @@ FSM.prototype.transition = function(newStateId) {
 		this._state = fsmStates[newStateId];
 	} else {
 		this._state = fsmStates[this._startState];
+	}
+	if (this._state.executeOnTransition) {
+		this.execute(unconditionally = true);
 	}
 }
 

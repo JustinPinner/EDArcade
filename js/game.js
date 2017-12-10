@@ -1,5 +1,5 @@
 // js/game.js
-const version = '0.1.6';
+const version = '0.1.8';
 
 const debug = document.location.search.substr(1).indexOf("debug") > -1;
 
@@ -135,13 +135,13 @@ Game.prototype.tick = function() {
   }
   this._viewport.clear();  
   const deadAndAlive = this._gameObjects.partition(function(obj) {
-    return obj.disposable;
+    return obj.TTL ? obj.TTL <= 0 : obj.disposable;
   });
   this._gameObjects = deadAndAlive[1];
   var npcCount = 0;
   for (var i = 0; i < this._gameObjects.length; i++) {
     const gameObject = this._gameObjects[i];
-    if (gameObject.TTL) {
+    if (gameObject.TTL ? true : false) {
       const now = Date.now();
       if (!gameObject.lastTTLTick || (gameObject.lastTTLTick && now - gameObject.lastTTLTick >= 1000)) {
         gameObject.lastTTLTick = Date.now();
@@ -206,6 +206,15 @@ Game.prototype.start = function() {
   this._gameObjects.push(this._playerShip);
   // all systems go!
 	setInterval(main, 1000/fps);
+}
+
+Game.prototype.filterObjects = function(objectTypeOrTypes) {
+  if (objectTypeOrTypes) {
+    return this.objects.filter(function(obj) {
+      return objectTypeOrTypes instanceof Array ? objectTypeOrTypes.includes(obj.constructor) : obj instanceof objectTypeOrTypes;
+    })
+  }
+  return this.objects;
 }
 
 const game = new Game();
