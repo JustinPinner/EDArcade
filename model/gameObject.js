@@ -132,9 +132,6 @@ GameObject.prototype.updatePosition = function() {
 }
 
 GameObject.prototype.collide = function(otherGameObject) {
-	if (this === game.playerShip && otherGameObject instanceof Pickup) {
-		this._name = this._name;	// breakpoint opportunity
-	}
 	if (this.collisionCentres.length == 0 || otherGameObject.collisionCentres.length == 0) {
 		return;
 	}
