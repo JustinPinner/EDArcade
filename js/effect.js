@@ -5,35 +5,7 @@ class Effect extends GameObject {
 		super(GameObjectTypes.EFFECT, sprite, role.roleName, role);
 		this._sprite = sprite;
 		this._sprite.loadImage();						
-	}
-	get sprite() {
-		return this._sprite;
-	}
-}
-
-var EffectRoles = {
-	shipExplosion: {
-		roleName: 'Explosion01_5x5',
-		initialState: FSMState.EFFECT,
-		initialStatus: '',
-		threatStatus: [],
-		targetStatus: []
-	}
-}
-
-class ShipExplosionEffect extends Effect {
-	constructor(drawOriginCentre) {
-		super(EffectRoles.shipExplosion, new Sprite(drawOriginCentre.x, drawOriginCentre.y, 204.8, 204.8, EffectRoles.shipExplosion.roleName));
-		this._sprite.cells = {
-			frameRate: 15,
-			frameWidth: 204.8,
-			frameHeight: 204.8,
-			frameColumns: 5,
-			frameRows: 5,
-			framesRepeat: false,
-			lastFrameDrawn: 0
-		};
-		this._coordinates = new Point2d(drawOriginCentre.x - (this._sprite.width / 2), drawOriginCentre.y - (this._sprite.height / 2));
+		this._coordinates = new Point2d(sprite.x - (this._sprite.width / 2), sprite.y - (this._sprite.height / 2));
 		this._fsm = new FSM(this, FSMState.EFFECT);
 		this.draw = function() {
 			var origin = this._coordinates;
@@ -63,9 +35,115 @@ class ShipExplosionEffect extends Effect {
 				!this._sprite.cells.framesRepeat;
 		};
 	}
+	get sprite() {
+		return this._sprite;
+	}
 }
 
+var EffectRoles = {
+	shipExplosion: {
+		roleName: 'Explosion01_5x5',
+		initialState: FSMState.EFFECT,
+		initialStatus: '',
+		threatStatus: [],
+		targetStatus: []
+	},
+	laserStrike: {
+		roleName: 'LaserStrike',
+		initialState: FSMState.EFFECT,
+		initialStatus: '',
+		threatStatus: [],
+		targetStatus: [],
+		onUpdated: function(particle) {
+			particle._speed -= 3;
+			particle._velocity.x = dir_x(particle._speed, particle._heading);
+			particle._velocity.y = dir_y(particle._speed, particle._heading); 
+		},
+		setup: function(generator) {
+			generator._particlesGenerated = 0;
+		},
+		execute: function(generator) {
+			if (generator._particlesGenerated >= generator._particleCount) {
+				generator._fsm.transition(FSMState.DESPAWN);
+				return;
+			}
+			const radius = randRangeInt(1,3);
+			const angle = ((360 / generator._particleCount) - generator._particlesGenerated) * generator._particlesGenerated;
+			const ttl = generator._secondsToLive ? generator._secondsToLive : randRangeInt(3, 5);
+			const speed = randRangeInt(10, 40);
+			game.objects.push(new Particle(radius, generator._coordinates, speed, angle, ttl, generator._onUpdated, fadeOut = true));
+			generator._particlesGenerated += 1;
+		}
+	}
+}
+
+class ShipExplosionEffect extends Effect {
+	constructor(drawOriginCentre) {
+		super(EffectRoles.shipExplosion, new Sprite(drawOriginCentre.x, drawOriginCentre.y, 204.8, 204.8, EffectRoles.shipExplosion.roleName));
+		this._sprite.cells = {
+			frameRate: 15,
+			frameWidth: 204.8,
+			frameHeight: 204.8,
+			frameColumns: 5,
+			frameRows: 5,
+			framesRepeat: false,
+			lastFrameDrawn: 0
+		};
+	}
+}
+
+class ParticleEffect extends GameObject {
+	// A particle effect is a gameobject that spawns particles (as other gameobjects)
+	// - a particle generator if you like
+	constructor(effectRole, coordinates, secondsToLive, particlesToGenerate) {
+		super(GameObjectTypes.EFFECT);	
+		this._coordinates = coordinates;
+		this._setupFunction = effectRole.setup;
+		this._executeFunction = effectRole.execute;
+		this._onUpdated = effectRole.onUpdated;
+		this._ttl = secondsToLive;
+		this._secondsToLive = secondsToLive;
+		this._particleCount = particlesToGenerate || randRangeInt(3, 5);
+		this._particlesGenerated = 0;
+		this.setup = function() {
+			const self = this;
+			if(self._setupFunction) {
+				self._setupFunction(self);
+			}
+			this._fsm.state.execute = self.execute.bind(self);
+		}
+		this.execute = function() {
+			const self = this;
+			if(self._executeFunction) {
+				self._executeFunction(self);
+			}
+		}
+		this._fsm = new FSM(this, FSMState.EFFECT);
+		this._fsm.state.execute = this.setup.bind(this);			
+	}
+	get particleCount() {
+		return this._particleCount;
+	}
+	get TTL() {
+		return this._ttl;
+	}
+	set particleCount(particlesToGenerate) {
+		this._particleCount = particlesToGenerate;
+	}
+	set TTL(timeLeft) {
+		this._ttl = timeLeft;
+	}
+}
+
+class LaserStrike extends ParticleEffect {
+	constructor(coordinates) {
+		const secondsToLive = 3;
+		const particlesToGenerate = 6;
+		super(EffectRoles.laserStrike, coordinates, secondsToLive, particlesToGenerate);
+	}
+}
 
 var EffectTypes = {
-	shipExplosion: ShipExplosionEffect 
+	shipExplosion: ShipExplosionEffect ,
+	laserStrike: LaserStrike
 }

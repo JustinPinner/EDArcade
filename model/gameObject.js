@@ -5,7 +5,8 @@ const GameObjectTypes = {
 	PICKUP: 'pickup',
 	ESCAPEPOD: 'escape-pod',
 	MUNITION: 'munition',
-	EFFECT: 'effect'
+	EFFECT: 'effect',
+	PARTICLE: 'particle'
 }
 var nextObjId = 0;
 
@@ -15,7 +16,7 @@ class GameObject {
 		this._disposable = false;
 		this._id = nextObjId += 1;
 		this._type = type;
-		this._name = name;
+		this._name = name || 'obj' + this._id.toString;
 		this._role = role;
 		this._coordinates = null;
 		this._velocity = new Vector2d(0, 0);
@@ -48,9 +49,6 @@ class GameObject {
 		return this._velocity;
 	}
 	get speed() {
-		// const currentPos = this.centre;
-		// const nextPos = new Point2d(currentPos.x + this._velocity.x, currentPos.y + this._velocity.y);	
-		// return Math.abs(distanceBetweenPoints(currentPos, nextPos) * fps);
 		return this._velocity.length * fps;
 	}
 	get drawOriginCentre() {
@@ -60,7 +58,7 @@ class GameObject {
 		};
 	}
 	get coordinatesRotated() {
-		return rotatePoint(this.centre.x, this.centre.y, this._coordinates.x, this._coordinates.y, this._heading);
+		return this._coordinates && rotatePoint(this.centre.x, this.centre.y, this._coordinates.x, this._coordinates.y, this._heading);
 	}
 	get geometry() {
 		return {
@@ -69,11 +67,11 @@ class GameObject {
 		};
 	}
 	get mass() {
-		return this._model.mass || 0;
+		return this._model ? this._model.mass : 0;
 	}
 	get collisionCentres() {
 		const _centres = [];
-		if (this._model.collisionCentres) {
+		if (this._model && this._model.collisionCentres) {
 			for (const collCtrGrp in this._model.collisionCentres) {
 				const collCtr = this._model.collisionCentres[collCtrGrp];
 				const _newXY = rotatePoint(this.drawOriginCentre.x, this.drawOriginCentre.y, this.drawOrigin.x + collCtr.x, this.drawOrigin.y + collCtr.y, this._heading + 90);
@@ -104,6 +102,9 @@ class GameObject {
 	}
 	// setters
 	set coordinates(point2d) {
+		if (isNaN(point2d.x) || isNaN(point2d.y)){
+			debugger;
+		}
 		this._coordinates = point2d;
 	}
 	set velocity(vector2d) {
@@ -125,18 +126,21 @@ class GameObject {
 
 GameObject.prototype.updatePosition = function() {
 	if (this._coordinates && this._velocity) {
-		this._coordinates.x += this._velocity.x;
-		this._coordinates.y += this._velocity.y;
+		this._coordinates.x += isNaN(this._velocity.x) ? 0 : this._velocity.x;
+		this._coordinates.y += isNaN(this._velocity.y) ? 0 : this._velocity.y;
 	}
 }
 
 GameObject.prototype.collide = function(otherGameObject) {
+	if (this === game.playerShip && otherGameObject instanceof Pickup) {
+		this._name = this._name;	// breakpoint opportunity
+	}
 	if (this.collisionCentres.length == 0 || otherGameObject.collisionCentres.length == 0) {
 		return;
 	}
 	// iterate over each object's collision radii
-	for (const myCentre in this.collisionCentres) {
-		for (const theirCentre in otherGameObject.collisionCentres) {
+	for (let myCentre = 0; myCentre < this.collisionCentres.length; myCentre++) {
+		for (let theirCentre = 0; theirCentre < otherGameObject.collisionCentres.length; theirCentre++) {
 			const dx = this.collisionCentres[myCentre].x - otherGameObject.collisionCentres[theirCentre].x;
 			const dy = this.collisionCentres[myCentre].y - otherGameObject.collisionCentres[theirCentre].y;
 			const distance = Math.sqrt((dx * dx) + (dy * dy));		
@@ -165,35 +169,37 @@ GameObject.prototype.collide = function(otherGameObject) {
 					// pickups do not take/cause damage
 					return;
 				}
-				// Apply basic motion transference algorithm
-				// from https://gamedevelopment.tutsplus.com/tutorials/when-worlds-collide-simulating-circle-circle-collisions--gamedev-769)
-				// a = shape1.vX * (shape1.mass - shape2.mass)
-				// b = (2 * shape2.mass * shape2.vX)
-				// c = (shape1.mass + shape2.mass)
-				//
-				// newVelX = (a + b) / c;
-				//						
-				// d = shape1.vY * (shape1.mass - shape2.mass)
-				// e = (2 * shape2.mass * shape2.vY)
-				// f = (shape1.mass + shape2.mass)
-				//
-				// newVelY = (d + e) / f;
-				const newVelX1 = ((this.velocity.x * (this.mass - otherGameObject.mass)) +
+				if (this.mass && otherGameObject.mass) {
+					// Apply basic motion transference algorithm
+					// from https://gamedevelopment.tutsplus.com/tutorials/when-worlds-collide-simulating-circle-circle-collisions--gamedev-769)
+					// a = shape1.vX * (shape1.mass - shape2.mass)
+					// b = (2 * shape2.mass * shape2.vX)
+					// c = (shape1.mass + shape2.mass)
+					//
+					// newVelX = (a + b) / c;
+					//						
+					// d = shape1.vY * (shape1.mass - shape2.mass)
+					// e = (2 * shape2.mass * shape2.vY)
+					// f = (shape1.mass + shape2.mass)
+					//
+					// newVelY = (d + e) / f;
+					const newVelX1 = ((this.velocity.x * (this.mass - otherGameObject.mass)) +
 					(2 * otherGameObject.mass * otherGameObject.velocity.x)) /
 					(this.mass + otherGameObject.mass);
-				const newVelY1 = ((this.velocity.y * (this.mass - otherGameObject.mass)) +
-					(2 * otherGameObject.mass * otherGameObject.velocity.y)) /
-					(this.mass + otherGameObject.mass);
-				const newVelX2 = ((otherGameObject.velocity.x * (otherGameObject.mass - this.mass)) +
-					(2 * this.mass * this.velocity.x)) /
-					(this.mass + otherGameObject.mass);
-				const newVelY2 = ((otherGameObject.velocity.y * (otherGameObject.mass - this.mass)) +
-					(2 * this.mass * this.velocity.y)) /
-					(this.mass + otherGameObject.mass);
-				this.velocity.x = newVelX1;
-				this.velocity.y = newVelY1;
-				otherGameObject.velocity.x = newVelX2;
-				otherGameObject.velocity.y = newVelY2;
+					const newVelY1 = ((this.velocity.y * (this.mass - otherGameObject.mass)) +
+						(2 * otherGameObject.mass * otherGameObject.velocity.y)) /
+						(this.mass + otherGameObject.mass);
+					const newVelX2 = ((otherGameObject.velocity.x * (otherGameObject.mass - this.mass)) +
+						(2 * this.mass * this.velocity.x)) /
+						(this.mass + otherGameObject.mass);
+					const newVelY2 = ((otherGameObject.velocity.y * (otherGameObject.mass - this.mass)) +
+						(2 * this.mass * this.velocity.y)) /
+						(this.mass + otherGameObject.mass);
+					this.velocity.x = newVelX1;
+					this.velocity.y = newVelY1;
+					otherGameObject.velocity.x = newVelX2;
+					otherGameObject.velocity.y = newVelY2;
+				}
 				// Apply damage
 				otherGameObject.takeHit(this);
 				this.takeHit(otherGameObject);						
@@ -204,7 +210,7 @@ GameObject.prototype.collide = function(otherGameObject) {
 
 
 GameObject.prototype.collisionDetect = function(x, y) {
-	if (this._fsm && this._fsm.state && !this._fsm.state.detectCollisions) {
+	if ((!this._fsm || !this._fsm.state || !this._fsm.state.detectCollisions) && this !== game.playerShip) {
 		return;
 	}
 	const self = this,
@@ -215,6 +221,9 @@ GameObject.prototype.collisionDetect = function(x, y) {
 			(obj instanceof Munition && obj.shooter === self) ||
 			(self instanceof Munition && self.shooter === obj) ||
 			(obj.fsm && obj.fsm.state && !obj.fsm.state.detectCollisions)) {
+			return false;
+		}
+		if (obj instanceof ParticleEffect || self instanceof ParticleEffect) {
 			return false;
 		}
 		// draw a circle to enclose the whole object
@@ -250,20 +259,24 @@ GameObject.prototype.isOnScreen = function(debug) {
 
 GameObject.prototype.draw = function(debug) {
 	if (!this.isOnScreen(debug)) return;
+	if (this.disposable) return;
 
 	game.viewport.context.save();
 	game.viewport.context.translate(this.drawOriginCentre.x, this.drawOriginCentre.y);
-	game.viewport.context.rotate(degreesToRadians(this._heading + 90));
+	if (this._heading) {
+		game.viewport.context.rotate(degreesToRadians(this._heading + 90));
+	}
+	game.viewport.context.fillStyle = this._colour ? this._colour : '#ffffff';
 	if (this._sprite && this._sprite.image) {
-	  game.viewport.context.drawImage(this._sprite.image, -this.geometry.width / 2, -this.geometry.height / 2, this.geometry.width, this.geometry.height);
-	} else {
-	  game.viewport.context.fillStyle = this._colour ? this._colour : '#ffffff';
-	  game.viewport.context.fillRect(-this.geometry.width / 2, -this.geometry.height / 2, this.geometry.width, this.geometry.height);
+	  	game.viewport.context.drawImage(this._sprite.image, -this.geometry.width / 2, -this.geometry.height / 2, this.geometry.width, this.geometry.height);
+	} else if(this.geometry.width !== 0 && this.geometry.height !== 0) {
+	  	game.viewport.context.fillRect(-this.geometry.width / 2, -this.geometry.height / 2, this.geometry.width, this.geometry.height);
 	}
 	game.viewport.context.restore();
 };
 
 GameObject.prototype.updateAndDraw = function(debug) {
+	if (this.disposable) return;
 	this.updatePosition();
 	this.collisionDetect();
 	this.draw(debug);
