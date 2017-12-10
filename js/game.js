@@ -1,5 +1,5 @@
 // js/game.js
-const version = '0.1.8';
+const version = '0.1.9';
 
 const debug = document.location.search.substr(1).indexOf("debug") > -1;
 
