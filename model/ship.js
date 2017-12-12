@@ -199,6 +199,45 @@ Ship.prototype.npcUpdate = function () {
 };
 	
 Ship.prototype.playerUpdate = function() {
+	if (game.gamepad) {
+		const status = game.gamepad.status;
+		const buttons = game.gamepad.buttons;
+		const sticks = game.gamepad.sticks;
+		const triggers = game.gamepad.triggers;
+		if (buttons.start) {
+			debugger;
+		}
+		if (triggers.right) {
+			this.fireWeapons();
+		}
+		if (sticks.left.up) {
+			//this.increaseThrust();
+		}
+		if (sticks.left.down) {
+			//this.decreaseThrust();
+		}
+		if (sticks.left.left) {
+			this.yaw('ccw');
+		}
+		if (sticks.left.right) {
+			this.yaw('cw');
+		}
+		if (buttons.b) {
+			this.boost();
+		}
+		if (buttons.y) {
+			this.selectClosestTarget();
+		}
+		if (buttons.a) {
+			this.thrustOn();
+		} else {
+			this.thrustOff();
+		}
+		if (buttons.x) {
+			this.allStop();
+		}	
+	}
+	
 	if (game.keys.up) {
 		this.increaseThrust();
 	}
