@@ -67,6 +67,64 @@ class KeyHandler {
 }
 
 KeyHandler.prototype.handleKeyDown = function(e) {
+  switch (e.keyCode) {
+    case 211:  // GamepadLeftThumbstickUp
+    case 203:  // GamepadDPadUp
+      break;
+
+    case 212:  // GamepadLeftThumbstickDown
+    case 204:  // GamepadDPadDown
+      break;
+
+    case 214:  // GamepadLeftThumbstickLeft
+    case 205:  // GamepadDPadLeft
+      this._keyLeft = true;
+      e.preventDefault();
+    break;
+
+    case 213:  // GamepadLeftThumbstickRight
+    case 206:  // GamepadDPadRight
+      this._keyRight = true;
+      e.preventDefault();
+      break;
+
+    case 195:  // A Button
+      this._keyThrust = true;
+      e.preventDefault();
+      break;
+
+    case 196: // B button
+      break;
+
+    case 197: // X Button
+      this._keyStop = true;
+      e.preventDefault;
+      break;
+
+    case 198: // Y Button
+      break;
+
+    case 208: // View button
+      break;
+
+    case 207: // Menu button
+      break;
+
+    case 200: // Left Bumper
+      break;
+
+    case 199: // Right Bumper
+      break;
+
+    case 201: // Left Trigger
+      break;
+
+    case 202: // Right Trigger
+      this._keyFire = true;
+      break;
+
+  }
+
   switch (e.code.toUpperCase()) {
     case this._keys.ARROWUP:
     case this._keys.W:

@@ -1,12 +1,10 @@
 // js/game.js
 const version = '0.1.9';
-
 const debug = document.location.search.substr(1).indexOf("debug") > -1;
-
 const minNPC = 10;
 const fps = 30;
-
 const imageService = new ImageService();
+const gamepadSupport = "getGamepads" in navigator;
 
 class Game {
   constructor(playerName, shipName) {   
@@ -75,6 +73,7 @@ class Game {
     this._playerShip = null;
     this._playerShipName = shipName;
     this._keyHandler = new KeyHandler();
+    this._gamepadHandler = new GamepadHandler();
   
   }
 
@@ -120,6 +119,10 @@ class Game {
 
   get keys() {
     return this._keyHandler;
+  }
+
+  get gamepad() {
+    return this._gamepadHandler.gamepad;
   }
 
   /* setters */
