@@ -70,56 +70,56 @@ GamepadHandler.prototype.refresh = function() {
     this._gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);
 }
 
-GamepadHandler.prototype.pressedButtons = function(gamepadIndex) {
-    return this._gamepads[gamepadIndex].buttons.filter(function(button){
-        return button.pressed;        
-    })
-}
+// GamepadHandler.prototype.pressedButtons = function(gamepadIndex) {
+//     return this._gamepads[gamepadIndex].buttons.filter(function(button){
+//         return button.pressed;        
+//     })
+// }
 
-GamepadHandler.prototype.movedSticks = function(gamepadIndex) {
-    return this._gamepads[gamepadIndex].axes.filter(function(stick){
-        return stick.valueOf !== 0;
-    })
-}
+// GamepadHandler.prototype.movedSticks = function(gamepadIndex) {
+//     return this._gamepads[gamepadIndex].axes.filter(function(stick){
+//         return stick.valueOf !== 0;
+//     })
+// }
 
-GamepadHandler.prototype.readInputs = function(index) {
-    const buttons = this.pressedButtons(index);
-    const sticks = this.movedSticks(index);
+// GamepadHandler.prototype.readInputs = function(index) {
+//     const buttons = this.pressedButtons(index);
+//     const sticks = this.movedSticks(index);
 
-}
+// }
 
-GamepadHandler.prototype.sticks = function(index) {
-    const _sticks = this._gamepads[index ? index : 0].axes;
-    return {
-        left: {
-            up: _sticks[0].valueOf(),
-            down: _sticks[0].valueOf(),
-            left: _sticks[0].valueOf(),
-            right: _sticks[0].valueOf()
-        },
-        right: {
-            up: _sticks[1].valueOf(),
-            down: _sticks[1].valueOf(),
-            left: _sticks[1].valueOf(),
-            right: _sticks[1].valueOf()
-        }
-    }
-}
+// GamepadHandler.prototype.sticks = function(index) {
+//     const _sticks = this._gamepads[index ? index : 0].axes;
+//     return {
+//         left: {
+//             up: _sticks[0].valueOf(),
+//             down: _sticks[0].valueOf(),
+//             left: _sticks[0].valueOf(),
+//             right: _sticks[0].valueOf()
+//         },
+//         right: {
+//             up: _sticks[1].valueOf(),
+//             down: _sticks[1].valueOf(),
+//             left: _sticks[1].valueOf(),
+//             right: _sticks[1].valueOf()
+//         }
+//     }
+// }
 
-GamepadHandler.prototype.buttons = function(index) {
-    const _buttons = this._gamepads[index ? index : 0].buttons;
-    return {
-        a: _buttons[0].pressed,
-        b: _buttons[1].pressed,
-        x: _buttons[2].pressed,
-        y: _buttons[3].pressed
-    }
-}
+// GamepadHandler.prototype.buttons = function(index) {
+//     const _buttons = this._gamepads[index ? index : 0].buttons;
+//     return {
+//         a: _buttons[0].pressed,
+//         b: _buttons[1].pressed,
+//         x: _buttons[2].pressed,
+//         y: _buttons[3].pressed
+//     }
+// }
 
-GamepadHandler.prototype.triggers = function(index) {
-    const _triggers = this._gamepads[index ? index : 0].buttons;
-    return {
-        left: _triggers[4].pressed,
-        right: _triggers[5].pressed
-    }
-}
+// GamepadHandler.prototype.triggers = function(index) {
+//     const _triggers = this._gamepads[index ? index : 0].buttons;
+//     return {
+//         left: _triggers[4].pressed,
+//         right: _triggers[5].pressed
+//     }
+// }
