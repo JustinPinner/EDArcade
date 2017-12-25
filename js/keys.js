@@ -67,113 +67,45 @@ class KeyHandler {
 }
 
 KeyHandler.prototype.handleKeyDown = function(e) {
-  switch (e.keyCode) {
-    case 211:  // GamepadLeftThumbstickUp
-    case 203:  // GamepadDPadUp
-      break;
-
-    case 212:  // GamepadLeftThumbstickDown
-    case 204:  // GamepadDPadDown
-      break;
-
-    case 214:  // GamepadLeftThumbstickLeft
-    case 205:  // GamepadDPadLeft
-      this._keyLeft = true;
-      e.preventDefault();
-    break;
-
-    case 213:  // GamepadLeftThumbstickRight
-    case 206:  // GamepadDPadRight
-      this._keyRight = true;
-      e.preventDefault();
-      break;
-
-    case 195:  // A Button
-      this._keyThrust = true;
-      e.preventDefault();
-      break;
-
-    case 196: // B button
-      break;
-
-    case 197: // X Button
-      this._keyStop = true;
-      e.preventDefault;
-      break;
-
-    case 198: // Y Button
-      break;
-
-    case 208: // View button
-      break;
-
-    case 207: // Menu button
-      break;
-
-    case 200: // Left Bumper
-      break;
-
-    case 199: // Right Bumper
-      break;
-
-    case 201: // Left Trigger
-      break;
-
-    case 202: // Right Trigger
-      this._keyFire = true;
-      break;
-
-  }
-
+  e.preventDefault();
   switch (e.code.toUpperCase()) {
     case this._keys.ARROWUP:
     case this._keys.W:
       this._keyUp = true;
-      e.preventDefault();
       break;
     case this._keys.ARROWDOWN:
     case this._keys.S:
       this._keyDown = true;
-      e.preventDefault();
       break;
     case this._keys.ARROWLEFT:
     case this._keys.A:
       this._keyLeft = true;
-      e.preventDefault();
       break;
     case this._keys.ARROWRIGHT:
     case this._keys.D:
       this._keyRight = true;
-      e.preventDefault();
       break;
     case this._keys.BOOST:
       this._keyBoost = true;
-      e.preventDefault();
       break;
     case this._keys.TARGET:
       this._keySwitchTarget = true;
-      e.preventDefault();
       break;
     case this._keys.FIRE:
       this._keyFire = true;
-      e.preventDefault();
       break;
     case this._keys.FLIGHTASSIST:
       this._keyFlightAssist = true;
-      e.preventDefault();
       break;  
     case this._keys.THRUST:
     case this._keys.SHIFTRIGHT: 
       this._keyThrust = true;
-      e.preventDefault();
       break;
     case this._keys.STOP:
       this._keyStop = true;
-      e.preventDefault;
       break;    
     case this._keys.DEBUGBREAK:
       debugger;
-      e.preventDefault();
       break;  
   }  
 }

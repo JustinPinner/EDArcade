@@ -10,6 +10,7 @@ cat js/keys.js >> dist/js/game.js
 cat js/lib.js >> dist/js/game.js
 cat js/imageService.js >> dist/js/game.js
 cat js/canvas2d.js >> dist/js/game.js
+cat js/touch.js >> dist/js/game.js
 cat model/environment.js >> dist/js/game.js
 cat model/gameObject.js >> dist/js/game.js
 cat js/perfmon.js >> dist/js/game.js
