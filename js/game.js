@@ -1,5 +1,5 @@
 // js/game.js
-const version = '0.1.9';
+const version = '0.1.10';
 const debug = document.location.search.substr(1).indexOf("debug") > -1;
 const minNPC = 10;
 const fps = 30;
@@ -64,16 +64,35 @@ class Game {
         vpCanvasElement.height = this._viewport.height;
     }
 
+    // size touch interface container
+    this._touchInterface = new TouchInterface();
+    const tiWrapper = document.querySelector('#touchdiv');
+    if (tiWrapper) {
+      tiWrapper.style.left = this._viewport.coordinates.x.toString() + 'px';
+      tiWrapper.style.top = this._viewport.coordinates.y.toString() + 'px';
+      tiWrapper.style.width = this._viewport.width.toString() + 'px';
+      tiWrapper.style.height = this._viewport.height.toString() + 'px';
+      tiWrapper.style.background = 'transparent';
+    }
+    // size touch interface canvas
+    if (this._touchInterface.element) {
+      this._touchInterface.element.style.left = this._viewport.coordinates.x.toString() + 'px';
+      this._touchInterface.element.style.top = this._viewport.coordinates.y.toString() + 'px';
+      this._touchInterface.element.width = this._viewport.width;
+      this._touchInterface.element.height = this._viewport.height;
+    }
+
     const uiVersion = document.querySelector(".ui.debug.version");      
     if (uiVersion) {
       uiVersion.innerHTML = "<p>version:" + version + "</p>";
     }
-  
+
+    this._keyHandler = new KeyHandler();
+    this._gamepadHandler = new GamepadHandler();
+      
     this._player = new Player(playerName);
     this._playerShip = null;
     this._playerShipName = shipName;
-    this._keyHandler = new KeyHandler();
-    this._gamepadHandler = new GamepadHandler();
   
   }
 
@@ -125,6 +144,10 @@ class Game {
     return this._gamepadHandler.gamepad;
   }
 
+  get touchHandler() {
+    return this._touchInterface.touchHandler;
+  }
+  
   /* setters */
 
   set playerShip(ship) {
@@ -194,6 +217,7 @@ Game.prototype.tick = function() {
   }
 
   this._midground.draw();
+  this._touchInterface.draw();
 }
 
 Game.prototype.start = function() {
@@ -204,6 +228,7 @@ Game.prototype.start = function() {
   this._background.init();
   this._midground.init('../image/star-tile-transparent.png', game.midground.draw.bind(game.midground));
   this._viewport.init();
+  this._touchInterface.init();
   // create player's ship
   this._playerShip = new Ship(ShipTypes.COBRA3, this._playerShipName, this._player);
   this._gameObjects.push(this._playerShip);

@@ -1,7 +1,7 @@
 // css/game.css
 body {
-		overflow: hidden;
-		background-color: #000000;
+	overflow: hidden;
+	background-color: #000000;
 }
 
 #bgdiv {
@@ -47,6 +47,21 @@ body {
 	z-index: 5; 
 }
 
+#touchdiv {
+	background: transparent; 	
+	overflow: hidden;
+	position: absolute;
+	z-index: 6; 
+}
+
+#touchcanvas {
+	background: transparent; 	
+	overflow: hidden;
+	top: 0px;
+	left: 0px;
+	z-index: 7; 
+}
+
 #ui-debug-top {
 	position: absolute;
 	background-color: transparent;
@@ -84,7 +99,6 @@ body {
 	float: right;
 	margin-right: 5px;
 }
-
 
 #uiBottom {
 	display: none;

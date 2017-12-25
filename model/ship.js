@@ -238,6 +238,23 @@ Ship.prototype.playerUpdate = function() {
 		}	
 	}
 	
+	if (game.touchHandler && game.touchHandler.buttons) {
+		if (game.touchHandler.buttons['thrustButton'].touched) {
+			this.thrustOn();
+		} else {
+			this.thrustOff();
+		}	
+		if (game.touchHandler.buttons['leftButton'].touched) {
+			this.yaw('ccw');
+		}
+		if (game.touchHandler.buttons['rightButton'].touched) {
+			this.yaw('cw');
+		}
+		if (game.touchHandler.buttons['fireButton'].touched) {
+			this.fireWeapons();
+		}
+	}
+
 	if (game.keys.up) {
 		this.increaseThrust();
 	}
