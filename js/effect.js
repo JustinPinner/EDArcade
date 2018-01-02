@@ -6,7 +6,7 @@ class Effect extends GameObject {
 		this._sprite = sprite;
 		this._sprite.loadImage();						
 		this._coordinates = new Point2d(sprite.x - (this._sprite.width / 2), sprite.y - (this._sprite.height / 2));
-		this._fsm = new FSM(this, FSMState.EFFECT);
+		this._fsm = new FSM(this, FSMState.EFFECTPLAY);
 		this.draw = function() {
 			var origin = this._coordinates;
 			var cell = ((this._sprite.cells.lastFrameDrawn || 0) * this._sprite.cells.frameWidth) / (this._sprite.cells.frameWidth * this._sprite.cells.frameColumns);
@@ -43,14 +43,14 @@ class Effect extends GameObject {
 var EffectRoles = {
 	shipExplosion: {
 		roleName: 'Explosion01_5x5',
-		initialState: FSMState.EFFECT,
+		initialState: FSMState.EFFECTPLAY,
 		initialStatus: '',
 		threatStatus: [],
 		targetStatus: []
 	},
 	laserStrike: {
 		roleName: 'LaserStrike',
-		initialState: FSMState.EFFECT,
+		initialState: FSMState.EFFECTPLAY,
 		initialStatus: '',
 		threatStatus: [],
 		targetStatus: [],
@@ -74,6 +74,35 @@ var EffectRoles = {
 			game.objects.push(new Particle(radius, generator._coordinates, speed, angle, ttl, generator._onUpdated, fadeOut = true));
 			generator._particlesGenerated += 1;
 		}
+	},
+	thrust: {
+		roleName: 'ThrustEffect',
+		initialState: FSMState.EFFECTPLAY,
+		initialStatus: '',
+		threatStatus: [],
+		targetStatus: [],
+		onUpdated: function(particle) {
+			particle._speed -= 3;
+			//particle._velocity.x = dir_x(particle._speed, particle._heading);
+			//particle._velocity.y = dir_y(particle._speed, particle._heading); 
+		},
+		setup: function(generator) {
+			generator._particlesGenerated = 0;
+		},
+		execute: function(generator, data) {
+			const radius = randRangeInt(1,3);
+			const angle = data.thrustVector;
+			const ttl = 0;
+			const speed = data._thrust / 2;
+			game.objects.push(new Particle(radius, generator._coordinates, speed, angle, ttl, generator._onUpdated, fadeOut = true));
+			generator._particlesGenerated += 1;
+		},
+		start: function(generator, data) {
+			generator._fsm.transition(FSMState.EFFECTPLAY);
+		},
+		stop: function(generator, data) {
+			generator._fsm.transition(FSMState.EFFECTPAUSE);
+		}	
 	}
 }
 
@@ -95,11 +124,13 @@ class ShipExplosionEffect extends Effect {
 class ParticleEffect extends GameObject {
 	// A particle effect is a gameobject that spawns particles (as other gameobjects)
 	// - a particle generator if you like
-	constructor(effectRole, coordinates, secondsToLive, particlesToGenerate) {
+	constructor(effectRole, coordinates, secondsToLive, particlesToGenerate, initialState) {
 		super(GameObjectTypes.EFFECT);	
 		this._coordinates = coordinates;
 		this._setupFunction = effectRole.setup;
 		this._executeFunction = effectRole.execute;
+		this._startFunction = effectRole.start;
+		this._stopFunction = effectRole.stop;
 		this._onUpdated = effectRole.onUpdated;
 		this._ttl = secondsToLive;
 		this._secondsToLive = secondsToLive;
@@ -111,14 +142,26 @@ class ParticleEffect extends GameObject {
 				self._setupFunction(self);
 			}
 			this._fsm.state.execute = self.execute.bind(self);
-		}
+		};
 		this.execute = function() {
 			const self = this;
 			if(self._executeFunction) {
 				self._executeFunction(self);
 			}
-		}
-		this._fsm = new FSM(this, FSMState.EFFECT);
+		};
+		this.start = function(data) {
+			const self = this;
+			if(self._startFunction) {
+				self._startFunction(self, data);
+			}
+		};
+		this.stop = function(data) {
+			const self = this;
+			if(self._stopFunction) {
+				self._stopFunction(self, data);
+			}
+		};		
+		this._fsm = new FSM(this, initialState || FSMState.EFFECTPLAY);
 		this._fsm.state.execute = this.setup.bind(this);			
 	}
 	get particleCount() {
@@ -143,7 +186,16 @@ class LaserStrike extends ParticleEffect {
 	}
 }
 
+class ThrustEffect extends ParticleEffect {
+	constructor(coordinates) {
+		const secondsToLive = 0;
+		const particlesToGenerate = 100;
+		super(EffectRoles.thrust, coordinates, secondsToLive, particlesToGenerate, FSMState.EFFECTPAUSE);
+	}
+}
+
 var EffectTypes = {
-	shipExplosion: ShipExplosionEffect ,
-	laserStrike: LaserStrike
+	shipExplosion: ShipExplosionEffect,
+	laserStrike: LaserStrike,
+	thrust: ThrustEffect
 }

@@ -1,5 +1,5 @@
 // js/game.js
-const version = '0.1.10';
+const version = '0.1.11';
 const debug = document.location.search.substr(1).indexOf("debug") > -1;
 const minNPC = 10;
 const fps = 30;
@@ -167,7 +167,7 @@ Game.prototype.tick = function() {
   var npcCount = 0;
   for (var i = 0; i < this._gameObjects.length; i++) {
     const gameObject = this._gameObjects[i];
-    if (gameObject.TTL ? true : false) {
+    if (gameObject.TTL && gameObject.TTL > 0) {
       const now = Date.now();
       if (!gameObject.lastTTLTick || (gameObject.lastTTLTick && now - gameObject.lastTTLTick >= 1000)) {
         gameObject.lastTTLTick = Date.now();

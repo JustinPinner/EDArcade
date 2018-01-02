@@ -45,7 +45,7 @@ Particle.prototype.updateAndDraw = function(debug) {
     if (this.disposable) return;
     this.updatePosition();
     if (this._fadeOut) {
-        this._alpha = this._ttl / this._lifeSpan; //1.0 / (this._lifeSpan * this._ttl);
+        this._alpha = this._ttl / this._lifeSpan;
     }
     if (this._fadeIn) {
         this._alpha = (1.0 / this._lifeSpan) * (this._lifeSpan - this._ttl);
@@ -66,4 +66,31 @@ Particle.prototype.draw = function(debug) {
     game.viewport.context.arc(this.drawOriginCentre.x, this.drawOriginCentre.y, this.geometry.width, 0, Math.PI * 2);
     game.viewport.context.closePath();
     game.viewport.context.fill();
+};
+
+class ParticleEmitter {
+    constructor(hostObject, setupData) {
+        this._host = hostObject;
+        this._particleRadius = setupData.radius;
+        this._fadeIn = setupData.fadeIn;
+        this._fadeOut = setupData.fadeOut;
+        this._particleTtl = setupData.ttl;
+        this._emitSpeed = setupData.speed;
+        this._emitAngle = setupData.angle;
+        this._onUpdated = setupData.onUpdated;
+    }
+}
+
+ParticleEmitter.prototype.emit = function(point2d, speed, angle, radius, fadeIn, fadeOut, ttl, onUpdated) {
+    const particle = new Particle(
+        radius || this._particleRadius, 
+        point2d,
+        speed || this._emitSpeed, 
+        angle || this._emitAngle, 
+        ttl || this._particleTtl, 
+        onUpdated || this._onUpdated, 
+        fadeIn || this._fadeIn, 
+        fadeOut || this._fadeOut
+    );
+    game.objects.push(particle);
 };

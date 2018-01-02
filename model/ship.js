@@ -48,6 +48,25 @@ class Ship extends GameObject {
 		} else {
 			this.randomiseWeaponHardpoints(this);
 		}
+		this._thrusters = [];
+		if (this._model.thrusters) {
+			for (const t in this._model.thrusters) {
+				const particleData = {
+					radius: 3,
+					ttl: 4,
+					fadeIn: false,
+					fadeOut: true,
+					onUpdated: function(particle) {
+						const newWidth = particle._model.width * (particle._ttl / particle._lifeSpan);
+						particle._model.width = newWidth;
+						particle._model.height = newWidth;
+					}
+				};
+				this._model.thrusters[t]._parent = this;
+				this._model.thrusters[t]._particleEmitter = new ParticleEmitter(this._model.thrusters[t], particleData);
+				this._thrusters.push(this._model.thrusters[t]);
+			}		
+		}
 	}
 	/* Getters */
 	get model() {
@@ -161,7 +180,7 @@ class Ship extends GameObject {
 	get fsm() {
 		return this._fsm;
 	}
-	
+
 	/* Setters */
 
 	set contacts(pings) {
@@ -178,6 +197,16 @@ class Ship extends GameObject {
 Ship.prototype.updateAndDraw = function(debug) {
 	if (this.disposable) return;
 	this._scanner.scan();
+	if (this._thrust > 0 && this.isOnScreen(debug)) {
+		for (let t = 0; t < this._thrusters.length; t++) {
+			const emitPoint = new Point2d((this._coordinates.x + this._thrusters[t].x + randRangeInt(3,9)), (this._coordinates.y + this._thrusters[t].y + randRangeInt(3,9)));
+			emitPoint.rotate(this.centre, this.heading + 90);
+			const speed = Math.max(this._thrust / 10, 1);
+			const angle = this.thrustVector;
+			const radius = Math.max(this._thrust / 10, 1);
+			this._thrusters[t]._particleEmitter.emit(emitPoint, speed, angle, radius);
+		}	
+	}
 	if (this._player) {
 		this.playerUpdate();
 		this.draw(debug);
@@ -294,7 +323,7 @@ Ship.prototype.playerUpdate = function() {
 };
 
 Ship.prototype.accelerate = function() {
-	const rate = this._thrust / this._model.agility * 0.01;
+	const rate = this._thrust / this._model.agility * 0.1;
 	const dx = dir_x(rate, this._heading);
 	const dy = dir_y(rate, this._heading);	
 	
@@ -432,7 +461,7 @@ Ship.prototype.isHostile = function() {
 };
 
 Ship.prototype.thrustOn = function() {
-	this._thrust = 100;
+	this._thrust = 50;
 	this.accelerate();
 };
 
