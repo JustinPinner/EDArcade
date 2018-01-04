@@ -71,38 +71,10 @@ var EffectRoles = {
 			const angle = ((360 / generator._particleCount) - generator._particlesGenerated) * generator._particlesGenerated;
 			const ttl = generator._secondsToLive ? generator._secondsToLive : randRangeInt(3, 5);
 			const speed = randRangeInt(10, 40);
-			game.objects.push(new Particle(radius, generator._coordinates, speed, angle, ttl, generator._onUpdated, fadeOut = true));
+			const rgba = {red: randRangeInt(7,14), green: randRangeInt(230, 250), blue: randRangeInt(220, 240), alpha: 1.0};
+			game.objects.push(new Particle(rgba, radius, generator._coordinates, speed, angle, ttl, generator._onUpdated, fadeOut = true));
 			generator._particlesGenerated += 1;
 		}
-	},
-	thrust: {
-		roleName: 'ThrustEffect',
-		initialState: FSMState.EFFECTPLAY,
-		initialStatus: '',
-		threatStatus: [],
-		targetStatus: [],
-		onUpdated: function(particle) {
-			particle._speed -= 3;
-			//particle._velocity.x = dir_x(particle._speed, particle._heading);
-			//particle._velocity.y = dir_y(particle._speed, particle._heading); 
-		},
-		setup: function(generator) {
-			generator._particlesGenerated = 0;
-		},
-		execute: function(generator, data) {
-			const radius = randRangeInt(1,3);
-			const angle = data.thrustVector;
-			const ttl = 0;
-			const speed = data._thrust / 2;
-			game.objects.push(new Particle(radius, generator._coordinates, speed, angle, ttl, generator._onUpdated, fadeOut = true));
-			generator._particlesGenerated += 1;
-		},
-		start: function(generator, data) {
-			generator._fsm.transition(FSMState.EFFECTPLAY);
-		},
-		stop: function(generator, data) {
-			generator._fsm.transition(FSMState.EFFECTPAUSE);
-		}	
 	}
 }
 
@@ -186,16 +158,7 @@ class LaserStrike extends ParticleEffect {
 	}
 }
 
-class ThrustEffect extends ParticleEffect {
-	constructor(coordinates) {
-		const secondsToLive = 0;
-		const particlesToGenerate = 100;
-		super(EffectRoles.thrust, coordinates, secondsToLive, particlesToGenerate, FSMState.EFFECTPAUSE);
-	}
-}
-
 var EffectTypes = {
 	shipExplosion: ShipExplosionEffect,
-	laserStrike: LaserStrike,
-	thrust: ThrustEffect
+	laserStrike: LaserStrike
 }

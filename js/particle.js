@@ -1,12 +1,13 @@
 // particle.js
 
 class Particle extends GameObject {
-    constructor(radius, coordinates, speed, heading, ttl, onUpdated, fadeIn, fadeOut) {
+    constructor(rgba, radius, coordinates, speed, heading, ttl, onUpdated, fadeIn, fadeOut) {
         super(GameObjectTypes.PARTICLE);
         this._model = {
             height: radius, 
             width: radius
         };
+        this._rgba = rgba || {red: 255, green: 255, blue: 255, alpha: 1.0}
         this._coordinates = coordinates;
         this._speed = speed;
         this._heading = heading;
@@ -14,7 +15,6 @@ class Particle extends GameObject {
         this._lifeSpan = ttl;
         this._ttl = ttl;
         this._lastTtlTick = 0;
-        this._alpha = 1.0;		        
         this._fadeIn = fadeIn ? fadeIn : false;
         this._fadeOut = fadeOut ? fadeOut : false;
         this._onUpdated = onUpdated;
@@ -45,10 +45,10 @@ Particle.prototype.updateAndDraw = function(debug) {
     if (this.disposable) return;
     this.updatePosition();
     if (this._fadeOut) {
-        this._alpha = this._ttl / this._lifeSpan;
+        this._rgba.alpha = this._ttl / this._lifeSpan;
     }
     if (this._fadeIn) {
-        this._alpha = (1.0 / this._lifeSpan) * (this._lifeSpan - this._ttl);
+        this._rgba.alpha = (1.0 / this._lifeSpan) * (this._lifeSpan - this._ttl);
     }
     this.draw(debug);
 	if (this._fsm && this._fsm.execute) {
@@ -61,7 +61,7 @@ Particle.prototype.updateAndDraw = function(debug) {
 
 Particle.prototype.draw = function(debug) {
 	if (!this.isOnScreen(debug)) return;
-	game.viewport.context.fillStyle="rgba(255,255,255," + this._alpha + ")";
+	game.viewport.context.fillStyle="rgba(" + this._rgba.red + "," + this._rgba.green + "," + this._rgba.blue + "," + this._rgba.alpha + ")";
     game.viewport.context.beginPath();
     game.viewport.context.arc(this.drawOriginCentre.x, this.drawOriginCentre.y, this.geometry.width, 0, Math.PI * 2);
     game.viewport.context.closePath();
@@ -71,6 +71,7 @@ Particle.prototype.draw = function(debug) {
 class ParticleEmitter {
     constructor(hostObject, setupData) {
         this._host = hostObject;
+        this._particleRgba = setupData.rgba;
         this._particleRadius = setupData.radius;
         this._fadeIn = setupData.fadeIn;
         this._fadeOut = setupData.fadeOut;
@@ -81,16 +82,17 @@ class ParticleEmitter {
     }
 }
 
-ParticleEmitter.prototype.emit = function(point2d, speed, angle, radius, fadeIn, fadeOut, ttl, onUpdated) {
+ParticleEmitter.prototype.emit = function(particleData) {
     const particle = new Particle(
-        radius || this._particleRadius, 
-        point2d,
-        speed || this._emitSpeed, 
-        angle || this._emitAngle, 
-        ttl || this._particleTtl, 
-        onUpdated || this._onUpdated, 
-        fadeIn || this._fadeIn, 
-        fadeOut || this._fadeOut
+        particleData.rgba || this._particleRgba,
+        particleData.radius || this._particleRadius, 
+        particleData.emitPoint,
+        particleData.emitSpeed || this._emitSpeed, 
+        particleData.emitAngle || this._emitAngle, 
+        particleData.ttl || this._particleTtl, 
+        particleData.onUpdated || this._onUpdated, 
+        particleData.fadeIn || this._fadeIn, 
+        particleData.fadeOut || this._fadeOut
     );
     game.objects.push(particle);
 };

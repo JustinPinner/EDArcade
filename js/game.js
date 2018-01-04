@@ -1,7 +1,7 @@
 // js/game.js
 const version = '0.1.11';
 const debug = document.location.search.substr(1).indexOf("debug") > -1;
-const minNPC = 10;
+const minNPC = 5;
 const fps = 30;
 const imageService = new ImageService();
 const gamepadSupport = "getGamepads" in navigator;
@@ -200,7 +200,7 @@ Game.prototype.tick = function() {
       }
       const uiInputs = document.querySelector(".ui.debug.inputs");
       if (uiInputs) {
-        uiInputs.innerHTML = "<p>thrust:" + (this._playerShip.thrust ? this._playerShip.thrust.toFixed(1) : " ") + "</p>";
+        uiInputs.innerHTML = "<p>thrust:" + (this._playerShip._thrust ? this._playerShip._thrust.toFixed(1) : " ") + "</p>";
       }
     }
   }
