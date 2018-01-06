@@ -53,13 +53,15 @@ const Cobra3 = {
         }
     },
     thrusters: {
-        leftRear: {
-            x: 31,
-            y: 51
-        },
-        rightRear: {
-            x: 52,
-            y: 51
+        rear: {
+            left: {
+                x: 31,
+                y: 51    
+            },
+            right: {
+                x: 52,
+                y: 51
+            }
         }
     },
     cells: {},

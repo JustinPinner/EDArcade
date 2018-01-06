@@ -50,23 +50,15 @@ class Ship extends GameObject {
 		}
 		this._thrusters = [];
 		if (this._model.thrusters) {
-			for (const t in this._model.thrusters) {
-				const particleData = {
-					rgba: {red: 246, green: 238, blue: 7, alpha: 0.8},
-					radius: 3,
-					ttl: 4,
-					fadeIn: false,
-					fadeOut: true,
-					onUpdated: function(particle) {
-						const newWidth = particle._model.width * (particle._ttl / particle._lifeSpan);
-						particle._model.width = newWidth;
-						particle._model.height = newWidth;
-					}
-				};
-				this._model.thrusters[t]._parent = this;
-				this._model.thrusters[t]._particleEmitter = new ParticleEmitter(this._model.thrusters[t], particleData);
-				this._thrusters.push(this._model.thrusters[t]);
-			}		
+			for (const thrusterGroup in this._model.thrusters) {
+				for (const thruster in this._model.thrusters[thrusterGroup]) {
+					const thrusterData = {
+						orientation: thrusterGroup,
+						coordinates: new Point2d(this._model.thrusters[thrusterGroup][thruster].x, this._model.thrusters[thrusterGroup][thruster].y)
+					};
+					this._thrusters.push(new Thruster(this, thrusterData));
+				}		
+			}			
 		}
 	}
 	/* Getters */
@@ -181,7 +173,9 @@ class Ship extends GameObject {
 	get fsm() {
 		return this._fsm;
 	}
-
+	get thrust() {
+		return this._thrust;
+	}
 	/* Setters */
 
 	set contacts(pings) {
@@ -202,28 +196,7 @@ Ship.prototype.updateAndDraw = function(debug) {
 		this.accelerate();
 		if (this.isOnScreen(debug)) {
 			for (let t = 0; t < this._thrusters.length; t++) {
-				const emitPoint = new Point2d((this._coordinates.x + this._thrusters[t].x + randRangeInt(3,9)), (this._coordinates.y + this._thrusters[t].y + randRangeInt(3,9)));
-				emitPoint.rotate(this.centre, this.heading + 90);
-				const speed = 0; //Math.max(this._thrust / 30, 10);
-				const angle = this.thrustVector;
-				const radius = Math.max(this._thrust / 2, 1);
-				// emit primary particle
-				const particleData = {
-					rgba: {red: 246, green: 238, blue: 7, alpha: 0.8},
-					radius: radius,
-					emitPoint: emitPoint,
-					emitSpeed: speed,
-					emitAngle: angle,
-	
-				};
-				// emit shadow particle
-				this._thrusters[t]._particleEmitter.emit(particleData);
-				particleData.rgba.green = randRangeInt(150, 160);
-				particleData.rgba.alpha = 0.5;
-				particleData.emitSpeed = speed * 0.6;
-				particleData.emitAngle = angle + rand(10, true);
-				particleData.radius = radius * 1.5;
-				this._thrusters[t]._particleEmitter.emit(particleData);
+				this._thrusters[t].thrust();
 			}		
 		}
 	}
