@@ -62,6 +62,16 @@ const Cobra3 = {
                 x: 52,
                 y: 51
             }
+        },
+        front: {
+            left: {
+                x: 18,
+                y: 14,
+            },
+            right: {
+                x: 70,
+                y: 14
+            }
         }
     },
     cells: {},

@@ -32,7 +32,7 @@ class KeyHandler {
     this._keyDebugBreak = false; 
   }
   get up() {
-    return this._keyUp;
+    return this._keyUp || this._keyThrust;
   }
   get down() {
     return this._keyDown;
@@ -54,9 +54,6 @@ class KeyHandler {
   }
   get flightAssist() {
     return this._keyFlightAssist;
-  }
-  get thrust() {
-    return this._keyThrust;
   }
   get stop() {
     return this._keyStop;

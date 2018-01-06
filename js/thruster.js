@@ -37,22 +37,25 @@ class Thruster extends ParticleEmitter {
         p.rotate(this._host.centre, this._host.heading + 90);
         return p;
     }
+
+    get orientation() {
+        return this._orientation;
+    }
 }
 
 Thruster.prototype.thrust = function() {
     const angle = this._orientation == ORIENTATION.aft ? this._host.thrustVector : this._host.heading;
-    const radius = Math.max(this._host.thrust / 2, 1);
+    const radius = Math.max(Math.abs(this._host.thrust) / 2, 1);
     // emit primary particle
-    const primary = DEFAULTTHRUSTPARTICLE;
-    primary.radius = radius * 1.5;
-    primary.emitPoint = this.hostRelativeCoordinates;
-    primary.emitAngle = angle;	
-    this.__proto__.emit(primary);
+    const particles = DEFAULTTHRUSTPARTICLE;
+    particles.radius = radius * 1.5;
+    particles.emitPoint = this.hostRelativeCoordinates;
+    particles.emitAngle = angle;	
+    this.__proto__.emit(particles);
     // emit secondary effect particle
-    const secondary = DEFAULTTHRUSTPARTICLE;
-    secondary.rgba.green = randRangeInt(170, 200);
-    secondary.rgba.alpha = 0.5;
-    secondary.emitAngle = angle + rand(10, true);
-    secondary.radius = radius;
-    this.__proto__.emit(secondary);
+    particles.rgba.green = randRangeInt(170, 200);
+    particles.rgba.alpha = 0.5;
+    particles.emitAngle = angle + rand(10, true);
+    particles.radius = radius;
+    this.__proto__.emit(particles);
 }

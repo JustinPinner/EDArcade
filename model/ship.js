@@ -192,13 +192,15 @@ class Ship extends GameObject {
 Ship.prototype.updateAndDraw = function(debug) {
 	if (this.disposable) return;
 	this._scanner.scan();
-	if (this._thrust > 0) {
-		this.accelerate();
+	if (this._thrust !== 0) {
 		if (this.isOnScreen(debug)) {
 			for (let t = 0; t < this._thrusters.length; t++) {
-				this._thrusters[t].thrust();
+				if (this._thrusters[t].orientation == (this._thrust < 0 ? ORIENTATION.fore : ORIENTATION.aft)) {
+					this._thrusters[t].thrust();
+				}
 			}		
 		}
+		this.accelerate();
 	}
 	if (this._player) {
 		this.playerUpdate();
@@ -252,12 +254,11 @@ Ship.prototype.playerUpdate = function() {
 		}
 		if (buttons.a) {
 			this.increaseThrust();
+		} else if (buttons.x) {
+			this.decreaseThrust();
 		} else {
-			if (this._thrust > 0) this.decreaseThrust(0);
+			this.thrustOff();
 		}
-		if (buttons.x) {
-			this.allStop();
-		}	
 	}
 	
 	if (game.touchHandler && game.touchHandler.buttons) {
@@ -278,8 +279,10 @@ Ship.prototype.playerUpdate = function() {
 	if (!game.gamepad) {
 		if (game.keys.up) {
 			this.increaseThrust();
+		} else if (game.keys.down) {
+			this.decreaseThrust();
 		} else {
-			if (this._thrust > 0) this.decreaseThrust(0);
+			this.thrustOff();
 		}
 	}
 	if (game.keys.left) {
@@ -301,7 +304,7 @@ Ship.prototype.playerUpdate = function() {
 		this._flightAssist = !this._flightAssist;
 	}
 	if (game.keys.thrust) {
-		this.thrustToggle();
+		this.increaseThrust();
 	}
 	if (game.keys.stop) {
 		this.allStop();
@@ -426,14 +429,6 @@ Ship.prototype.isHostile = function() {
 	return this._player ? true : false;
 };
 
-Ship.prototype.thrustToggle = function() {
-	if (this._thrust == 0) {
-		this.thrustOn();
-	} else {
-		this.thrustOff();
-	}
-}
-
 Ship.prototype.thrustOn = function() {
 	this._thrust = 50;
 };
@@ -447,9 +442,9 @@ Ship.prototype.increaseThrust = function() {
 	if (this._thrust > 100) this._thrust = 100;	
 };
 	
-Ship.prototype.decreaseThrust = function(lowerLimit) {
-	this._thrust -= 8;
-	if (this._thrust < lowerLimit) this._thrust = lowerLimit;
+Ship.prototype.decreaseThrust = function() {
+	this._thrust -= 4;
+	if (this._thrust < -100) this._thrust = -100;
 };
 	
 Ship.prototype.allStop = function() {
