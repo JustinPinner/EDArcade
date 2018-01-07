@@ -42,6 +42,28 @@ const Viper3 = {
             radius: 15
         },
     },
+    thrusters: {
+        rear: {
+            left: {
+                x: 5,
+                y: 53
+            },  
+            right: {
+                x: 42,
+                y: 53
+            }
+        },
+        front: {
+            left: {
+                x: 14,
+                y: 17
+            },
+            right: {
+                x: 33,
+                y: 17
+            }
+        }
+    },
     cells: {},
     loadHardpoints: function(self) {
         for (var i = 1; i < 3; i++){

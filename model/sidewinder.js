@@ -48,6 +48,28 @@ const SideWinder = {
             radius: 10
         }
     },
+    thrusters: {
+        rear: {
+            left: {
+                x: 11,
+                y: 28
+            },  
+            right: {
+                x: 34,
+                y: 28
+            }
+        },
+        front: {
+            left: {
+                x: 11,
+                y: 8
+            },
+            right: {
+                x: 34,
+                y: 8
+            }
+        }
+    },
     cells: {
         shieldStrike: {
             src: null,

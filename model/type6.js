@@ -39,6 +39,28 @@ const Type6 = {
             radius: 27
         },
     },
+    thrusters: {
+        rear: {
+            left: {
+                x: 12,
+                y: 99
+            },  
+            right: {
+                x: 41,
+                y: 99
+            }
+        },
+        front: {
+            left: {
+                x: 12,
+                y: 10
+            },
+            right: {
+                x: 41,
+                y: 10
+            }
+        }
+    },
     cells: {},
     loadHardpoints: function(self) {
         for (var i = 1; i < 3; i++){
