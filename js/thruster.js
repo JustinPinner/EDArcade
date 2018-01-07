@@ -45,10 +45,10 @@ class Thruster extends ParticleEmitter {
 
 Thruster.prototype.thrust = function() {
     const angle = this._orientation == ORIENTATION.aft ? this._host.thrustVector : this._host.heading;
-    const radius = Math.max(Math.abs(this._host.thrust) / 2, 1);
+    const radius = Math.max(Math.abs(this._host.thrust) / 4, 1);
     // emit primary particle
     const particles = DEFAULTTHRUSTPARTICLE;
-    particles.radius = radius * 1.5;
+    particles.radius = radius * 1.25;
     particles.emitPoint = this.hostRelativeCoordinates;
     particles.emitAngle = angle;	
     this.__proto__.emit(particles);
