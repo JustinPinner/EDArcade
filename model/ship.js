@@ -316,9 +316,10 @@ Ship.prototype.playerUpdate = function() {
 };
 
 Ship.prototype.accelerate = function() {
-	const rate = (this._thrust / this._model.agility) * 0.02;
-	const xComp = dir_x(rate, this.thrustVector);
-	const yComp = dir_y(rate, this.thrustVector);
+	// a=F/m
+	const acceleration = this._thrust / this._model.mass;
+	const xComp = dir_x(acceleration, this.thrustVector);
+	const yComp = dir_y(acceleration, this.thrustVector);
 	const accVec = new Vector2d(-xComp, -yComp);	
 	this._velocity.add(accVec);
 };
