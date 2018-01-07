@@ -48,6 +48,18 @@ class Ship extends GameObject {
 		} else {
 			this.randomiseWeaponHardpoints(this);
 		}
+		this._thrusters = [];
+		if (this._model.thrusters) {
+			for (const thrusterGroup in this._model.thrusters) {
+				for (const thruster in this._model.thrusters[thrusterGroup]) {
+					const thrusterData = {
+						orientation: thrusterGroup,
+						coordinates: new Point2d(this._model.thrusters[thrusterGroup][thruster].x, this._model.thrusters[thrusterGroup][thruster].y)
+					};
+					this._thrusters.push(new Thruster(this, thrusterData));
+				}		
+			}			
+		}
 	}
 	/* Getters */
 	get model() {
@@ -161,7 +173,9 @@ class Ship extends GameObject {
 	get fsm() {
 		return this._fsm;
 	}
-	
+	get thrust() {
+		return this._thrust;
+	}
 	/* Setters */
 
 	set contacts(pings) {
@@ -178,6 +192,16 @@ class Ship extends GameObject {
 Ship.prototype.updateAndDraw = function(debug) {
 	if (this.disposable) return;
 	this._scanner.scan();
+	if (this._thrust !== 0) {
+		if (this.isOnScreen(debug)) {
+			for (let t = 0; t < this._thrusters.length; t++) {
+				if (this._thrusters[t].orientation == (this._thrust < 0 ? ORIENTATION.fore : ORIENTATION.aft)) {
+					this._thrusters[t].thrust();
+				}
+			}		
+		}
+		this.accelerate();
+	}
 	if (this._player) {
 		this.playerUpdate();
 		this.draw(debug);
@@ -229,21 +253,18 @@ Ship.prototype.playerUpdate = function() {
 			this.selectClosestTarget();
 		}
 		if (buttons.a) {
-			this.thrustOn();
+			this.increaseThrust();
+		} else if (buttons.x) {
+			this.decreaseThrust();
 		} else {
 			this.thrustOff();
 		}
-		if (buttons.x) {
-			this.allStop();
-		}	
 	}
 	
 	if (game.touchHandler && game.touchHandler.buttons) {
 		if (game.touchHandler.buttons['thrustButton'].touched) {
-			this.thrustOn();
-		} else {
-			this.thrustOff();
-		}	
+			this.increaseThrust();
+		}
 		if (game.touchHandler.buttons['leftButton'].touched) {
 			this.yaw('ccw');
 		}
@@ -255,11 +276,14 @@ Ship.prototype.playerUpdate = function() {
 		}
 	}
 
-	if (game.keys.up) {
-		this.increaseThrust();
-	}
-	if (game.keys.down) {
-		this.decreaseThrust();
+	if (!game.gamepad) {
+		if (game.keys.up) {
+			this.increaseThrust();
+		} else if (game.keys.down) {
+			this.decreaseThrust();
+		} else {
+			this.thrustOff();
+		}
 	}
 	if (game.keys.left) {
 		this.yaw('ccw');
@@ -280,9 +304,7 @@ Ship.prototype.playerUpdate = function() {
 		this._flightAssist = !this._flightAssist;
 	}
 	if (game.keys.thrust) {
-		this.thrustOn();
-	} else {
-		this.thrustOff();
+		this.increaseThrust();
 	}
 	if (game.keys.stop) {
 		this.allStop();
@@ -294,41 +316,17 @@ Ship.prototype.playerUpdate = function() {
 };
 
 Ship.prototype.accelerate = function() {
-	const rate = this._thrust / this._model.agility * 0.01;
-	const dx = dir_x(rate, this._heading);
-	const dy = dir_y(rate, this._heading);	
-	
-	// speed limiter
-	var apply_dx = true;
-	var apply_dy = true;
-	const maxLimit = this._model.maxSpeed / fps;
-	const minLimit = maxLimit * -1;
-
-	if (dx > 0 && this._velocity.x > 0 && (this._velocity.x + dx > maxLimit)) {
-		apply_dx = false;
-	}
-	if (dx < 0 && this._velocity.x < 0 && (this._velocity.x + dx < minLimit)) {
-		apply_dx = false;
-	}
-	if (dy > 0 && this._velocity.y > 0 && (this._velocity.y + dy > maxLimit)) {
-		apply_dy = false;
-	}
-	if (dy < 0 && this._velocity.y < 0 && (this._velocity.y + dy < minLimit)) {
-		apply_dy = false;
-	}
-
-	if (apply_dx) {
-		this._velocity.x += dx;
-	}
-	if (apply_dy) {
-		this._velocity.y += dy;
-	}
+	const rate = (this._thrust / this._model.agility) * 0.02;
+	const xComp = dir_x(rate, this.thrustVector);
+	const yComp = dir_y(rate, this.thrustVector);
+	const accVec = new Vector2d(-xComp, -yComp);	
+	this._velocity.add(accVec);
 };
 
 Ship.prototype.updateMomentum = function() {
 	const dA = angleDifference(this._heading, this._direction);
-	if (Math.abs(this._thrust) != 0) {
-		this._direction += dA * this.yawRate * 0.1; //(this.yawRate * (1 / (this.thrust != 0 ? Math.abs(this.thrust) : 1)));	
+	if (this._thrust !== 0) {
+		this._direction += dA * this.yawRate * 0.1;
 	}
 	if (this._direction > 359) {
 		this._direction -= 359;
@@ -432,8 +430,7 @@ Ship.prototype.isHostile = function() {
 };
 
 Ship.prototype.thrustOn = function() {
-	this._thrust = 100;
-	this.accelerate();
+	this._thrust = 50;
 };
 
 Ship.prototype.thrustOff = function() {
@@ -441,37 +438,19 @@ Ship.prototype.thrustOff = function() {
 };
 
 Ship.prototype.increaseThrust = function() {
-	this._thrust += 2;
+	this._thrust += 4;
 	if (this._thrust > 100) this._thrust = 100;	
-	if (this._thrust > 0) this.accelerate();
 };
 	
 Ship.prototype.decreaseThrust = function() {
-	this._thrust -= 2;
-	if (this._thrust < -100) this._thrust = -100;	
-	if (this._thrust < 0) this.decelerate();
+	this._thrust -= 4;
+	if (this._thrust < -100) this._thrust = -100;
 };
 	
 Ship.prototype.allStop = function() {
 	this._thrust = 0;
-	this._velocity.x = 0;
-	this._velocity.y = 0;
 };
-	
-Ship.prototype.npcAccelerate = function() {	
-	this._speed += this.accelerationRate;
-	if (this._speed > this._model.maxSpeed) {
-		this._speed = this._model.maxSpeed;
-	}
-};
-	
-Ship.prototype.decelerate = function() {
-	this._speed -= this.accelerationRate;
-	if (this._speed < -this._model.maxSpeed) {
-		this._speed = -this._model.maxSpeed;
-	}
-};
-	
+		
 Ship.prototype.yaw = function(dir) {
 	var degsToAdd = 0;
 	switch (dir) {
@@ -492,7 +471,8 @@ Ship.prototype.yaw = function(dir) {
 };
 	
 Ship.prototype.boost = function() {
-	this._speed = this._boostSpeed;	
+	const maxBoost = 80;
+	this._thrust = Math.max(maxBoost, Math.min(this._thrust * 1.3, maxBoost));	
 };
 	
 Ship.prototype.setTarget = function(ship) {

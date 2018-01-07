@@ -64,6 +64,28 @@ const Python = {
             radius: 40
         }
     },
+    thrusters: {
+        rear: {
+            left: {
+                x: 35,
+                y: 170
+            },  
+            right: {
+                x: 82,
+                y: 170
+            }
+        },
+        front: {
+            left: {
+                x: 31,
+                y: 50
+            },
+            right: {
+                x: 88,
+                y: 50
+            }
+        }
+    },
     cells: {},
     loadHardpoints: function(self) {
         for (var i = 1; i < 4; i++){

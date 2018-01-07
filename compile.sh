@@ -18,6 +18,7 @@ cat util/polyfill.js >> dist/js/game.js
 cat js/fsm.js >> dist/js/game.js
 cat js/particle.js >> dist/js/game.js
 cat js/effect.js >> dist/js/game.js
+cat js/thruster.js >> dist/js/game.js
 cat model/weapon.js >> dist/js/game.js
 cat model/sprite.js >> dist/js/game.js
 cat js/math2d.js >> dist/js/game.js

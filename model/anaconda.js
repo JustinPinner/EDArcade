@@ -73,6 +73,28 @@ const Anaconda = {
             radius: 40
         }
     },
+    thrusters: {
+        rear: {
+            left: {
+                x: 42,
+                y: 293
+            },
+            right: {
+                x: 75,
+                y: 293
+            }
+        },
+        front: {
+            left: {
+                x: 26,
+                y: 79
+            },
+            right: {
+                x: 88,
+                y: 79
+            }
+        }
+    },
     cells: {},
     loadHardpoints: function(self) {
         self._hardpoints.push(new WeaponHardpoint(self, Size.HUGE.value, 1));

@@ -16,7 +16,8 @@ const FSMState = {
 	UNLOAD: 'munitionUnload',
 	INFLIGHT: 'munitionInFlight',
 	IMPACT: 'munitionImpact',
-	EFFECT: 'effectPlay'
+	EFFECTPLAY: 'effectPlay',
+	EFFECTPAUSE: 'effectPause'
 }
 
 const fsmStates = {
@@ -263,8 +264,14 @@ const fsmStates = {
 		}
 	},
 	effectPlay: {
-		mode: FSMState.EFFECT,
-		nextState: [FSMState.DESPAWN],
+		mode: FSMState.EFFECTPLAY,
+		nextState: [FSMState.EFFECTPAUSE, FSMState.DESPAWN],
+		detectCollisions: false,
+		execute: function(self) {}
+	},
+	effectPause: {
+		mode: FSMState.EFFECTPAUSE,
+		nextState: [FSMState.EFFECTPLAY, FSMState.DESPAWN],
 		detectCollisions: false,
 		execute: function(self) {}
 	},

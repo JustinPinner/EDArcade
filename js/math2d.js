@@ -17,6 +17,20 @@ class Point2d {
   }
 }
 
+Point2d.prototype.rotate = function(p2dCentre, degrees) {
+	//rotate counterclockwise
+	const r = [];
+	const x = this._x - p2dCentre.x;
+	const y = this._y - p2dCentre.y;
+  const rads = degreesToRadians(degrees);
+  r[0] = x * Math.cos(rads) - y * Math.sin(rads);
+	r[1] = x * Math.sin(rads) + y * Math.cos(rads);
+	r[0] += p2dCentre.x;
+  r[1] += p2dCentre.y;
+  this._x = r[0];
+  this._y = r[1];
+}
+
 function distanceBetweenObjects(objA, objB) {
   const dx = objA.centre.x - objB.centre.x;
   const dy = objA.centre.y - objB.centre.y;
@@ -75,49 +89,47 @@ class Vector2d extends Point2d {
     super(x, y);
   }
   get length() {
-    return Math.sqrt(this._x^2 + this._y^2);
+    return Math.sqrt(Math.abs(this._x)^2 + Math.abs(this._y)^2);
   }
 }
 
 Vector2d.prototype.add = function(v2d) {
-	return new Vector2d(v2d.x + this._x, v2d.y + this._y);
+  this._x += v2d.x;
+  this._y += v2d.y;
 }
 
 Vector2d.prototype.subtract = function(v2d) {
-	return new Vector2d(this._x - v2d.x, this._y - v2d.y);
+  this._x -= v2d.x;
+  this._y -= v2d.y;
 }
 
 Vector2d.prototype.scale = function(n) {
-	return new Vector2d(this._x * n, this._y * n);
+  this._x *= n;
+  this._y *= n;
 }
 
 Vector2d.prototype.dot = function(v2d) {
-	return (this._x * v2d.x + this._y * v2d.y);
+  this._x *= v2d.x;
+  this._y *= v2d.y;
 }
 
 Vector2d.prototype.cross = function(v2d) {
-	return (this._x * v2d.y - this._y * v2d.x);
-}
-
-Vector2d.prototype.rotate = function(v2dCentre, degrees) {
-	//rotate counterclockwise
-	const r = [];
-	const x = this._x - v2dCentre.x;
-	const y = this._y - v2dCentre.y;
-	r[0] = x * Math.cos(angle) - y * Math.sin(degreesToRadians(degrees));
-	r[1] = x * Math.sin(angle) + y * Math.cos(degreesToRadians(degrees));
-	r[0] += v2dCentre.x;
-	r[1] += v2dCentre.y;
-	return new Vector2d(r[0], r[1]);
+  this._x *= v2d.y;
+  this._y *= v2d.x;
 }
 
 Vector2d.prototype.normalize = function() {
 	const len = this.length > 0 ? (1 / this.length) : this.length;
-  return new Vector2d(this._x * len, this._y * len);
+  this._x *= len;
+  this._y *= len;
 }
 
 Vector2d.prototype.distance = function(v2d) {
 	const x = this._x - v2d.x;
 	const y = this._y - v2d.y;
 	return Math.sqrt(x^2 + y^2);
+}
+
+Vector2d.prototype.clone = function() {
+  return new Vector2d(this._x, this._y);
 }

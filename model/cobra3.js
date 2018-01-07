@@ -52,6 +52,28 @@ const Cobra3 = {
             radius: 15
         }
     },
+    thrusters: {
+        rear: {
+            left: {
+                x: 31,
+                y: 51    
+            },
+            right: {
+                x: 52,
+                y: 51
+            }
+        },
+        front: {
+            left: {
+                x: 18,
+                y: 14,
+            },
+            right: {
+                x: 70,
+                y: 14
+            }
+        }
+    },
     cells: {},
     loadHardpoints: function(self) {
         for (var i = 1; i < 3; i++){
