@@ -5,6 +5,7 @@
 
 class TouchHandler {
     constructor(width, height) {
+        this._enabled = false;
         this._width = width;
         this._height = height;
         this._button = {
@@ -54,10 +55,18 @@ class TouchHandler {
     get buttons() {
         return this._buttons;
     }
+    get enabled() {
+        return this._enabled;
+    }
+
+    set enabled(val) {
+        this._enabled = val;
+    }
 }
 
 TouchHandler.prototype.handleTouchStart = function(evt) {
     evt.preventDefault();
+    this._enabled = true;
     const touches = evt.changedTouches;
     
     for (var i = 0; i < touches.length; i++) {

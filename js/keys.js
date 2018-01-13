@@ -19,6 +19,7 @@ class KeyHandler {
       STOP: 'BACKSPACE',
       DEBUGBREAK: 'ESCAPE'
     };
+    this._enabled = false;
     this._keyUp = false;
     this._keyDown = false;
     this._keyLeft = false;
@@ -30,6 +31,9 @@ class KeyHandler {
     this._keyThrust = false;
     this._keyStop = false;
     this._keyDebugBreak = false; 
+  }
+  get enabled() {
+    return this._enabled;
   }
   get up() {
     return this._keyUp || this._keyThrust;
@@ -61,10 +65,15 @@ class KeyHandler {
   get debugBreak() {
     return this._keyDebugBreak;
   }
+
+  set enabled(val) {
+    this._enabled = val;
+  }
 }
 
 KeyHandler.prototype.handleKeyDown = function(e) {
   e.preventDefault();
+  this._enabled = true;
   switch (e.code.toUpperCase()) {
     case this._keys.ARROWUP:
     case this._keys.W:
