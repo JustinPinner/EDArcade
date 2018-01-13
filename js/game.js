@@ -1,5 +1,5 @@
 // js/game.js
-const version = '0.1.13.DEV';
+const version = '0.1.13';
 const debug = document.location.search.substr(1).indexOf("debug") > -1;
 const minNPC = 5;
 const fps = 30;
