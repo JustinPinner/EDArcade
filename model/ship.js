@@ -132,7 +132,7 @@ class Ship extends GameObject {
 		return (this._model.agility / this._model.mass) * Math.abs(this._thrust) * 10;
 	}
 	get yawRate() {
-		return this._model.agility * 5.0;
+		return this._model.agility * 6.0;
 	}
 	get maximumWeaponRange() {
 		var range = null;
@@ -261,9 +261,11 @@ Ship.prototype.playerUpdate = function() {
 		}
 	}
 	
-	if (game.touchHandler && game.touchHandler.buttons) {
+	if (game.touch) {
 		if (game.touchHandler.buttons['thrustButton'].touched) {
 			this.increaseThrust();
+		} else {
+			this.thrustOff();
 		}
 		if (game.touchHandler.buttons['leftButton'].touched) {
 			this.yaw('ccw');
@@ -276,7 +278,7 @@ Ship.prototype.playerUpdate = function() {
 		}
 	}
 
-	if (!game.gamepad) {
+	if (!game.gamepad && !game.touch) {
 		if (game.keys.up) {
 			this.increaseThrust();
 		} else if (game.keys.down) {
@@ -285,41 +287,46 @@ Ship.prototype.playerUpdate = function() {
 			this.thrustOff();
 		}
 	}
-	if (game.keys.left) {
-		this.yaw('ccw');
+	
+	if (!game.touch) {
+		if (game.keys.left) {
+			this.yaw('ccw');
+		}
+		if (game.keys.right) {
+			this.yaw('cw');
+		}
+		if (game.keys.boost) {
+			this.boost();
+		}
+		if (game.keys.switchTarget) {
+			this.selectClosestTarget();
+		}
+		if (game.keys.fire) {
+			this.fireWeapons();
+		}
+		if (game.keys.flightAssist) {
+			this._flightAssist = !this._flightAssist;
+		}
+		if (game.keys.thrust) {
+			this.increaseThrust();
+		}
+		if (game.keys.stop) {
+			this.allStop();
+		}
+		if (this._thrust != 0) {
+			this.updateMomentum();
+		}
 	}
-	if (game.keys.right) {
-		this.yaw('cw');
-	}
-	if (game.keys.boost) {
-		this.boost();
-	}
-	if (game.keys.switchTarget) {
-		this.selectClosestTarget();
-	}
-	if (game.keys.fire) {
-		this.fireWeapons();
-	}
-	if (game.keys.flightAssist) {
-		this._flightAssist = !this._flightAssist;
-	}
-	if (game.keys.thrust) {
-		this.increaseThrust();
-	}
-	if (game.keys.stop) {
-		this.allStop();
-	}
-	if (this._thrust != 0) {
-		this.updateMomentum();
-	}
+
 	this.updatePosition();
 };
 
 Ship.prototype.accelerate = function() {
 	// a=F/m
-	const acceleration = this._thrust / this._model.mass;
-	const xComp = dir_x(acceleration, this.thrustVector);
-	const yComp = dir_y(acceleration, this.thrustVector);
+	const maxPower = 2 * this._model.mass; // TODO: use ship- & thruster-specific values
+	const a = (this._thrust * (maxPower / 100)) / this._model.mass;
+	const xComp = dir_x(a, this.thrustVector);
+	const yComp = dir_y(a, this.thrustVector);
 	const accVec = new Vector2d(-xComp, -yComp);	
 	this._velocity.add(accVec);
 };
