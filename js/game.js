@@ -1,5 +1,5 @@
 // js/game.js
-const version = '0.1.14.DEV';
+const version = '0.1.14';
 const params = document.location.search.substr(1);
 const debug = params.indexOf("debug") > -1;
 const practiceMode = params.indexOf("practice") > -1;
