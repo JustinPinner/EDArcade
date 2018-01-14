@@ -323,6 +323,7 @@ Ship.prototype.playerUpdate = function() {
 
 Ship.prototype.accelerate = function() {
 	// a=F/m
+	if (!this._player && practiceMode) return;
 	const maxPower = 2 * this._model.mass; // TODO: use ship- & thruster-specific values
 	const a = (this._thrust * (maxPower / 100)) / this._model.mass;
 	const xComp = dir_x(a, this.thrustVector);
@@ -513,8 +514,8 @@ Ship.prototype.takeHit = function(source) {
 				}
 			}
 		}		
-		if (this.fsm) {
-			this.fsm.underAttack();
+		if (this._fsm) {
+			this._fsm.underAttack();
 		}
 		if (this._shield && this._shield.charge > 0) {
 			this._shield.impact(source);
@@ -530,7 +531,7 @@ Ship.prototype.takeHit = function(source) {
 			this._player = null;
 			this._fsm = new FSM(this, this._role.initialState);
 		}
-		this.fsm.transition(FSMState.EXPLODE);
+		this._fsm.transition(FSMState.EXPLODE);
 	}
 };
 

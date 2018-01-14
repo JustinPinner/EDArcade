@@ -206,6 +206,7 @@ const fsmStates = {
 		mode: FSMState.EXPLODE,
 		nextState: [FSMState.EXPLODING],
 		detectCollisions: false,
+		executeOnTransition: true,
 		execute: function(self, explosionEffect) {
 			const explosion = explosionEffect || new ShipExplosionEffect(self.drawOriginCentre);
 			explosion.velocity = self._velocity
@@ -217,6 +218,7 @@ const fsmStates = {
 		mode: FSMState.EXPLODING,
 		nextState: [FSMState.DIE],
 		detectCollisions: false,
+		executeOnTransition: true,
 		execute: function(self) {
 			if (self.dumpWeapons) {
 				self.dumpWeapons();
@@ -229,6 +231,7 @@ const fsmStates = {
 		mode: FSMState.DIE,
 		nextState: [FSMState.DESPAWN],
 		detectCollisions: false,
+		executeOnTransition: true,
 		execute: function(self) {
 			self.fsm.transition(FSMState.DESPAWN);
 		}		

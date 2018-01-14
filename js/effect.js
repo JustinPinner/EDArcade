@@ -5,7 +5,7 @@ class Effect extends GameObject {
 		super(GameObjectTypes.EFFECT, sprite, role.roleName, role);
 		this._sprite = sprite;
 		this._sprite.loadImage();						
-		this._coordinates = new Point2d(sprite.x - (this._sprite.width / 2), sprite.y - (this._sprite.height / 2));
+		this._coordinates = new Point2d(this._sprite.coordinates.x - (this._sprite.width / 2), this._sprite.coordinates.y - (this._sprite.height / 2));
 		this._fsm = new FSM(this, FSMState.EFFECTPLAY);
 		this.draw = function() {
 			var origin = this._coordinates;

@@ -6,6 +6,14 @@ const DEFAULTTHRUSTPARTICLE = {
     fadeIn: false,
     fadeOut: true,
     onUpdated: function(particle) {
+        if (
+            (this._ttl && this._ttl <= 0) || 
+            (this._rgba.alpha && this._rgba.alpha <= 0) || 
+            (this._model.width < 1 || this.model.height < 1)
+        ) {
+            this._disposable = true;
+            return;
+        }
         const newWidth = particle._model.width * (particle._ttl / particle._lifeSpan);
         particle._model.width = newWidth;
         particle._model.height = newWidth;
