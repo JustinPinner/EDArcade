@@ -23,7 +23,9 @@ cat model/weapon.js >> dist/js/game.js
 cat model/sprite.js >> dist/js/game.js
 cat js/math2d.js >> dist/js/game.js
 cat model/pickup.js >> dist/js/game.js
+cat model/adder_84.js >> dist/js/game.js
 cat model/sidewinder.js >> dist/js/game.js
+cat model/cobra3_84.js >> dist/js/game.js
 cat model/cobra3.js >> dist/js/game.js
 cat model/cobra4.js >> dist/js/game.js
 cat model/python.js >> dist/js/game.js

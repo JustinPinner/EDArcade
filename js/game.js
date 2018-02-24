@@ -2,8 +2,9 @@
 const version = '0.1.14';
 const params = document.location.search.substr(1);
 const debug = params.indexOf("debug") > -1;
+const oldSchool = params.indexOf("1984") > -1;
 const practiceMode = params.indexOf("practice") > -1;
-const minNPC = 5;
+const minNPC = 0;
 const fps = 30;
 const imageService = new ImageService();
 const gamepadSupport = "getGamepads" in navigator;
@@ -220,7 +221,8 @@ Game.prototype.tick = function() {
   }
   // spawn new / maintain min. NPC ships
   for (var i = npcCount; i < minNPC; i++) {
-    const spawnShipType = ShipTypes[Object.keys(ShipTypes)[Math.floor(rand(Object.keys(ShipTypes).length))]];
+    const shipSet = oldSchool ? ShipTypes_84 : ShipTypes;
+    const spawnShipType = shipSet[Object.keys(shipSet)[Math.floor(rand(Object.keys(shipSet).length))]];
     const spawnShipRole = PilotRoles[Object.keys(PilotRoles)[Math.floor(rand(Object.keys(PilotRoles).length - 1))]];
     const newShip = new Ship(spawnShipType, 'NPC' + i, spawnShipRole);
     this._gameObjects.push(newShip);
@@ -243,7 +245,8 @@ Game.prototype.start = function() {
   this._touchSupport && this._touchInterface.init();
 
   // create player's ship
-  this._playerShip = new Ship(ShipTypes.COBRA3, this._playerShipName, this._player);
+  const shipSet = oldSchool ? ShipTypes_84 : ShipTypes;
+  this._playerShip = new Ship(shipSet.COBRA3, this._playerShipName, this._player);
   this._gameObjects.push(this._playerShip);
   // all systems go!
 	setInterval(main, 1000/fps);
