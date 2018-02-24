@@ -1,12 +1,12 @@
-const Adder_84 = {
-    name: 'Adder_84',
+const Moray_84 = {
+    name: 'Moray_84',
     mass: 180,
     agility: 0.4,
     armour: 88,
     maxSpeed: 260,
     boostSpeed: 300,
-    width: 41,  // 30ft
-    height: 62, // 45ft
+    width: 82,  // 60ft
+    height: 82, // 60ft
     hardpointGeometry: {
         WEAPON: {
             SMALL: {

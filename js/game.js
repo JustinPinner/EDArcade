@@ -4,7 +4,7 @@ const params = document.location.search.substr(1);
 const debug = params.indexOf("debug") > -1;
 const oldSchool = params.indexOf("1984") > -1;
 const practiceMode = params.indexOf("practice") > -1;
-const minNPC = 0;
+const minNPC = 5;
 const fps = 30;
 const imageService = new ImageService();
 const gamepadSupport = "getGamepads" in navigator;
@@ -246,7 +246,7 @@ Game.prototype.start = function() {
 
   // create player's ship
   const shipSet = oldSchool ? ShipTypes_84 : ShipTypes;
-  this._playerShip = new Ship(shipSet.COBRA3, this._playerShipName, this._player);
+  this._playerShip = new Ship(shipSet.WORM, this._playerShipName, this._player);
   this._gameObjects.push(this._playerShip);
   // all systems go!
 	setInterval(main, 1000/fps);

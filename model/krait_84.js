@@ -1,12 +1,12 @@
-const Adder_84 = {
-    name: 'Adder_84',
+const Krait_84 = {
+    name: 'Krait_84',
     mass: 180,
     agility: 0.4,
     armour: 88,
     maxSpeed: 260,
     boostSpeed: 300,
-    width: 41,  // 30ft
-    height: 62, // 45ft
+    width: 123, // 90ft
+    height: 110,  // 80ft
     hardpointGeometry: {
         WEAPON: {
             SMALL: {

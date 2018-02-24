@@ -749,25 +749,28 @@ const ShipTypes = {
 	VIPER3: Viper3
 }
 
+// a note on ship sizing: px = ft/0.73 = m/0.22
+// image sizes should be 3-4x rendered dimensions
+
 const ShipTypes_84 = {
 	ADDER: Adder_84,
-	// ANACONDA: Anaconda_84,
-	// ASP2: Asp2_84,
-	// BOA: Boa_84,	
-	// COBRA1: Cobra1_84,
-	COBRA3: Cobra3_84
-	// FERDELANCE: FerdeLance_84,
-	// GECKO: Gecko_84,
-	// KRAIT: Krait_84,
-	// MAMBA: Mamba_84,
-	// MORAY: Moray_84,
-	// PYTHON: Python_84,
-	// SHUTTLE: Shuttle_84,
-	// SIDEWINDER: SideWinder_84,
-	// THARGOID: Thargoid_84,
-	// TRANSPORTER: Transporter_84,
-	// VIPER: Viper_84,
-	// WORM: Worm_84
+	ANACONDA: Anaconda_84,
+	ASP2: Asp2_84,
+	BOA: Boa_84,	
+	COBRA1: Cobra1_84,
+	COBRA3: Cobra3_84,
+	FERDELANCE: FerdeLance_84,
+	GECKO: Gecko_84,
+	KRAIT: Krait_84,
+	MAMBA: Mamba_84,
+	MORAY: Moray_84,
+	PYTHON: Python_84,
+	SHUTTLE: Shuttle_84,
+	SIDEWINDER: SideWinder_84,
+	THARGOID: Thargoid_84,
+	TRANSPORTER: Transporter_84,
+	VIPER: Viper_84,
+	WORM: Worm_84
 }
 
 class Scanner {

@@ -1,12 +1,12 @@
-const Cobra3_84 = {
-    name: 'Cobra3_84',
+const Cobra1_84 = {
+    name: 'Cobra1_84',
     mass: 180,
     agility: 0.6,
     armour: 216,
     maxSpeed: 282,
     boostSpeed: 402,
-    width: 185, // 130ft
-    height: 82, // 65 ft
+    width: 96,  // 70ft
+    height: 75, // 55ft
     hardpointGeometry: {
         WEAPON: {
             SMALL: {

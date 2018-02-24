@@ -1,12 +1,12 @@
-const Adder_84 = {
-    name: 'Adder_84',
+const Worm_84 = {
+    name: 'Worm_84',
     mass: 180,
     agility: 0.4,
     armour: 88,
     maxSpeed: 260,
     boostSpeed: 300,
-    width: 41,  // 30ft
-    height: 62, // 45ft
+    width: 32,
+    height: 48,
     hardpointGeometry: {
         WEAPON: {
             SMALL: {

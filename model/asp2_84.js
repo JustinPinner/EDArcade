@@ -1,16 +1,16 @@
-const Adder_84 = {
-    name: 'Adder_84',
+const Asp2_84 = {
+    name: 'Asp2_84',
     mass: 180,
     agility: 0.4,
     armour: 88,
     maxSpeed: 260,
     boostSpeed: 300,
-    width: 41,  // 30ft
-    height: 62, // 45ft
+    width: 96,  // 70ft
+    height: 89, // 65ft
     hardpointGeometry: {
         WEAPON: {
             SMALL: {
-                1: {x: 0, y: 18, z: -1}
+                1: {x: 29, y: 2, z: -1}
             }
         }
     },
@@ -29,20 +29,20 @@ const Adder_84 = {
     thrusters: {
         rear: {
             mid: {
-                x: 18,
-                y: 46,
+                x: 29,
+                y: 52,
                 size: 2
             }
         },
         front: {
             left: {
-                x: 2,
-                y: 18,
+                x: 8,
+                y: 17,
                 size: 1
             },
             right: {
-                x: 32,
-                y: 18,
+                x: 51,
+                y: 17,
                 size: 1
             }
         }
