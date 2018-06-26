@@ -1,5 +1,5 @@
 // js/game.js
-const version = '0.1.14';
+const version = '0.1.15';
 const params = document.location.search.substr(1);
 const debug = params.indexOf("debug") > -1;
 const oldSchool = params.indexOf("1984") > -1;
