@@ -4,7 +4,7 @@ const params = document.location.search.substr(1);
 const debug = params.indexOf("debug") > -1;
 const oldSchool = params.indexOf("1984") > -1;
 const practiceMode = params.indexOf("practice") > -1;
-const minNPC = 5;
+const minNPC = 10;
 const fps = 30;
 const imageService = new ImageService();
 const gamepadSupport = "getGamepads" in navigator;
@@ -199,7 +199,7 @@ Game.prototype.tick = function() {
       }
       const uiVector = document.querySelector(".ui.debug.vector");
       if (uiVector) {
-        uiVector.innerHTML = "<p>spd:" + (this._playerShip.speed ? this._playerShip.speed.toFixed(1) : " ") + " hdg:" + (this._playerShip.heading ? this._playerShip.heading.toFixed(1) : " ") + "</p>";
+        uiVector.innerHTML = "<p>vel:" + (this._playerShip.velocity ? this._playerShip.velocity.length : " N/A ") + " hdg:" + (this._playerShip.heading ? this._playerShip.heading.toFixed(1) : " ") + "</p>";
       }
       const uiStatus = document.querySelector(".ui.debug.status");
       if (uiStatus) {
@@ -246,7 +246,7 @@ Game.prototype.start = function() {
 
   // create player's ship
   const shipSet = oldSchool ? ShipTypes_84 : ShipTypes;
-  this._playerShip = new Ship(shipSet.WORM, this._playerShipName, this._player);
+  this._playerShip = new Ship(shipSet.COBRA3, this._playerShipName, this._player);
   this._gameObjects.push(this._playerShip);
   // all systems go!
 	setInterval(main, 1000/fps);

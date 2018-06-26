@@ -328,7 +328,13 @@ Ship.prototype.accelerate = function() {
 	const a = (this._thrust * (maxPower / 100)) / this._model.mass;
 	const xComp = dir_x(a, this.thrustVector);
 	const yComp = dir_y(a, this.thrustVector);
-	const accVec = new Vector2d(-xComp, -yComp);	
+	const accVec = new Vector2d(-xComp, -yComp);
+	const newVel = this._velocity.clone();
+	newVel.add(accVec);
+	// limit acceleration
+	if (newVel.length > this._model.maxSpeed / 100) {
+		accVec.scale(0.3);
+	}
 	this._velocity.add(accVec);
 };
 

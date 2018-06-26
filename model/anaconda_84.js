@@ -43,9 +43,9 @@ const Anaconda_84 = {
     },
     collisionCentres: {
         nose: {
-            x: 57,
-            y: 18,
-            radius: 15
+            x: 51,
+            y: 7,
+            radius: 5
         },
         gunWhale: {
             x: 57,
@@ -76,12 +76,12 @@ const Anaconda_84 = {
     thrusters: {
         rear: {
             left: {
-                x: 42,
-                y: 293
+                x: 23,
+                y: 214
             },
             right: {
-                x: 75,
-                y: 293
+                x: 82,
+                y: 214
             }
         },
         front: {
