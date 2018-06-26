@@ -27,6 +27,7 @@ cat model/adder_84.js >> dist/js/game.js
 cat model/anaconda_84.js >> dist/js/game.js
 cat model/asp2_84.js >> dist/js/game.js
 cat model/boa_84.js >> dist/js/game.js
+cat model/cobra1_84.js >> dist/js/game.js
 cat model/cobra3_84.js >> dist/js/game.js
 cat model/ferdelance_84.js >> dist/js/game.js
 cat model/gecko_84.js >> dist/js/game.js
