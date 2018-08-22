@@ -592,19 +592,48 @@ Ship.prototype.collectPowerUp = function(pickup) {
 	pickup.payload.execute(this);
 }
 
+Ship.prototype.scaleAndLocateVertex = function(vertex) {
+	const scale = this.scale;
+	const v1 = {
+		x: (vertex.x * scale.x) - (this.model.width / 2),
+		y: (vertex.y * scale.y) - (this.model.height / 2),
+		connectsTo: vertex.connectsTo
+	}
+	return v1;
+}
+
 Ship.prototype.draw = function(debug) {
 	if (!game.viewport || !game.viewport.context) {
 		return;
 	}
 	const origin = this.drawOriginCentre;
+
 	game.viewport.context.save();
+	// TODO: when drawing by vertices, it may be more efficient to scale and rotate those rather than the canvas
 	game.viewport.context.translate(origin.x, origin.y);
 	game.viewport.context.rotate(degreesToRadians(this._heading + 90));
-	try {
-	  game.viewport.context.drawImage(this._sprite.image, -this._model.width / 2, -this._model.height / 2, this._model.width, this._model.height);
-	} catch(e) {
-	  game.viewport.context.fillRect(-this._model.width / 2, -this._model.height / 2, this._model.width, this._model.height);
+	 
+	if (this.vertices) {
+		game.viewport.context.beginPath();
+		game.viewport.context.strokeStyle = "white";
+		for (v0 = 0; v0 < this.vertices.length; v0++) {
+			const vertex = this.scaleAndLocateVertex(this.vertices[v0]);
+			game.viewport.context.moveTo(vertex.x, vertex.y);
+			for (v1 = 0; v1 < vertex.connectsTo.length; v1++) {
+				const dest = this.scaleAndLocateVertex(this.vertices[vertex.connectsTo[v1]]);
+				game.viewport.context.lineTo(dest.x, dest.y);
+				game.viewport.context.moveTo(vertex.x, vertex.y);
+			}
+		}
+		game.viewport.context.stroke();
+	} else {
+		try {
+			game.viewport.context.drawImage(this._sprite.image, -this._model.width / 2, -this._model.height / 2, this._model.width, this._model.height);
+		  } catch(e) {
+			game.viewport.context.fillRect(-this._model.width / 2, -this._model.height / 2, this._model.width, this._model.height);
+		  }
 	}
+
 	game.viewport.context.restore();
 	  
   if (this._player && this._contacts.length > 0) {

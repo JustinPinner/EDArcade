@@ -39,6 +39,12 @@ class GameObject {
 	get coordinates() {
 		return this._coordinates;
 	}
+	get vertices() {
+		return this._model.vertices;
+	}
+	get scale() {
+		return this._model.scale;
+	}
 	get centre() {
 		return this._coordinates && new Point2d(
 			this._coordinates.x + (this.geometry ? (this.geometry.width / 2) : 0),
