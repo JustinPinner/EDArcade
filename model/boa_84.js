@@ -7,6 +7,10 @@ const Boa_84 = {
     boostSpeed: 244,
     width: 89, // 65ft
     height: 158,    // 115ft
+    scale: {
+        x: 0.28,   // 89/322
+        y: 0.25    // 158/628
+    },
     hardpointGeometry: {
         WEAPON: {
             HUGE: {
@@ -95,6 +99,44 @@ const Boa_84 = {
             }
         }
     },
+    vertices: [
+        {
+            id: 0,
+            x: 170,
+            y: 2,
+            connectsTo: [1,2,4,5]
+        },
+        {
+            id: 1,
+            x: 4,
+            y: 570,
+            connectsTo: [2,3]
+        },
+        {
+            id: 2,
+            x: 99,
+            y: 515,
+            connectsTo: [3,4]
+        },
+        {
+            id: 3,
+            x: 170,
+            y: 622,
+            connectsTo: [4,5]
+        },
+        {
+            id: 4,
+            x: 228,
+            y: 515,
+            connectsTo: [5]
+        },
+        {
+            id: 5,
+            x: 316,
+            y: 570,
+            connectsTo: []
+        }
+    ],
     cells: {},
     loadHardpoints: function(self) {
         self._hardpoints.push(new WeaponHardpoint(self, Size.HUGE.value, 1));
