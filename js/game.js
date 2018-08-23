@@ -1,9 +1,9 @@
 // js/game.js
-const version = '0.1.15';
-const params = document.location.search.substr(1);
-const debug = params.indexOf("debug") > -1;
-const oldSchool = params.indexOf("1984") > -1;
-const practiceMode = params.indexOf("practice") > -1;
+const version = '0.1.16';
+const params = document.location.search.substr(1).toString();
+const debug = params.includes("debug");
+const oldSchool = !params.includes("dangerous");
+const practiceMode = params.includes("practice");
 const minNPC = 10;
 const fps = 30;
 const imageService = new ImageService();

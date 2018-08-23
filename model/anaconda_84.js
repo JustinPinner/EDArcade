@@ -7,6 +7,10 @@ const Anaconda_84 = {
     boostSpeed: 244,
     width: 103, // 75ft
     height: 233,    // 170ft
+    scale: {
+        x: 0.343, // 103/300
+        y: 0.382 // 233/610
+    },
     hardpointGeometry: {
         WEAPON: {
             HUGE: {
@@ -95,6 +99,44 @@ const Anaconda_84 = {
             }
         }
     },
+    vertices: [
+        {
+            id: 0,
+            x: 149,
+            y: 1,
+            connectsTo: [1,2,4,5]
+        },
+        {
+            id: 1,
+            x: 1,
+            y: 456,
+            connectsTo: [2] 
+        },
+        {
+            id: 2, 
+            x: 53, 
+            y: 508,
+            connectsTo: [3,4]
+        },
+        {
+            id: 3,
+            x: 150,
+            y: 557,
+            connectsTo: [4]
+        },
+        {
+            id: 4,
+            x: 238,
+            y: 508,
+            connectsTo: [5]
+        },
+        {
+            id: 5,
+            x: 290,
+            y: 456,
+            connectsTo: []
+        }
+    ],
     cells: {},
     loadHardpoints: function(self) {
         self._hardpoints.push(new WeaponHardpoint(self, Size.HUGE.value, 1));
