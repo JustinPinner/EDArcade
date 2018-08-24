@@ -7,6 +7,10 @@ const Cobra1_84 = {
     boostSpeed: 402,
     width: 96,  // 70ft
     height: 75, // 55ft
+    scale: {
+        x: 0.3, // 96/317
+        y: 0.38 // 75/196
+    },
     hardpointGeometry: {
         WEAPON: {
             SMALL: {
@@ -68,6 +72,63 @@ const Cobra1_84 = {
             }
         }
     },
+    vertices: [
+        {
+            id: 0,
+            x: 109,
+            y: 4,
+            connectsTo: [1,4,8]
+        },
+        {
+            id: 1,
+            x: 4,
+            y: 80,
+            connectsTo: [2,3]
+        },
+        {
+            id: 2,
+            x: 35,
+            y: 174,
+            connectsTo: [3]
+        },
+        {
+            id: 3,
+            x: 77,
+            y: 192,
+            connectsTo: [4,5]
+        },
+        {
+            id: 4,
+            x: 158,
+            y: 107,
+            connectsTo: [8,5]
+        },
+        {
+            id: 5,
+            x: 239,
+            y: 192,
+            connectsTo: [6,7]
+        },
+        {
+            id: 6,
+            x: 282,
+            y: 174,
+            connectsTo: [7]
+        },
+        {
+            id: 7,
+            x: 311,
+            y: 80,
+            connectsTo: [8]
+        },
+        {
+            id: 8,
+            x: 205,
+            y: 4,
+            connectsTo: []
+        }
+
+    ],
     cells: {},
     loadHardpoints: function(self) {
         for (var i = 1; i < 3; i++){
