@@ -2,11 +2,11 @@
 
 **What is it?**
 
-A 2D 360 degree top-down endless scroller based on Elite Dangerous.
+A 2D 360 degree top-down endless scroller based on the original Elite, and its more recent incarnation Elite: Dangerous.
 
 **Why is it?**
 
-Because I like Elite Dangerous, and figured we needed a 2D arcade version. Seemed like a decent challenge for a first game attempt.
+Because I like Elite, and figured we needed a 2D arcade version. Seemed like a decent challenge for a first game attempt.
 
 *But first... credit where it's due*
 
