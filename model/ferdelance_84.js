@@ -7,6 +7,10 @@ const FerdeLance_84 = {
     boostSpeed: 244,
     width: 62, // 45ft
     height: 116,    // 85ft
+    scale: {
+        x: 0.26,    // 62/237
+        y: 0.19     // 116/607
+    },
     hardpointGeometry: {
         WEAPON: {
             HUGE: {
@@ -95,6 +99,80 @@ const FerdeLance_84 = {
             }
         }
     },
+    vertices: [
+        {
+            id: 0,
+            x: 124,
+            y: 5,
+            connectsTo: [1,5]
+        },
+        {
+            id: 1,
+            x: 4,
+            y: 464,
+            connectsTo: [2,3]
+        },
+        {
+            id: 2,
+            x: 70,
+            y: 600,
+            connectsTo: [3,4]
+        },
+        {
+            id: 3,
+            x: 124,
+            y: 504,
+            connectsTo: [4,5]
+        },
+        {
+            id: 4,
+            x: 163,
+            y: 600,
+            connectsTo: [5]
+        },
+        {
+            id: 5,
+            x: 234,
+            y: 464,
+            connectsTo: []
+        },
+        {
+            id: 6,
+            x: 154,
+            y: 406,
+            connectsTo: [7,8]
+        },
+        {
+            id: 7,
+            x: 198,
+            y: 347,
+            connectsTo: [8]
+        },
+        {
+            id: 8,
+            x: 132,
+            y: 59,
+            connectsTo: []
+        },
+        {
+            id: 9,
+            x: 118,
+            y: 59,
+            connectsTo: [10,11]
+        },
+        {
+            id: 10,
+            x: 42,
+            y: 347,
+            connectsTo: [11]
+        },
+        {
+            id: 11,
+            x: 88,
+            y: 406,
+            connectsTo: []
+        }
+    ],
     cells: {},
     loadHardpoints: function(self) {
         self._hardpoints.push(new WeaponHardpoint(self, Size.HUGE.value, 1));
