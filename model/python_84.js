@@ -7,6 +7,10 @@ const Python_84 = {
     boostSpeed: 305,
     width: 110,
     height: 178,
+    scale: {
+        x: 0.47,    // 110/233
+        y: 0.3      // 178/609
+    },
     hardpointGeometry: {
         WEAPON: {
             LARGE: { 
@@ -86,6 +90,50 @@ const Python_84 = {
             }
         }
     },
+    vertices: [
+        {
+            id: 0,
+            x: 118,
+            y: 2,
+            connectsTo: [1,2,3]
+        },
+        {
+            id: 1,
+            x: 2,
+            y: 426,
+            connectsTo: [2,3,4]
+        },
+        {
+            id: 2,
+            x: 118,
+            y: 331,
+            connectsTo: [4]
+        },
+        {
+            id: 3,
+            x: 228,
+            y: 426,
+            connectsTo: [2,4]
+        },
+        {
+            id: 4,
+            x: 118,
+            y: 605,
+            connectsTo: [5,6]
+        },
+        {
+            id: 5,
+            x: 56,
+            y: 605,
+            connectsTo: [1,4]
+        },
+        {
+            id: 6,
+            x: 177,
+            y: 605,
+            connectsTo: [3,4]
+        }
+    ],
     cells: {},
     loadHardpoints: function(self) {
         for (var i = 1; i < 4; i++){
