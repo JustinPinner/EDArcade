@@ -7,6 +7,10 @@ const SideWinder_84 = {
     boostSpeed: 321,
     width: 89,
     height: 48,
+    scale: {
+        x: 0.27,
+        y: 0.3
+    },
     hardpointGeometry: {
         WEAPON: {
             SMALL: {
@@ -70,6 +74,38 @@ const SideWinder_84 = {
             }
         }
     },
+    vertices: [
+        {
+            id: 0,
+            x: 88,
+            y: 7,
+            connectsTo: [1,2,4]
+        },
+        {
+            id: 1,
+            x: 3,
+            y: 155,
+            connectsTo: [2]
+        },
+        {
+            id: 2,
+            x: 162,
+            y: 155,
+            connectsTo: [3,4]
+        },
+        {
+            id: 3,
+            x: 322,
+            y: 155,
+            connectsTo: [4]
+        },
+        {
+            id: 4,
+            x: 236,
+            y: 7,
+            connectsTo: []
+        }
+    ],
     cells: {
         shieldStrike: {
             src: null,
