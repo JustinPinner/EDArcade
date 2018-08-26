@@ -7,6 +7,10 @@ const Viper_84 = {
     boostSpeed: 394,
     width: 68,
     height: 75,
+    scale: {
+        x: 0.21,
+        y: 0.23
+    },
     hardpointGeometry: {
         WEAPON: {
             SMALL: {
@@ -64,6 +68,44 @@ const Viper_84 = {
             }
         }
     },
+    vertices: [
+        {
+            id: 0,
+            x: 161,
+            y: 4,
+            connectsTo: [1,5,4]
+        },
+        {
+            id: 1,
+            x: 2,
+            y: 317,
+            connectsTo: [2]
+        },
+        {
+            id: 2,
+            x: 88,
+            y: 317,
+            connectsTo: [3,5]
+        },
+        {
+            id: 3,
+            x: 236,
+            y: 317,
+            connectsTo: [5,4]
+        },
+        {
+            id: 4,
+            x: 318,
+            y: 317,
+            connectsTo: [0]
+        },
+        {
+            id: 5,
+            x: 161,
+            y: 157,
+            connectsTo: [0]
+        }
+    ],
     cells: {},
     loadHardpoints: function(self) {
         for (var i = 1; i < 3; i++){
