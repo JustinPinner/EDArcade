@@ -5,72 +5,45 @@ const SideWinder_84 = {
     armour: 108,
     maxSpeed: 220,
     boostSpeed: 321,
-    width: 89,
-    height: 48,
+    width: 325,     // 65
+    height: 160,    // 35
     scale: {
-        x: 0.27,
-        y: 0.3
+        x: 0.2,
+        y: 0.22
     },
     hardpointGeometry: {
         WEAPON: {
             SMALL: {
-                1: {x: 17, y: 8, z: 1},
-                2: {x: 26, y: 8, z: 1}				
-            }
-        },
-        UTILITY: {
-            SMALL: {
-                1: {x: 8, y: 21, z: -1},
-                2: {x: 35, y: 21,	z: -1}
+                1: {x: 115, y: 32, z: 1},
+                2: {x: 205, y: 32, z: 1}				
             }
         }
     },
     collisionCentres: {
-        leftFront: {
-            x: 15,
-            y: 10,
-            radius: 10
+        left: {
+            x: 117,
+            y: 85,
+            radius: 75
         },
-        rightFront:{
-            x: 28,
-            y: 10,
-            radius: 10
-        },
-        leftRear: {
-            x: 11,
-            y: 20,
-            radius: 10
-        },
-        midRear: {
-            x: 22, 
-            y: 20, 
-            radius: 10
-        },
-        rightRear: {
-            x: 33,
-            y: 20,
-            radius: 10
+        right: {
+            x: 210,
+            y: 85,
+            radius: 75
         }
     },
     thrusters: {
         rear: {
-            left: {
-                x: 11,
-                y: 28
-            },  
-            right: {
-                x: 34,
-                y: 28
-            }
+            centre: {
+                x: 162,
+                y: 155,
+                size: 1
+            }  
         },
         front: {
-            left: {
-                x: 11,
-                y: 8
-            },
-            right: {
-                x: 34,
-                y: 8
+            centre: {
+                x: 162,
+                y: 8,
+                size: 1
             }
         }
     },
@@ -106,32 +79,10 @@ const SideWinder_84 = {
             connectsTo: []
         }
     ],
-    cells: {
-        shieldStrike: {
-            src: null,
-            frames: null,
-            frameRate: null
-        },
-        hullStrike: {
-            src: null,
-            frames: null,
-            frameRate: null
-        },
-        boostEngage: {
-            src: null,
-            frames: null,
-            frameRate: null
-        },
-        explode: {
-            src: null,
-            frames: null,
-            frameRate: null
-        }
-    },
+    cells: {},
     loadHardpoints: function(self) {
         for (var i = 1; i < 3; i++) {
             self._hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
-            self._hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));
         }
     }		
 };

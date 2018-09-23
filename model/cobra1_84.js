@@ -5,70 +5,54 @@ const Cobra1_84 = {
     armour: 216,
     maxSpeed: 282,
     boostSpeed: 402,
-    width: 96,  // 70ft
-    height: 75, // 55ft
+    width: 318,     // 70
+    height: 196,    // 55
     scale: {
-        x: 0.3, // 96/317
-        y: 0.38 // 75/196
+        x: 0.22,
+        y: 0.28
     },
     hardpointGeometry: {
         WEAPON: {
             SMALL: {
-                1: {x: 46, y: 10, z: 1},
-                2: {x: 75, y: 10, z: 1}					
+                1: {x: 159, y: 27, z: -1}
             }
         }
     },
     collisionCentres: {
-        leftFront: {
-            x: 32,
-            y: 16,
-            radius: 15
+        left: {
+            x: 98,
+            y: 103,
+            radius: 90
         },
-        rightFront:{
-            x: 54,
-            y: 16,
-            radius: 15
-        },
-        leftRear: {
-            x: 14,
-            y: 38,
-            radius: 15
-        },
-        midRear: {
-            x: 44, 
-            y: 38, 
-            radius: 15
-        },
-        rightRear: {
-            x: 72,
-            y: 38,
-            radius: 15
+        right:{
+            x: 220,
+            y: 103,
+            radius: 90
         }
     },
     thrusters: {
         rear: {
             left: {
-                x: 40,
-                y: 56,
+                x: 100,
+                y: 189,
                 size: 2    
             },
             right: {
-                x: 79,
-                y: 56,
+                x: 218,
+                y: 189,
                 size: 2
             }
         },
         front: {
             left: {
-                x: 28,
-                y: 17,
-                size: 2
+                x: 54,
+                y: 44,
+                size: 1
             },
             right: {
-                x: 92,
-                y: 17,
-                size: 2
+                x: 264,
+                y: 44,
+                size: 1
             }
         }
     },
@@ -131,7 +115,7 @@ const Cobra1_84 = {
     ],
     cells: {},
     loadHardpoints: function(self) {
-        for (var i = 1; i < 3; i++){
+        for (var i = 1; i < 2; i++){
             self._hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
         }
     }

@@ -5,104 +5,87 @@ const FerdeLance_84 = {
     armour: 945,
     maxSpeed: 183,
     boostSpeed: 244,
-    width: 62, // 45ft
-    height: 116,    // 85ft
+    width: 236,     // 45
+    height: 607,    // 85
     scale: {
-        x: 0.26,    // 62/237
-        y: 0.19     // 116/607
+        x: 0.3,
+        y: 0.34
     },
     hardpointGeometry: {
         WEAPON: {
-            HUGE: {
-                1: {x: 58, y: 72, z: -1}
-            },
             LARGE: { 
-                1: {x: 56, y: 35,	z: -1},
-                2: {x: 44, y: 84, z: 1},
-                3: {x: 70, y: 84,	z: 1}
+                1: {x: 118, y: 280, z: 1}
             },
             MEDIUM: {
-                1: {x: 40, y: 25, z: 1},
-                2: {x: 74, y: 25, z: 1},
-                3: {x: 47, y: 245, z: -1},
-                4: {x: 69, y: 245, z: -1}					
+                1: {x: 84, y: 241, z: -1},
+                2: {x: 160, y: 241, z: -1}
             },
             SMALL: {
-                1: {x: 37, y: 225, z: 1},
-                2: {x: 78, y: 225, z: 1}				
+                1: {x: 58, y: 519, z: 1},
+                2: {x: 174, y: 519, z: 1}				
             }
         },
         UTILITY: {
             SMALL: {
-                1: {x: 48, y: 207, z: 1},
-                2: {x: 68, y: 207, z: 1},
-                3: {x: 17, y: 266, z: 1},
-                4: {x: 99, y: 266, z: 1},
-                5: {x: 44, y: 84, z: -1},
-                6: {x: 70, y: 84, z: -1},
-                7: {x: 17, y: 266, z: -1},
-                8: {x: 99, y: 266, z: -1}
+                1: {x: 16, y: 454, z: -1},
+                2: {x: 221, y: 454, z: -1},
+                3: {x: 118, y: 576, z: -1},
+                4: {x: 118, y: 45, z: 1}
             }
         }
     },
     collisionCentres: {
         nose: {
-            x: 57,
-            y: 18,
+            x: 118,
+            y: 100,
             radius: 15
         },
         gunWhale: {
-            x: 57,
-            y: 62,
+            x: 118,
+            y: 146,
             radius: 30
         },
         midDeck:{
-            x: 57,
-            y: 120,
-            radius: 45
-        },
-        bridge: {
-            x: 57, 
-            y: 187, 
+            x: 118,
+            y: 220,
             radius: 55
         },
-        portTail: {
-            x: 37,
-            y: 265,
-            radius: 40
+        bridge: {
+            x: 118, 
+            y: 316, 
+            radius: 80
         },
-        starboardTail: {
-            x: 78,
-            y: 265,
-            radius: 40
+        tail: {
+            x: 118,
+            y: 462,
+            radius: 113
         }
     },
     thrusters: {
         rear: {
-            left: {
-                x: 42,
-                y: 293
+            mid: {
+                x: 118,
+                y: 598,
+                size: 3
             },
-            right: {
-                x: 75,
-                y: 293
-            }
         },
         front: {
             left: {
-                x: 26,
-                y: 79
+                x: 36,
+                y: 340,
+                size: 2
             },
             right: {
-                x: 88,
-                y: 79
+                x: 201,
+                y: 340,
+                size: 2
             }
         }
     },
     vertices: [
         {
             id: 0,
-            x: 124,
+            x: 118,
             y: 5,
             connectsTo: [1,5]
         },
@@ -120,7 +103,7 @@ const FerdeLance_84 = {
         },
         {
             id: 3,
-            x: 124,
+            x: 118,
             y: 504,
             connectsTo: [4,5]
         },
@@ -150,13 +133,13 @@ const FerdeLance_84 = {
         },
         {
             id: 8,
-            x: 132,
+            x: 126,
             y: 59,
             connectsTo: []
         },
         {
             id: 9,
-            x: 118,
+            x: 112,
             y: 59,
             connectsTo: [10,11]
         },
@@ -175,20 +158,14 @@ const FerdeLance_84 = {
     ],
     cells: {},
     loadHardpoints: function(self) {
-        self._hardpoints.push(new WeaponHardpoint(self, Size.HUGE.value, 1));
-        for (var i = 1; i < 4; i++){
-            self._hardpoints.push(new WeaponHardpoint(self, Size.LARGE.value, i));				
-        }
+        self._hardpoints.push(new WeaponHardpoint(self, Size.LARGE.value, 1, PulseLaser, HardpointMountTypes.TURRET, 1));				
         for (var i = 1; i < 3; i++){
             self._hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));				
-        }
-        for (var i = 3; i < 5; i++){
-            self._hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i));				
         }
         for (var i = 1; i < 3; i++){
             self._hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i));				
         }
-        for (var i = 1; i < 9; i++){
+        for (var i = 1; i < 5; i++){
             self._hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));	
         }
     }

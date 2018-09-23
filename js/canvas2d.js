@@ -38,6 +38,9 @@ class Canvas2D {
 	get scrollData() {
 		return this._scrollData;
 	}
+	get focussedObject() {
+		return this._anchor;
+	}
 
 	/* setters */
 	set context(contextRef) {
@@ -89,6 +92,18 @@ Canvas2D.prototype.scroll = function () {
 }
 
 Canvas2D.prototype.contains = function(x, y, width, height) {
-	return (x + (width || 0) >= this._coordinates.x && y + (height || 0) >= this._coordinates.y) &&
-		 (x <= this._coordinates.x + this._width && y <= this._coordinates.y + this._height)
+	const centrePoint = this._anchor ? 
+		this._anchor.centre : 
+		new Point2d(
+			this._coordinates.x + (this.width / 2),
+			this._coordinates.y + (this.height / 2)
+		);
+	const minX = centrePoint.x - (this.width / 2);
+	const minY = centrePoint.y - (this.height / 2);
+	const maxX = centrePoint.x + (this.width / 2);
+	const maxY = centrePoint.y + (this.height / 2);
+	const isContained = 
+		((x + (width || 0) >= minX && y) + ((height || 0) >= minY)) && 
+		(x <= maxX && y <= maxY)
+	return isContained;
 };

@@ -5,8 +5,8 @@ const Worm_84 = {
     armour: 88,
     maxSpeed: 260,
     boostSpeed: 300,
-    width: 32,
-    height: 48,
+    width: 224,      // 30 (one of these must be wrong in the docs)
+    height: 326,     // 30
     scale: {
         x: 0.14,
         y: 0.15
@@ -14,39 +14,44 @@ const Worm_84 = {
     hardpointGeometry: {
         WEAPON: {
             SMALL: {
-                1: {x: 0, y: 18, z: -1}
+                1: {x: 112, y: 78, z: -1}
             }
         }
     },
     collisionCentres: {
         front: {
-            x: 18,
-            y: 12,
-            radius: 18
+            x: 112,
+            y: 54,
+            radius: 45
+        },
+        centre: {
+            x: 112,
+            y: 160,
+            radius: 70
         },
         rear: {
-            x: 18, 
-            y: 30, 
-            radius: 18
+            x: 112, 
+            y: 247, 
+            radius: 90
         }
     },
     thrusters: {
         rear: {
             mid: {
-                x: 18,
-                y: 46,
+                x: 112,
+                y: 320,
                 size: 2
             }
         },
         front: {
             left: {
-                x: 2,
-                y: 18,
+                x: 41,
+                y: 149,
                 size: 1
             },
             right: {
-                x: 32,
-                y: 18,
+                x: 183,
+                y: 149,
                 size: 1
             }
         }

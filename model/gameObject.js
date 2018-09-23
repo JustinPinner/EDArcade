@@ -47,8 +47,8 @@ class GameObject {
 	}
 	get centre() {
 		return this._coordinates && new Point2d(
-			this._coordinates.x + (this.geometry ? (this.geometry.width / 2) : 0),
-			this._coordinates.y + (this.geometry ? (this.geometry.height / 2) : 0)
+			this._coordinates.x + (this.geometry ? this.geometry.width / 2 : 0),
+			this._coordinates.y + (this.geometry ? this.geometry.height / 2 : 0)
 		);
 	}
 	get velocity() {
@@ -80,7 +80,13 @@ class GameObject {
 		if (this._model && this._model.collisionCentres) {
 			for (const collCtrGrp in this._model.collisionCentres) {
 				const collCtr = this._model.collisionCentres[collCtrGrp];
-				const _newXY = rotatePoint(this.drawOriginCentre.x, this.drawOriginCentre.y, this.drawOrigin.x + collCtr.x, this.drawOrigin.y + collCtr.y, this._heading + 90);
+				const _newXY = rotatePoint(
+					this.drawOriginCentre.x, 
+					this.drawOriginCentre.y, 
+					this.drawOrigin.x + collCtr.x, 
+					this.drawOrigin.y + collCtr.y, 
+					this._heading + 90
+				);
 				_centres.push({
 					x: _newXY.x,
 					y: _newXY.y,
@@ -109,7 +115,8 @@ class GameObject {
 	// setters
 	set coordinates(point2d) {
 		if (isNaN(point2d.x) || isNaN(point2d.y)){
-			debugger;
+			console.log('ERROR: coordinate isNaN');
+			return;
 		}
 		this._coordinates = point2d;
 	}
@@ -128,6 +135,32 @@ class GameObject {
 	set disposable(disp) {
 		this._disposable = disp;
 	}
+}
+
+GameObject.prototype.scaleWidth = function(value) {
+	if (this._model && this._model.scale && this._model.scale.x) {
+		return Math.ceil(value * this.model.scale.x);
+	}
+	return value;
+}
+
+GameObject.prototype.scaleHeight = function(value) {
+	if (this._model && this._model.scale && this._model.scale.y) {
+		return Math.ceil(value * this.model.scale.y);
+	}
+	return value;
+}
+
+GameObject.prototype.scalePoint = function(value, dimension) {
+	if (this._model && this._model.scale) {
+		if (dimension.toLowerCase() == 'w' || 'width' || 'x') {
+			 return Math.ceil(value * this._model.scale.x);
+		}
+		if (dimension.toLowerCase() == 'h' || 'height' || 'y') {
+			return Math.ceil(value * this._model.scale.y);
+		}
+	}
+	return value;
 }
 
 GameObject.prototype.updatePosition = function() {
@@ -211,7 +244,6 @@ GameObject.prototype.collide = function(otherGameObject) {
 	}			
 }
 
-
 GameObject.prototype.collisionDetect = function(x, y) {
 	if ((!this._fsm || !this._fsm.state || !this._fsm.state.detectCollisions) && this !== game.playerShip) {
 		return;
@@ -231,13 +263,13 @@ GameObject.prototype.collisionDetect = function(x, y) {
 		}
 		// draw a circle to enclose the whole object
 		const selfCirc = {
-			x: self.centre.x,
-			y: self.centre.y,
+			x: self.coordinates.x + self.centre.x,
+			y: self.coordinates.y + self.centre.y,
 			r: (self.geometry.width > self.geometry.height ?  self.geometry.width : self.geometry.height) / 2
 		};
 		const objCirc = {
-			x: obj.centre.x,
-			y: obj.centre.y,
+			x: obj.coordinates.x + obj.centre.x,
+			y: obj.coordinates.y + obj.centre.y,
 			r: (obj.geometry.width > obj.geometry.height ? obj.geometry.width : obj.geometry.height) / 2
 		};
 		const dx = selfCirc.x - objCirc.x;
@@ -257,7 +289,13 @@ GameObject.prototype.collisionDetect = function(x, y) {
 GameObject.prototype.takeHit = function(source) {};
 
 GameObject.prototype.isOnScreen = function(debug) {
-	return game.viewport.contains(this._coordinates.x, this._coordinates.y, this.geometry.width, this.geometry.height);	
+	const vpContains = game.viewport.contains(
+		this._coordinates.x, 
+		this._coordinates.y, 
+		this.geometry.width, 
+		this.geometry.height
+	);
+	return 	vpContains;
 };
 
 GameObject.prototype.draw = function(debug) {

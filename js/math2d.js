@@ -32,8 +32,8 @@ Point2d.prototype.rotate = function(p2dCentre, degrees) {
 }
 
 function distanceBetweenObjects(objA, objB) {
-  const dx = objA.centre.x - objB.centre.x;
-  const dy = objA.centre.y - objB.centre.y;
+  const dx = (objA.coordinates.x + objA.centre.x) - (objB.coordinates.x + objB.centre.x);
+  const dy = (objA.coordinates.y + objA.centre.y) - (objB.coordinates.y + objB.centre.y);
   return Math.sqrt((dx * dx) + (dy * dy));
 }
 

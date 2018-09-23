@@ -23,8 +23,7 @@ class Ship extends GameObject {
 			this._player ? game.viewport.centre.x - (this._model.width / 2) : game.playerShip.coordinates.x + rand(game.maxSpawnDistanceX, true),
 			this._player ? game.viewport.centre.y - (this._model.height / 2) : game.playerShip.coordinates.y + rand(game.maxSpawnDistanceY, true)	
 		);		
-		this._sprite = new Sprite(0, 0, shipType.width, shipType.height, shipType.name, shipType.cells);
-		this._sprite.loadImage();		
+		this._sprite = this.vertices ? null : new Sprite(0, 0, shipType.width, shipType.height, shipType.name, shipType.cells);
 		this._hardpoints = [];
 		this._hardpointGeometry = shipType.hardpointGeometry;
 		this.randomiseWeaponHardpoints = function(self) {
@@ -54,12 +53,16 @@ class Ship extends GameObject {
 				for (const thruster in this._model.thrusters[thrusterGroup]) {
 					const thrusterData = {
 						orientation: thrusterGroup,
-						coordinates: new Point2d(this._model.thrusters[thrusterGroup][thruster].x, this._model.thrusters[thrusterGroup][thruster].y)
+						coordinates: new Point2d(
+							this._model.thrusters[thrusterGroup][thruster].x, 
+							this._model.thrusters[thrusterGroup][thruster].y
+						)
 					};
 					this._thrusters.push(new Thruster(this, thrusterData));
 				}		
 			}			
 		}
+		this.reScale();
 	}
 	/* Getters */
 	get model() {
@@ -188,6 +191,37 @@ class Ship extends GameObject {
 		this._armour = val;
 	}
 };
+
+Ship.prototype.reScale = function(x,y) {
+	if (!this._model.scale) {
+		return;
+	}
+	this._model.scale.x = x || this._model.scale.x || 1;
+	this._model.scale.y = y || this._model.scale.y || 1;
+	this._model.width = this.scaleWidth(this._model.width);
+	this._model.height = this.scaleHeight(this._model.height);
+	// scale vertices
+	for (let v = 0; v < this._model.vertices.length; v += 1) {
+		const vertex = this._model.vertices[v];
+		vertex.x = this.scaleWidth(vertex.x);
+		vertex.y = this.scaleHeight(vertex.y);
+	}
+	// scale collision centres
+	for (const collCtrGrp in this._model.collisionCentres) {
+		const collCtr = this._model.collisionCentres[collCtrGrp];
+		collCtr.x = this.scaleWidth(collCtr.x);
+		collCtr.y = this.scaleHeight(collCtr.y);
+		collCtr.radius = this.scaleWidth(collCtr.radius);
+	}
+	// scale hardpoints
+	for (let h = 0; h < this._hardpoints.length; h += 1) {
+		this._hardpoints[h].reScale();
+	}
+	// scale thrusters
+	for (let t = 0; t < this._thrusters.length; t += 1) {
+		this._thrusters[t].reScale();
+	}
+} 
 
 Ship.prototype.updateAndDraw = function(debug) {
 	if (this.disposable) return;
@@ -363,17 +397,10 @@ Ship.prototype.updatePosition = function() {
 		if (game.midground.scrollData.velocity.x !== 0 || game.midground.scrollData.velocity.y !== 0) {
 			game.midground.scroll();
 		}
-		game.viewport.focus(this);
+		if (game.viewport.focussedObject !== this) {
+			game.viewport.focus(this);
+		}
 	}
-};
-
-Ship.prototype.isOnScreen = function(debug) {
-	return game.viewport.contains(
-		this._coordinates.x - (debug ? this.maximumWeaponRange : 0), 
-		this._coordinates.y - (debug ? this.maximumWeaponRange : 0), 
-		this._model.width + (debug ? this.maximumWeaponRange : 0), 
-		this._model.height + (debug ? this.maximumWeaponRange : 0)
-	);
 };
 
 Ship.prototype.isKnown = function(ship) {
@@ -592,16 +619,6 @@ Ship.prototype.collectPowerUp = function(pickup) {
 	pickup.payload.execute(this);
 }
 
-Ship.prototype.scaleAndLocateVertex = function(vertex) {
-	const scale = this.scale;
-	const v1 = {
-		x: (vertex.x * scale.x) - (this.model.width / 2),
-		y: (vertex.y * scale.y) - (this.model.height / 2),
-		connectsTo: vertex.connectsTo
-	}
-	return v1;
-}
-
 Ship.prototype.draw = function(debug) {
 	if (!game.viewport || !game.viewport.context) {
 		return;
@@ -610,19 +627,22 @@ Ship.prototype.draw = function(debug) {
 
 	game.viewport.context.save();
 	// TODO: when drawing by vertices, it may be more efficient to scale and rotate those rather than the canvas
-	game.viewport.context.translate(origin.x, origin.y);
+	game.viewport.context.translate(
+		origin.x, 
+		origin.y
+	);
 	game.viewport.context.rotate(degreesToRadians(this._heading + 90));
 	 
 	if (this.vertices) {
 		game.viewport.context.beginPath();
 		game.viewport.context.strokeStyle = "white";
 		for (v0 = 0; v0 < this.vertices.length; v0++) {
-			const vertex = this.scaleAndLocateVertex(this.vertices[v0]);
-			game.viewport.context.moveTo(vertex.x, vertex.y);
+			const vertex = this.vertices[v0];
+			game.viewport.context.moveTo(vertex.x - this._model.width / 2, vertex.y - this._model.height / 2);
 			for (v1 = 0; v1 < vertex.connectsTo.length; v1++) {
-				const dest = this.scaleAndLocateVertex(this.vertices[vertex.connectsTo[v1]]);
-				game.viewport.context.lineTo(dest.x, dest.y);
-				game.viewport.context.moveTo(vertex.x, vertex.y);
+				const dest = this.vertices[vertex.connectsTo[v1]];
+				game.viewport.context.lineTo(dest.x - this._model.width / 2, dest.y - this._model.height / 2);
+				game.viewport.context.moveTo(vertex.x - this._model.width / 2, vertex.y - this._model.height / 2);
 			}
 		}
 		game.viewport.context.stroke();
@@ -648,15 +668,19 @@ Ship.prototype.drawHud = function() {
 	if (!game.viewport || !game.viewport.context) {
 		return;
 	}
-	var origin = null;
+	let origin;
 	game.viewport.context.save();	
 	// draw threat pointers
 	for (var i=0; i < this._contacts.length; i++) {
 		const ping = this._contacts[i];
-		const angle = angleBetween(this._coordinates.x, this._coordinates.y, ping.echo.centre.x, ping.echo.centre.y);
+		const angle = angleBetween(
+			this._coordinates.x + this.centre.x, 
+			this._coordinates.y + this.centre.y, 
+			ping.echo.coordinates.x + ping.echo.centre.x, 
+			ping.echo.coordinates.y + ping.echo.centre.y
+		);
 		const distance = distanceBetweenObjects(this, ping.echo);
-		let threatType;
-		threatType = ping.target || ping.echo.currentTarget && ping.echo.currentTarget.echo === this ? ThreatTypes.MEDIUM : ping.threat ? ThreatTypes.LOW : ThreatTypes.NONE;
+		let threatType = ping.target || ping.echo.currentTarget && ping.echo.currentTarget.echo === this ? ThreatTypes.MEDIUM : ping.threat ? ThreatTypes.LOW : ThreatTypes.NONE;
 		if (game.playerShip.currentTarget && game.playerShip.currentTarget.echo === ping.echo) {
 			threatType = ThreatTypes.TARGET;
 		}
@@ -692,51 +716,51 @@ Ship.prototype.drawDebug = function() {
 	if (!game.viewport || !game.viewport.context) {
 		return;
 	}
-	var origin = this.drawOriginCentre;
+	const originCentre = this.drawOriginCentre;
 	game.viewport.context.save();	
-	// draw centre mark
-	game.viewport.context.moveTo(origin.x, origin.y);
+	// centre mark
+	game.viewport.context.moveTo(originCentre.x, originCentre.y);
 	game.viewport.context.beginPath();
 	game.viewport.context.strokeStyle = "blue";
-	game.viewport.context.arc(origin.x, origin.y, 2, 0, Math.PI * 2, false);
+	game.viewport.context.arc(originCentre.x, originCentre.y, 2, 0, Math.PI * 2, false);
 	game.viewport.context.stroke();
-	// draw momentum vector
+	// momentum vector
 	game.viewport.context.beginPath();
-	game.viewport.context.moveTo(origin.x, origin.y);
-	game.viewport.context.lineTo(origin.x + dir_x(this.speed, this._direction), origin.y + dir_y(this.speed, this._direction));
+	game.viewport.context.moveTo(originCentre.x, originCentre.y);
+	game.viewport.context.lineTo(originCentre.x + dir_x(this.speed, this._direction), originCentre.y + dir_y(this.speed, this._direction));
 	game.viewport.context.strokeStyle = "blue";
 	game.viewport.context.stroke();
-	// draw direction marker
+	// direction marker
 	game.viewport.context.beginPath();
-	game.viewport.context.moveTo(origin.x, origin.y);
-	game.viewport.context.lineTo(origin.x + dir_x(this.engageRadius * 0.1, this._direction), origin.y + dir_y(this.engageRadius * 0.1, this._direction));
+	game.viewport.context.moveTo(originCentre.x, originCentre.y);
+	game.viewport.context.lineTo(originCentre.x + dir_x(this.engageRadius * 0.1, this._direction), originCentre.y + dir_y(this.engageRadius * 0.1, this._direction));
 	game.viewport.context.strokeStyle = "orange";
 	game.viewport.context.stroke();
-	// draw heading marker
+	// heading marker
 	game.viewport.context.beginPath();
-	game.viewport.context.moveTo(origin.x, origin.y);
-	game.viewport.context.lineTo(origin.x + dir_x(this.engageRadius * 0.1, this._heading), origin.y + dir_y(this.engageRadius * 0.1, this._heading));
+	game.viewport.context.moveTo(originCentre.x, originCentre.y);
+	game.viewport.context.lineTo(originCentre.x + dir_x(this.engageRadius * 0.1, this._heading), originCentre.y + dir_y(this.engageRadius * 0.1, this._heading));
 	game.viewport.context.strokeStyle = "green";
 	game.viewport.context.stroke();
 	// draw speed marker
 	game.viewport.context.beginPath();
-	game.viewport.context.moveTo(origin.x, origin.y);
-	game.viewport.context.lineTo(origin.x - dir_x(this.speed, this._heading), origin.y - dir_y(this.speed, this.heading));
+	game.viewport.context.moveTo(originCentre.x, originCentre.y);
+	game.viewport.context.lineTo(originCentre.x - dir_x(this.speed, this._heading), originCentre.y - dir_y(this.speed, this.heading));
 	game.viewport.context.strokeStyle = "red";
 	game.viewport.context.stroke();
-	// draw thrust marker
+	// thrust marker
 	game.viewport.context.beginPath();
-	game.viewport.context.moveTo(origin.x, origin.y);
-	game.viewport.context.lineTo(origin.x - dir_x(this._thrust, this._heading), origin.y - dir_y(this._thrust, this._heading));
+	game.viewport.context.moveTo(originCentre.x, originCentre.y);
+	game.viewport.context.lineTo(originCentre.x - dir_x(this._thrust, this._heading), originCentre.y - dir_y(this._thrust, this._heading));
 	game.viewport.context.strokeStyle = "yellow";
 	game.viewport.context.stroke();
-	// draw weapon range ring
+	// weapon range ring
 	game.viewport.context.beginPath();
-	game.viewport.context.arc(origin.x, origin.y, this.maximumWeaponRange, 0, 2 * Math.PI, false);
+	game.viewport.context.arc(originCentre.x, originCentre.y, this.maximumWeaponRange, 0, 2 * Math.PI, false);
 	game.viewport.context.lineWidth = 1;
 	game.viewport.context.strokeStyle = "red";
 	game.viewport.context.stroke();
-	// draw collision centres
+	// collision centres
 	for (const collCtrGrp in this.collisionCentres) {
 		const collCtr = this.collisionCentres[collCtrGrp];
 		game.viewport.context.beginPath();
@@ -745,11 +769,16 @@ Ship.prototype.drawDebug = function() {
 		game.viewport.context.strokeStyle = "yellow";
 		game.viewport.context.stroke();
 	}
-	game.viewport.context.restore();
-
-  for (var i = 0; i < this._hardpoints.length; i++) {
+	// thrusters
+	for (let t = 0; t < this._thrusters.length; t += 1) {
+		this._thrusters[t].draw();
+	}
+	// hardpoints
+	for (let i = 0; i < this._hardpoints.length; i++) {
   	this._hardpoints[i].draw();
   }
+
+	game.viewport.context.restore();
 
 }
 
@@ -783,9 +812,6 @@ const ShipTypes = {
 	TYPE6: Type6,
 	VIPER3: Viper3
 }
-
-// a note on ship sizing: px = ft/0.73 = m/0.22
-// image sizes should be 3-4x rendered dimensions
 
 const ShipTypes_84 = {
 	ADDER: Adder_84,

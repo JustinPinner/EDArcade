@@ -394,8 +394,8 @@ class Hardpoint {
 		};	
 	}
 	get coordinatesWithRotation() {
-		return rotatePoint(this._parent.centre.x, 
-			this._parent.centre.y, 
+		return rotatePoint(this._parent.coordinates.x + this._parent.centre.x, 
+			this._parent.coordinates.y + this._parent.centre.y, 
 			this.coordinates.x, 
 			this.coordinates.y, 
 			this._parent.heading + 90); 
@@ -419,11 +419,18 @@ class Hardpoint {
 	}
 }
 
+Hardpoint.prototype.reScale = function(x,y) {
+	this._geometry.x = this._parent.scaleWidth(this._geometry.x);
+	this._geometry.y = this._parent.scaleHeight(this._geometry.y);
+	this._coordinates.x = this._parent.coordinates.x + this._geometry.x;
+	this._coordinates.y = this._parent.coordinates.y + this._geometry.y;
+}
+
 Hardpoint.prototype.draw = function() {
 	const r = rotatePoint(this._parent.drawOriginCentre.x, 
 		this._parent.drawOriginCentre.y, 
-		this._parent.drawOrigin.x + this._geometry.x, 
-		this._parent.drawOrigin.y + this._geometry.y, 
+		this._parent.drawOrigin.x + this.geometry.x, 
+		this._parent.drawOrigin.y + this.geometry.y, 
 		this._parent.heading + 90); 
 
 	game.viewport.context.moveTo(r.x, r.y);

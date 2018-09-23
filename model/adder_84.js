@@ -5,48 +5,48 @@ const Adder_84 = {
     armour: 88,
     maxSpeed: 260,
     boostSpeed: 300,
-    width: 41,
-    height: 62,
+    width: 233,     // 30
+    height: 311,    // 45
     scale: {
-		x: 0.18,	// 41/233
-		y: 0.20, 	// 62/311
+		x: 0.18,
+		y: 0.2,
 	},
     hardpointGeometry: {
         WEAPON: {
             SMALL: {
-                1: {x: 19, y: 6, z: -1}
+                1: {x: 116, y: 30, z: -1}
             }
         }
     },
     collisionCentres: {
         front: {
-            x: 20,
-            y: 20,
-            radius: 20
+            x: 116,
+            y: 86,
+            radius: 131
         },
         rear: {
-            x: 20, 
-            y: 46, 
-            radius: 20
+            x: 116, 
+            y: 221, 
+            radius: 131
         }
     },
     thrusters: {
         rear: {
             mid: {
-                x: 20,
-                y: 62,
+                x: 116,
+                y: 306,
                 size: 2
             }
         },
         front: {
             left: {
-                x: 2,
-                y: 32,
+                x: 29,
+                y: 134,
                 size: 1
             },
             right: {
-                x: 38,
-                y: 32,
+                x: 202,
+                y: 134,
                 size: 1
             }
         }

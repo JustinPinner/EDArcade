@@ -5,8 +5,8 @@ const Asp2_84 = {
     armour: 88,
     maxSpeed: 260,
     boostSpeed: 300,
-    width: 96,  // 70ft
-    height: 89, // 65ft
+    width: 311,  // 70
+    height: 273, // 65
     scale: {
         x: 0.31,    // 96/311
         y: 0.29     // 89/311
@@ -14,39 +14,34 @@ const Asp2_84 = {
     hardpointGeometry: {
         WEAPON: {
             SMALL: {
-                1: {x: 29, y: 2, z: -1}
+                1: {x: 151, y: 32, z: -1}
             }
         }
     },
     collisionCentres: {
         front: {
-            x: 18,
-            y: 12,
-            radius: 18
-        },
-        rear: {
-            x: 18, 
-            y: 30, 
-            radius: 18
+            x: 152,
+            y: 136,
+            radius: 142
         }
     },
     thrusters: {
         rear: {
             mid: {
-                x: 29,
-                y: 52,
+                x: 155,
+                y: 266,
                 size: 2
             }
         },
         front: {
             left: {
-                x: 8,
-                y: 17,
+                x: 39,
+                y: 92,
                 size: 1
             },
             right: {
-                x: 51,
-                y: 17,
+                x: 264,
+                y: 92,
                 size: 1
             }
         }

@@ -5,48 +5,43 @@ const Moray_84 = {
     armour: 88,
     maxSpeed: 260,
     boostSpeed: 300,
-    width: 82,  // 60ft
-    height: 82, // 60ft
+    width: 316,  // 65
+    height: 270, // 60
     scale: {
-        x: 0.26,    // 82/316
-        y: 0.3      // 82/270
+        x: 0.2,
+        y: 0.22
     },
     hardpointGeometry: {
         WEAPON: {
             SMALL: {
-                1: {x: 0, y: 18, z: -1}
+                1: {x: 158, y: 33, z: -1}
             }
         }
     },
     collisionCentres: {
-        front: {
-            x: 18,
-            y: 12,
-            radius: 18
-        },
-        rear: {
-            x: 18, 
-            y: 30, 
-            radius: 18
+        centre: {
+            x: 158,
+            y: 143,
+            radius: 120
         }
     },
     thrusters: {
         rear: {
             mid: {
-                x: 18,
-                y: 46,
+                x: 158,
+                y: 261,
                 size: 2
             }
         },
         front: {
             left: {
-                x: 2,
-                y: 18,
+                x: 55,
+                y: 79,
                 size: 1
             },
             right: {
-                x: 32,
-                y: 18,
+                x: 261,
+                y: 79,
                 size: 1
             }
         }

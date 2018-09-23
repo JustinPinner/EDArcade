@@ -5,48 +5,49 @@ const Gecko_84 = {
     armour: 88,
     maxSpeed: 260,
     boostSpeed: 300,
-    width: 89, // 65ft
-    height: 55,  // 40ft
+    width: 320,     // 65
+    height: 214,    // 40
     scale: {
-        x: 0.28,    // 89/320
-        y: 0.26     // 55/214
+        x: 0.3,
+        y: 0.34
     },
     hardpointGeometry: {
         WEAPON: {
+            MEDIUM: {
+                1: { x: 160, y: 35, z: -1 }
+            }
+        },
+        UTILITY: {
             SMALL: {
-                1: {x: 0, y: 18, z: -1}
+                1: { x: 62, y: 159, z: -1 },
+                2: { x: 258, y: 159, z: -1 }
             }
         }
     },
     collisionCentres: {
         front: {
-            x: 18,
-            y: 12,
-            radius: 18
-        },
-        rear: {
-            x: 18, 
-            y: 30, 
-            radius: 18
+            x: 160,
+            y: 112,
+            radius: 100
         }
     },
     thrusters: {
         rear: {
             mid: {
-                x: 18,
-                y: 46,
-                size: 2
+                x: 160,
+                y: 208,
+                size: 3
             }
         },
         front: {
             left: {
-                x: 2,
-                y: 18,
+                x: 79,
+                y: 69,
                 size: 1
             },
             right: {
-                x: 32,
-                y: 18,
+                x: 241,
+                y: 69,
                 size: 1
             }
         }
@@ -91,6 +92,6 @@ const Gecko_84 = {
     ],
     cells: {},
     loadHardpoints: function(self) {
-        self._hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, 1, PulseLaser, HardpointMountTypes.FIXED, 1));
+        self._hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, 1, PulseLaser, HardpointMountTypes.FIXED, 1));
     }
 };

@@ -5,113 +5,103 @@ const Viper_84 = {
     armour: 126,
     maxSpeed: 315,
     boostSpeed: 394,
-    width: 68,
-    height: 75,
+    width: 300,     // 50
+    height: 320,    // 55
     scale: {
-        x: 0.21,
-        y: 0.23
+        x: 0.16,
+        y: 0.17
     },
     hardpointGeometry: {
         WEAPON: {
-            SMALL: {
-                1: {x: 18, y: 7, z: 1},
-                2: {x: 27, y: 7, z: 1}				
-            },
             MEDIUM: {
-                1: {x: 17, y: 23, z: -1},
-                2: {x: 29, y: 23, z: -1}
-            }
-        },
-        UTILITY: {
-            SMALL: {
-                1: {x: 22.5, y: 45, z: 1},
-                2: {x: 22.5, y: 45, z: -1}
+                1: {x: 150, y: 65, z: -1}
             }
         }
     },
     collisionCentres: {
         front: {
-            x: 22,
-            y: 15,
-            radius: 15
+            x: 150,
+            y: 90,
+            radius: 45
+        },
+        mid: {
+            x: 150,
+            y: 218,
+            radius: 100
         },
         rearLeft:{
-            x: 14,
-            y: 40,
-            radius: 15
+            x: 70,
+            y: 275,
+            radius: 45
         },
         rearRight: {
-            x: 32,
-            y: 40,
-            radius: 15
+            x: 230,
+            y: 275,
+            radius: 45
         },
     },
     thrusters: {
         rear: {
             left: {
-                x: 5,
-                y: 53
+                x: 100,
+                y: 315
             },  
             right: {
-                x: 42,
-                y: 53
+                x: 200,
+                y: 315
             }
         },
         front: {
             left: {
-                x: 14,
-                y: 17
+                x: 100,
+                y: 125
             },
             right: {
-                x: 33,
-                y: 17
+                x: 200,
+                y: 125
             }
         }
     },
     vertices: [
         {
             id: 0,
-            x: 161,
+            x: 150,
             y: 4,
             connectsTo: [1,5,4]
         },
         {
             id: 1,
-            x: 2,
+            x: 0,
             y: 317,
             connectsTo: [2]
         },
         {
             id: 2,
-            x: 88,
+            x: 75,
             y: 317,
             connectsTo: [3,5]
         },
         {
             id: 3,
-            x: 236,
+            x: 225,
             y: 317,
             connectsTo: [5,4]
         },
         {
             id: 4,
-            x: 318,
+            x: 300,
             y: 317,
             connectsTo: [0]
         },
         {
             id: 5,
-            x: 161,
+            x: 150,
             y: 157,
             connectsTo: [0]
         }
     ],
     cells: {},
     loadHardpoints: function(self) {
-        for (var i = 1; i < 3; i++){
-            self._hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, i));
-            self._hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));
-            self._hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));
-        }
+        self._hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, 1, PulseLaser, HardpointMountTypes.FIXED, 1));
     }
 };

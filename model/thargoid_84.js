@@ -5,88 +5,57 @@ const Thargoid_84 = {
     armour: 468,
     maxSpeed: 234,
     boostSpeed: 305,
-    width: 247,
-    height: 247,
+    width: 300,     // 180
+    height: 300,    // 180
     scale: {
-        x: 0.82,
-        y: 0.82
+        x: 0.6,
+        y: 0.6
     },
     hardpointGeometry: {
         WEAPON: {
             LARGE: { 
-                1: {x: 59, y: 26,	z: -1},
-                2: {x: 48, y: 58, z: -1},
-                3: {x: 71, y: 58,	z: -1}
-            },
-            MEDIUM: {
-                1: {x: 46, y: 38, z: 1},
-                2: {x: 73, y: 38, z: 1}					
-            },
-            SMALL: {
-                1: {x: 38, y: 75, z: 1},
-                2: {x: 80, y: 75, z: 1}				
-            }
-        },
-        UTILITY: {
-            SMALL: {
-                1: {x: 59, y: 94, z: 1},
-                2: {x: 59, y: 94, z: -1},
-                3: {x: 41, y: 137, z: -1},
-                4: {x: 78, y: 137, z: -1}
+                1: {x: 150, y: 75,	z: -1},
+                2: {x: 75, y: 150, z: -1},
+                3: {x: 225, y: 150,	z: -1},
+                4: {x: 150, y: 225, z: -1}
             }
         }
     },
     collisionCentres: {
-        leftFront: {
-            x: 50,
-            y: 62,
-            radius: 30
-        },
-        midFront: {
-            x: 60,
-            y: 20,
-            radius: 15
-        },
-        rightFront:{
-            x: 68,
-            y: 62,
-            radius: 30
-        },
-        leftRear: {
-            x: 37,
-            y: 125,
-            radius: 40
-        },
-        midRear: {
-            x: 60, 
-            y: 150, 
-            radius: 25
-        },
-        rightRear: {
-            x: 78,
-            y: 127,
-            radius: 40
+        mid: {
+            x: 150,
+            y: 150,
+            radius: 150
         }
     },
     thrusters: {
         rear: {
             left: {
-                x: 35,
-                y: 170
+                x: 42,
+                y: 252,
+                size: 3,
+            },
+            mid: {
+                x: 150,
+                y: 295,
+                size: 3
             },  
             right: {
-                x: 82,
-                y: 170
+                x: 258,
+                y: 252,
+                size: 3
             }
         },
         front: {
             left: {
-                x: 31,
-                y: 50
+                x: 42,
+                y: 46,
+                size: 3
             },
             right: {
-                x: 88,
-                y: 50
+                x: 258,
+                y: 46,
+                size: 3
             }
         }
     },
@@ -190,14 +159,8 @@ const Thargoid_84 = {
     ],
     cells: {},
     loadHardpoints: function(self) {
-        for (var i = 1; i < 4; i++){
-            self._hardpoints.push(new WeaponHardpoint(self, Size.LARGE.value, i));	
-        }
-        for (var i = 1; i < 3; i++){
-            self._hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, i, PulseLaser, HardpointMountTypes.FIXED, 1));				
-        }
         for (var i = 1; i < 5; i++){
-            self._hardpoints.push(new UtilityHardpoint(self, Size.SMALL.value, i));	
+            self._hardpoints.push(new WeaponHardpoint(self, Size.LARGE.value, i, PulseLaser, HardpointMountTypes.TURRET, 1));				
         }
     }		
 };

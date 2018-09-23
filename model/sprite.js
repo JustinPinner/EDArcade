@@ -6,6 +6,7 @@ class Sprite {
         this._name = name;
         this._loadedImage = null;
         this._cells = cells || {};
+        this.loadImage();
     }
     get coordinates() {
         return this._coordinates;

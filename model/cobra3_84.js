@@ -5,70 +5,60 @@ const Cobra3_84 = {
     armour: 216,
     maxSpeed: 282,
     boostSpeed: 402,
-    width: 126,
-    height: 92,
+    width: 315,     // 130
+    height: 169,    // 65
     scale: {
-        x: 0.40,
-        y: 0.44
+        x: 0.3,
+        y: 0.34
     },
     hardpointGeometry: {
         WEAPON: {
             SMALL: {
-                1: {x: 46, y: 10, z: 1},
-                2: {x: 75, y: 10, z: 1}					
+                1: {x: 157, y: 33, z: -1},
+                2: {x: 157, y: 160, z: -1}					
             }
         }
     },
     collisionCentres: {
-        leftFront: {
-            x: 32,
-            y: 16,
-            radius: 15
+        centre: {
+            x: 157,
+            y: 90,
+            radius: 75
         },
-        rightFront:{
-            x: 54,
-            y: 16,
-            radius: 15
+        left: {
+            x: 60,
+            y: 131,
+            radius: 45
         },
-        leftRear: {
-            x: 14,
-            y: 38,
-            radius: 15
-        },
-        midRear: {
-            x: 44, 
-            y: 38, 
-            radius: 15
-        },
-        rightRear: {
-            x: 72,
-            y: 38,
-            radius: 15
+        right: {
+            x: 255,
+            y: 131,
+            radius: 45
         }
     },
     thrusters: {
         rear: {
             left: {
-                x: 40,
-                y: 56,
+                x: 111,
+                y: 164,
                 size: 2    
             },
             right: {
-                x: 79,
-                y: 56,
+                x: 204,
+                y: 164,
                 size: 2
             }
         },
         front: {
             left: {
-                x: 28,
-                y: 17,
-                size: 2
+                x: 75,
+                y: 63,
+                size: 1
             },
             right: {
-                x: 92,
-                y: 17,
-                size: 2
+                x: 240,
+                y: 63,
+                size: 1
             }
         }
     },

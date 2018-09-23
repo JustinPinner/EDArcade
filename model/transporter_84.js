@@ -5,48 +5,32 @@ const Transporter_84 = {
     armour: 88,
     maxSpeed: 260,
     boostSpeed: 300,
-    width: 48,
-    height: 41,
+    width: 320,      // 35
+    height: 300,     // 30
     scale: {
-        x: 0.15,
-        y: 0.14
+        x: 0.11,
+        y: 0.1
     },
-    hardpointGeometry: {
-        WEAPON: {
-            SMALL: {
-                1: {x: 0, y: 18, z: -1}
-            }
-        }
-    },
+    hardpointGeometry: {},
     collisionCentres: {
-        front: {
-            x: 18,
-            y: 12,
-            radius: 18
-        },
-        rear: {
-            x: 18, 
-            y: 30, 
-            radius: 18
+        centre: {
+            x: 160,
+            y: 150,
+            radius: 150
         }
     },
     thrusters: {
         rear: {
-            mid: {
-                x: 18,
-                y: 46,
+            centre: {
+                x: 160,
+                y: 295,
                 size: 2
             }
         },
         front: {
-            left: {
-                x: 2,
-                y: 18,
-                size: 1
-            },
-            right: {
-                x: 32,
-                y: 18,
+            centre: {
+                x: 160,
+                y: 5,
                 size: 1
             }
         }
@@ -181,6 +165,6 @@ const Transporter_84 = {
     ],
     cells: {},
     loadHardpoints: function(self) {
-        self._hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, 1, PulseLaser, HardpointMountTypes.FIXED, 1));
+        // this ship has no hardpoints
     }
 };

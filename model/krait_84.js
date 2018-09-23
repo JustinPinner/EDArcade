@@ -5,48 +5,58 @@ const Krait_84 = {
     armour: 88,
     maxSpeed: 260,
     boostSpeed: 300,
-    width: 123, // 90ft
-    height: 110,  // 80ft,
+    width: 314,     // 90
+    height: 226,    // 80
     scale: {
-        x: 0.39,    // 123/314
-        y: 0.49     // 110/226
+        x: 0.39,
+        y: 0.49
     },
     hardpointGeometry: {
         WEAPON: {
-            SMALL: {
-                1: {x: 0, y: 18, z: -1}
+            MEDIUM: {
+                1: {x: 157, y: 28, z: 1}
             }
         }
     },
     collisionCentres: {
         front: {
-            x: 18,
-            y: 12,
-            radius: 18
+            x: 157,
+            y: 123,
+            radius: 90
         },
-        rear: {
-            x: 18, 
-            y: 30, 
-            radius: 18
+        rearLeft: {
+            x: 54, 
+            y: 134, 
+            radius: 30
+        },
+        rearRight: {
+            x: 260,
+            y: 134,
+            radius: 30
         }
     },
     thrusters: {
         rear: {
-            mid: {
-                x: 18,
-                y: 46,
+            left: {
+                x: 113,
+                y: 200,
+                size: 2
+            },
+            right: {
+                x: 201,
+                y: 200,
                 size: 2
             }
         },
         front: {
             left: {
-                x: 2,
-                y: 18,
+                x: 113,
+                y: 45,
                 size: 1
             },
             right: {
-                x: 32,
-                y: 18,
+                x: 201,
+                y: 45,
                 size: 1
             }
         }
@@ -115,6 +125,6 @@ const Krait_84 = {
     ],
     cells: {},
     loadHardpoints: function(self) {
-        self._hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, 1, PulseLaser, HardpointMountTypes.FIXED, 1));
+        self._hardpoints.push(new WeaponHardpoint(self, Size.MEDIUM.value, 1, PulseLaser, HardpointMountTypes.FIXED, 1));
     }
 };

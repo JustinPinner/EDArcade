@@ -5,48 +5,38 @@ const Shuttle_84 = {
     armour: 88,
     maxSpeed: 260,
     boostSpeed: 300,
-    width: 47,
-    height: 68,
+    width: 192,     // 20
+    height: 332,    // 35
     scale: {
-        x: 0.24,
-        y: 0.26
+        x: 0.1,
+        y: 0.1
     },
     hardpointGeometry: {
-        WEAPON: {
-            SMALL: {
-                1: {x: 0, y: 18, z: -1}
-            }
-        }
     },
     collisionCentres: {
         front: {
-            x: 18,
-            y: 12,
-            radius: 18
+            x: 96,
+            y: 80,
+            radius: 75
         },
         rear: {
-            x: 18, 
-            y: 30, 
-            radius: 18
+            x: 96, 
+            y: 230, 
+            radius: 85
         }
     },
     thrusters: {
         rear: {
             mid: {
-                x: 18,
-                y: 46,
-                size: 2
+                x: 96,
+                y: 325,
+                size: 1
             }
         },
         front: {
-            left: {
-                x: 2,
-                y: 18,
-                size: 1
-            },
-            right: {
-                x: 32,
-                y: 18,
+            mid: {
+                x: 96,
+                y: 20,
                 size: 1
             }
         }
@@ -54,7 +44,7 @@ const Shuttle_84 = {
     vertices: [
         {
             id: 0,
-            x: 91,
+            x: 96,
             y: 5,
             connectsTo: [1,7,6]
         },
@@ -96,7 +86,7 @@ const Shuttle_84 = {
         },
         {
             id: 7,
-            x: 91,
+            x: 96,
             y: 46,
             connectsTo:[]
         },
@@ -140,6 +130,6 @@ const Shuttle_84 = {
     ],
     cells: {},
     loadHardpoints: function(self) {
-        self._hardpoints.push(new WeaponHardpoint(self, Size.SMALL.value, 1, PulseLaser, HardpointMountTypes.FIXED, 1));
+        // this ship has no hardpoints
     }
 };

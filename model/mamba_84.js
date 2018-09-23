@@ -5,48 +5,58 @@ const Mamba_84 = {
     armour: 88,
     maxSpeed: 260,
     boostSpeed: 300,
-    width: 89,  // 65ft
-    height: 75, // 55ft
+    width: 318,  // 65
+    height: 297, // 55
     scale: {
-        x: 0.28,   // 89/318
-        y: 0.25    // 75/297
+        x: 0.20,
+        y: 0.19
     },
     hardpointGeometry: {
         WEAPON: {
             SMALL: {
-                1: {x: 0, y: 18, z: -1}
+                1: {x: 159, y: 54, z: -1}
             }
         }
     },
     collisionCentres: {
         front: {
-            x: 18,
-            y: 12,
-            radius: 18
+            x: 159,
+            y: 65,
+            radius: 32
         },
-        rear: {
-            x: 18, 
-            y: 30, 
-            radius: 18
+        centre: {
+            x: 159, 
+            y: 195, 
+            radius: 100
+        },
+        left: {
+            x: 43,
+            y: 265,
+            radius: 32
+        },
+        right: {
+            x: 275,
+            y: 265,
+            radius: 32
         }
     },
     thrusters: {
         rear: {
             mid: {
-                x: 18,
-                y: 46,
+                x: 159,
+                y: 295,
                 size: 2
             }
         },
         front: {
             left: {
-                x: 2,
-                y: 18,
+                x: 75,
+                y: 153,
                 size: 1
             },
             right: {
-                x: 32,
-                y: 18,
+                x: 243,
+                y: 153,
                 size: 1
             }
         }

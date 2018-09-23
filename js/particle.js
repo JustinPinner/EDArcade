@@ -28,8 +28,8 @@ class Particle extends GameObject {
     }
 	get drawOriginCentre() {
 		return {
-			x: this._coordinates.x + -game.viewport.coordinates.x,
-			y: this._coordinates.y + -game.viewport.coordinates.y
+			x: this._coordinates.x,
+			y: this._coordinates.y
 		};
 	}
     
