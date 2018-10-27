@@ -492,7 +492,7 @@ class FSM {
 FSM.prototype.execute = function(unconditionally = false) {
 	if (this._gameObject) {
 		if (!unconditionally) {
-			if (this._gameObject instanceof Ship && distanceBetweenObjects(this._gameObject, game.playerShip) > game.despawnRange) {
+			if (this._gameObject instanceof Ship && distanceBetweenObjects(this._gameObject, game.localPlayer.ship) > game.despawnRange) {
 				this.transition(FSMState.DESPAWN);
 			}
 			if (this._gameObject instanceof Ship) {

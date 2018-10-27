@@ -8,6 +8,7 @@ class Effect extends GameObject {
 		this._coordinates = new Point2d(this._sprite.coordinates.x - (this._sprite.width / 2), this._sprite.coordinates.y - (this._sprite.height / 2));
 		this._fsm = new FSM(this, FSMState.EFFECTPLAY);
 		this.draw = function() {
+			if (!this._ready) return;
 			var origin = this._coordinates;
 			var cell = ((this._sprite.cells.lastFrameDrawn || 0) * this._sprite.cells.frameWidth) / (this._sprite.cells.frameWidth * this._sprite.cells.frameColumns);
 			var row = Math.floor((this._sprite.cells.lastFrameDrawn || 0) / this._sprite.cells.frameColumns);
@@ -25,8 +26,8 @@ class Effect extends GameObject {
 				spriteSheetMap.height,
 				this._coordinates.x, 
 				this._coordinates.y, 
-				this.geometry.width, 
-				this.geometry.height);
+				this.width, 
+				this.height);
 			this._sprite.cells.lastFrameDrawn = this._sprite.cells.lastFrameDrawn === this._sprite.cells.frameColumns * this._sprite.cells.frameRows ? 0 : this._sprite.cells.lastFrameDrawn += 1;
 			if (this.complete()) this._fsm.transition(FSMState.DESPAWN);
 		};

@@ -2,33 +2,28 @@
 	Generic ship constructor
 */
 class Ship extends GameObject {
-	constructor(shipType, shipName, role) {
-		super(GameObjectTypes.SHIP, shipType, shipName, role);
-		this._player = role instanceof Player ? role : null;
-		this._flightAssist = this._player ? false : true;
-		this._heading = this._player ? 270 : rand(359);
+	constructor(model, isPlayer) {
+		super(GameObjectTypes.SHIP, model);
+		const role = isPlayer ? PilotRoles['PLAYER'] : PilotRoles[Object.keys(PilotRoles)[Math.floor(rand(Object.keys(PilotRoles).length - 1))]];
+		this._flightAssist = isPlayer ? false : true;
+		this._heading = isPlayer ? 270 : rand(359);
 		this._thrust = 0;
 		this._direction = this._heading;
-		this._role = this._player ? PilotRoles.PLAYER : role;
-		this._fsm = this._player ? null : new FSM(this, this.role.initialState);
-		this._status = this._role.initialStatus;
+		this._role = role;
+		this._fsm = isPlayer ? null : new FSM(this, this.role.initialState);
+		this._status = role ? this._role.initialStatus : null;
 		this._contacts = [];
 		this._attackers = [];
 		this._currentTarget = null;
 		this._scanner = new Scanner(this);
 		this._shield = new Shield(this);
-		this._armour = shipType.armour;
+		this._armour = model.armour;
 		this._hullIntegrity = 100;
-		this._coordinates = new Point2d(
-			this._player ? game.viewport.centre.x - (this._model.width / 2) : game.playerShip.coordinates.x + rand(game.maxSpawnDistanceX, true),
-			this._player ? game.viewport.centre.y - (this._model.height / 2) : game.playerShip.coordinates.y + rand(game.maxSpawnDistanceY, true)	
-		);		
-		this._sprite = this.vertices ? null : new Sprite(0, 0, shipType.width, shipType.height, shipType.name, shipType.cells);
 		this._hardpoints = [];
-		this._hardpointGeometry = shipType.hardpointGeometry;
+		//this._hardpointGeometry = model.hardpointGeometry;
 		this.randomiseWeaponHardpoints = function(self) {
-			for (const sizeGroup in this._hardpointGeometry[HardpointTypes.WEAPON]) {
-				for (const slot in this._hardpointGeometry[HardpointTypes.WEAPON][sizeGroup]) {
+			for (const sizeGroup in model.hardpointGeometry[HardpointTypes.WEAPON]) {
+				for (const slot in model.hardpointGeometry[HardpointTypes.WEAPON][sizeGroup]) {
 					const loadSlot = randInt(100) > 32;
 					if (loadSlot) {
 						const i = Number(slot);
@@ -41,28 +36,7 @@ class Ship extends GameObject {
 				}
 			}	    
 		};
-		if (this._player){
-			this._model.loadHardpoints(this);
-			this._player.ship = this;
-		} else {
-			this.randomiseWeaponHardpoints(this);
-		}
 		this._thrusters = [];
-		if (this._model.thrusters) {
-			for (const thrusterGroup in this._model.thrusters) {
-				for (const thruster in this._model.thrusters[thrusterGroup]) {
-					const thrusterData = {
-						orientation: thrusterGroup,
-						coordinates: new Point2d(
-							this._model.thrusters[thrusterGroup][thruster].x, 
-							this._model.thrusters[thrusterGroup][thruster].y
-						)
-					};
-					this._thrusters.push(new Thruster(this, thrusterData));
-				}		
-			}			
-		}
-		this.reScale();
 	}
 	/* Getters */
 	get model() {
@@ -74,21 +48,8 @@ class Ship extends GameObject {
 	get shield() {
 		return this._shield;
 	}
-	get coordinates() {
-		return this._coordinates;
-	}
-	get drawOriginCentre() {
-		return new Point2d(
-			this._player ? game.viewport.width / 2 : this.centre.x + -game.viewport.coordinates.x,
-			this._player ? game.viewport.height / 2 : this.centre.y + -game.viewport.coordinates.y
-		);	
-	}
-	get drawOrigin() {
-		const originCentre = this.drawOriginCentre;
-		return {
-			x: originCentre.x - (this._model.width / 2),
-			y: originCentre.y - (this._model.height / 2)
-		}
+	get isLocalPlayerShip() {
+		return this === game.localPlayer.ship;
 	}
 	get hardpointGeometry() {
 		return this._hardpointGeometry;
@@ -158,9 +119,6 @@ class Ship extends GameObject {
 	get role() {
 		return this._role;
 	}
-	get heading() {
-		return this._heading;
-	}
 	get status() {
 		return this._status;
 	}
@@ -179,8 +137,10 @@ class Ship extends GameObject {
 	get thrust() {
 		return this._thrust;
 	}
+	get player() {
+		return this._player;
+	}
 	/* Setters */
-
 	set contacts(pings) {
 		this._contacts = pings;
 	}
@@ -190,7 +150,65 @@ class Ship extends GameObject {
 	set armour(val) {
 		this._armour = val;
 	}
+	set player(player) {
+		this._player = player;
+	}
 };
+
+Ship.prototype.init = function() {
+	this._coordinates.centre = new Coordinate3d(
+		x = this._player ? 0 : game.localPlayer.ship.coordinates.centre.x + rand(game.maxSpawnDistanceX, true),
+		y = this._player ? 0 : game.localPlayer.ship.coordinates.centre.y + rand(game.maxSpawnDistanceY, true),	
+		z = 0
+	);
+	if (this._player){
+		this._model.loadHardpoints(this);
+	} else {
+		this.randomiseWeaponHardpoints(this);
+	}
+	if (this._model.thrusters) {
+		for (const thrusterGroup in this._model.thrusters) {
+			for (const thruster in this._model.thrusters[thrusterGroup]) {
+				const thrusterData = {
+					orientation: thrusterGroup,
+					coordinates: new Point2d(
+						this._model.thrusters[thrusterGroup][thruster].x, 
+						this._model.thrusters[thrusterGroup][thruster].y
+					)
+				};
+				this._thrusters.push(new Thruster(this, thrusterData));
+			}		
+		}			
+	}
+	this.reScale();
+	this._coordinates.origin = new Coordinate3d(
+		x = this._coordinates.centre.x - this._width / 2,
+		y = this._coordinates.centre.y - this._height / 2,
+		z = this._coordinates.centre.z
+	);
+	this.rotate();
+	this._ready = true;
+}
+
+Ship.prototype.ascend = function() {
+	if (!this._ready || !this._model || !this._model.scale || this._coordinates.z > 0) {
+		return;
+	}
+	this._model.scale.x *= 1.5;
+	this._model.scale.y *= 1.5;
+	this._coordinates.z += 1;
+	this.reScale();
+}
+
+Ship.prototype.descend = function() {
+	if (!this._ready || !this._model || !this._model.scale || this._coordinates.z < 0) {
+		return;
+	}
+	this._model.scale.x = this._model.scale.x / 1.5;
+	this._model.scale.y = this._model.scale.y / 1.5;
+	this._coordinates.z -= 1;
+	this.reScale();
+}
 
 Ship.prototype.reScale = function(x,y) {
 	if (!this._model.scale) {
@@ -198,20 +216,29 @@ Ship.prototype.reScale = function(x,y) {
 	}
 	this._model.scale.x = x || this._model.scale.x || 1;
 	this._model.scale.y = y || this._model.scale.y || 1;
-	this._model.width = this.scaleWidth(this._model.width);
-	this._model.height = this.scaleHeight(this._model.height);
+	this.width = this.scaleWidth(this._model.width);
+	this.height = this.scaleHeight(this._model.height);
+	
 	// scale vertices
 	for (let v = 0; v < this._model.vertices.length; v += 1) {
 		const vertex = this._model.vertices[v];
-		vertex.x = this.scaleWidth(vertex.x);
-		vertex.y = this.scaleHeight(vertex.y);
+		const scaled = {
+			connectsTo: vertex.connectsTo,
+			id: vertex.id,
+			x: this.scaleWidth(vertex.x),
+			y: this.scaleHeight(vertex.y)
+		};
+		this.vertices[v] = scaled;
 	}
+
 	// scale collision centres
 	for (const collCtrGrp in this._model.collisionCentres) {
 		const collCtr = this._model.collisionCentres[collCtrGrp];
-		collCtr.x = this.scaleWidth(collCtr.x);
-		collCtr.y = this.scaleHeight(collCtr.y);
-		collCtr.radius = this.scaleWidth(collCtr.radius);
+		collCtr.scaled = {
+			x: this.scaleWidth(collCtr.x),
+			y: this.scaleHeight(collCtr.y),
+			radius: this.scaleWidth(collCtr.radius)
+		};
 	}
 	// scale hardpoints
 	for (let h = 0; h < this._hardpoints.length; h += 1) {
@@ -222,6 +249,46 @@ Ship.prototype.reScale = function(x,y) {
 		this._thrusters[t].reScale();
 	}
 } 
+
+Ship.prototype.rotate = function(degrees) {
+	// rotate vertices
+	const startTime = new Date().getTime();
+	const centreRef = new Point2d(this._width / 2, this._height / 2);
+	for (let v = 0; v < this.vertices.length; v += 1) {
+		const vertex = this.vertices[v];
+		const rotated = rotatePoint(
+			centreRef.x,
+			centreRef.y,
+			vertex.x,
+			vertex.y,
+			degrees || this._heading + 90 
+		);
+		this.vertices[v].x = rotated.x;
+		this.vertices[v].y = rotated.y;
+	}
+	// rotate collision centres
+	for (const collCtrGrp in this.collisionCentres) {
+		const collCtr = this.collisionCentres[collCtrGrp].rotated ? 
+			this.collisionCentres[collCtrGrp].rotated : 
+				this.collisionCentres[collCtrGrp].scaled ? 
+					this.collisionCentres[collCtrGrp].scaled :
+						this.collisionCentres[collCtrGrp];
+		const r = rotatePoint(
+			centreRef.x,
+			centreRef.y,
+			collCtr.x,
+			collCtr.y,
+			degrees || this._heading + 90
+		);
+		this.collisionCentres[collCtrGrp].rotated = {
+			x: r.x,
+			y: r.y,
+			radius: collCtr.radius
+		}
+	};
+	const endTime = new Date().getTime();
+	game.log(new LoggedEvent('ship.prototype.rotate', `duration: ${endTime - startTime}ms`));
+}
 
 Ship.prototype.updateAndDraw = function(debug) {
 	if (this.disposable) return;
@@ -236,15 +303,10 @@ Ship.prototype.updateAndDraw = function(debug) {
 		}
 		this.accelerate();
 	}
-	if (this._player) {
-		this.playerUpdate();
-		this.draw(debug);
-	} else {
-		this.npcUpdate();
-		if (this.isOnScreen(debug)) {
-			this.draw(debug);
-		}
-	}
+	this._player ? this.playerUpdate() : this.npcUpdate();
+
+	this.draw(debug);
+
 	this.collisionDetect();
 };
 
@@ -320,6 +382,12 @@ Ship.prototype.playerUpdate = function() {
 		} else {
 			this.thrustOff();
 		}
+		if (game.keys.ascend) {
+			this.ascend();
+		}
+		if (game.keys.descend) {
+			this.descend();
+		}
 	}
 	
 	if (!game.touch) {
@@ -388,7 +456,7 @@ Ship.prototype.updateMomentum = function() {
 Ship.prototype.updatePosition = function() {	
 	this._coordinates.x += this._velocity.x;
 	this._coordinates.y += this._velocity.y;
-	if (this === game.playerShip) {
+	if (this === game.localPlayer.ship) {
 		if (game.midground.scrollData.anchor !== this) {
 			game.midground.scrollData.anchor = this;
 		}
@@ -510,6 +578,7 @@ Ship.prototype.yaw = function(dir) {
 	if (this._heading < 0) {
 		this._heading += 359;
 	}
+	this.rotate(degsToAdd);
 };
 	
 Ship.prototype.boost = function() {
@@ -620,48 +689,58 @@ Ship.prototype.collectPowerUp = function(pickup) {
 }
 
 Ship.prototype.draw = function(debug) {
-	if (!game.viewport || !game.viewport.context) {
+	if(!this._ready || !game.viewport || !game.viewport.context || !this.isOnScreen) {
 		return;
 	}
-	const origin = this.drawOriginCentre;
-
 	game.viewport.context.save();
-	// TODO: when drawing by vertices, it may be more efficient to scale and rotate those rather than the canvas
-	game.viewport.context.translate(
-		origin.x, 
-		origin.y
-	);
-	game.viewport.context.rotate(degreesToRadians(this._heading + 90));
-	 
 	if (this.vertices) {
-		game.viewport.context.beginPath();
-		game.viewport.context.strokeStyle = "white";
-		for (v0 = 0; v0 < this.vertices.length; v0++) {
-			const vertex = this.vertices[v0];
-			game.viewport.context.moveTo(vertex.x - this._model.width / 2, vertex.y - this._model.height / 2);
-			for (v1 = 0; v1 < vertex.connectsTo.length; v1++) {
-				const dest = this.vertices[vertex.connectsTo[v1]];
-				game.viewport.context.lineTo(dest.x - this._model.width / 2, dest.y - this._model.height / 2);
-				game.viewport.context.moveTo(vertex.x - this._model.width / 2, vertex.y - this._model.height / 2);
-			}
-		}
-		game.viewport.context.stroke();
+		this.drawWithVertices();
 	} else {
+		game.viewport.context.translate(
+			drawOrigin.x, 
+			drawOrigin.y
+		);
+		game.viewport.context.rotate(degreesToRadians(this._heading + 90));	
 		try {
-			game.viewport.context.drawImage(this._sprite.image, -this._model.width / 2, -this._model.height / 2, this._model.width, this._model.height);
-		  } catch(e) {
-			game.viewport.context.fillRect(-this._model.width / 2, -this._model.height / 2, this._model.width, this._model.height);
-		  }
+			game.viewport.context.drawImage(this._sprite.image, -this.width / 2, -this.height / 2, this.width, this.height);
+		} catch(e) {
+			game.viewport.context.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+		}		
 	}
-
 	game.viewport.context.restore();
-	  
-  if (this._player && this._contacts.length > 0) {
-  	this.drawHud();
-  }
-  if (debug) {
-  	this.drawDebug();
-  }
+	if (game.viewport.focussedObject === this && this._contacts.length > 0) {
+		this.drawHud();
+	}
+	if (debug) {
+		this.drawDebug();
+	}
+};
+
+Ship.prototype.drawWithVertices = function() {
+	const drawOrigin = game.viewport.drawOrigin(this);
+	game.viewport.context.moveTo(drawOrigin.x, drawOrigin.y);
+	game.viewport.context.beginPath();
+	game.viewport.context.strokeStyle = "white";
+	for (v0 = 0; v0 < this.vertices.length; v0++) {
+		const connects = this.vertices[v0].connectsTo;
+		const vertex = this.vertices[v0];
+		game.viewport.context.moveTo(
+			drawOrigin.x + vertex.x, //(vertex.x - this.width / 2), 
+			drawOrigin.y + vertex.y //(vertex.y - this.height / 2)
+		);
+		for (v1 = 0; v1 < connects.length; v1 += 1) {
+			const dest = this.vertices[connects[v1]];
+			game.viewport.context.lineTo(
+				drawOrigin.x + dest.x, //(dest.x - this.width / 2), 
+				drawOrigin.y + dest.y //(dest.y - this.height / 2)
+			);
+			game.viewport.context.moveTo(
+				drawOrigin.x + vertex.x, //(vertex.x - this.width / 2), 
+				drawOrigin.y + vertex.y //(vertex.y - this.height / 2)
+			);
+		}
+	}
+	game.viewport.context.stroke();
 };
 
 Ship.prototype.drawHud = function() {
@@ -681,7 +760,7 @@ Ship.prototype.drawHud = function() {
 		);
 		const distance = distanceBetweenObjects(this, ping.echo);
 		let threatType = ping.target || ping.echo.currentTarget && ping.echo.currentTarget.echo === this ? ThreatTypes.MEDIUM : ping.threat ? ThreatTypes.LOW : ThreatTypes.NONE;
-		if (game.playerShip.currentTarget && game.playerShip.currentTarget.echo === ping.echo) {
+		if (game.localPlayer.ship.currentTarget && game.localPlayer.ship.currentTarget.echo === ping.echo) {
 			threatType = ThreatTypes.TARGET;
 		}
 		if (ping.echo.isOnScreen() && threatType !== ThreatTypes.NONE) {
@@ -690,7 +769,7 @@ Ship.prototype.drawHud = function() {
 			game.viewport.context.moveTo(origin.x, origin.y);
 			game.viewport.context.beginPath();
 			game.viewport.context.strokeStyle = ThreatColour[threatType];
-			game.viewport.context.arc(origin.x, origin.y, ping.echo.model.width, 0, Math.PI * 2, false);
+			game.viewport.context.arc(origin.x, origin.y, ping.echo.width, 0, Math.PI * 2, false);
 			game.viewport.context.stroke();
 		} else if (!ping.echo.isOnScreen()) {
 			// show off-screen marker
@@ -716,70 +795,107 @@ Ship.prototype.drawDebug = function() {
 	if (!game.viewport || !game.viewport.context) {
 		return;
 	}
-	const originCentre = this.drawOriginCentre;
+	const drawCentre = game.viewport.drawCentre(this);
+	const drawOrigin = rotatePoint(drawCentre.x, drawCentre.y, game.viewport.drawOrigin(this).x, game.viewport.drawOrigin(this).y, this._heading + 90);
 	game.viewport.context.save();	
-	// centre mark
-	game.viewport.context.moveTo(originCentre.x, originCentre.y);
+	// origin mark
+	game.viewport.context.moveTo(drawOrigin.x, drawOrigin.y);
 	game.viewport.context.beginPath();
-	game.viewport.context.strokeStyle = "blue";
-	game.viewport.context.arc(originCentre.x, originCentre.y, 2, 0, Math.PI * 2, false);
+	game.viewport.context.strokeStyle = "white";
+	game.viewport.context.arc(drawOrigin.x, drawOrigin.y, 2, 0, Math.PI * 2, false);
+	game.viewport.context.stroke();		
+	// centre mark
+	game.viewport.context.moveTo(drawCentre.x, drawCentre.y);
+	game.viewport.context.beginPath();
+	game.viewport.context.strokeStyle = "white";
+	game.viewport.context.arc(drawCentre.x, drawCentre.y, 2, 0, Math.PI * 2, false);
 	game.viewport.context.stroke();
 	// momentum vector
 	game.viewport.context.beginPath();
-	game.viewport.context.moveTo(originCentre.x, originCentre.y);
-	game.viewport.context.lineTo(originCentre.x + dir_x(this.speed, this._direction), originCentre.y + dir_y(this.speed, this._direction));
+	game.viewport.context.moveTo(drawCentre.x, drawCentre.y);
+	game.viewport.context.lineTo(drawCentre.x + dir_x(this.speed, this._direction), drawCentre.y + dir_y(this.speed, this._direction));
 	game.viewport.context.strokeStyle = "blue";
 	game.viewport.context.stroke();
 	// direction marker
 	game.viewport.context.beginPath();
-	game.viewport.context.moveTo(originCentre.x, originCentre.y);
-	game.viewport.context.lineTo(originCentre.x + dir_x(this.engageRadius * 0.1, this._direction), originCentre.y + dir_y(this.engageRadius * 0.1, this._direction));
+	game.viewport.context.moveTo(drawCentre.x, drawCentre.y);
+	game.viewport.context.lineTo(drawCentre.x + dir_x(this.engageRadius * 0.1, this._direction), drawCentre.y + dir_y(this.engageRadius * 0.1, this._direction));
 	game.viewport.context.strokeStyle = "orange";
 	game.viewport.context.stroke();
 	// heading marker
 	game.viewport.context.beginPath();
-	game.viewport.context.moveTo(originCentre.x, originCentre.y);
-	game.viewport.context.lineTo(originCentre.x + dir_x(this.engageRadius * 0.1, this._heading), originCentre.y + dir_y(this.engageRadius * 0.1, this._heading));
+	game.viewport.context.moveTo(drawCentre.x, drawCentre.y);
+	game.viewport.context.lineTo(drawCentre.x + dir_x(this.engageRadius * 0.1, this._heading), drawCentre.y + dir_y(this.engageRadius * 0.1, this._heading));
 	game.viewport.context.strokeStyle = "green";
 	game.viewport.context.stroke();
 	// draw speed marker
 	game.viewport.context.beginPath();
-	game.viewport.context.moveTo(originCentre.x, originCentre.y);
-	game.viewport.context.lineTo(originCentre.x - dir_x(this.speed, this._heading), originCentre.y - dir_y(this.speed, this.heading));
+	game.viewport.context.moveTo(drawCentre.x, drawCentre.y);
+	game.viewport.context.lineTo(drawCentre.x - dir_x(this.speed, this._heading), drawCentre.y - dir_y(this.speed, this.heading));
 	game.viewport.context.strokeStyle = "red";
 	game.viewport.context.stroke();
 	// thrust marker
 	game.viewport.context.beginPath();
-	game.viewport.context.moveTo(originCentre.x, originCentre.y);
-	game.viewport.context.lineTo(originCentre.x - dir_x(this._thrust, this._heading), originCentre.y - dir_y(this._thrust, this._heading));
+	game.viewport.context.moveTo(drawCentre.x, drawCentre.y);
+	game.viewport.context.lineTo(drawCentre.x - dir_x(this._thrust, this._heading), drawCentre.y - dir_y(this._thrust, this._heading));
 	game.viewport.context.strokeStyle = "yellow";
 	game.viewport.context.stroke();
 	// weapon range ring
 	game.viewport.context.beginPath();
-	game.viewport.context.arc(originCentre.x, originCentre.y, this.maximumWeaponRange, 0, 2 * Math.PI, false);
+	game.viewport.context.arc(drawCentre.x, drawCentre.y, this.maximumWeaponRange, 0, 2 * Math.PI, false);
 	game.viewport.context.lineWidth = 1;
 	game.viewport.context.strokeStyle = "red";
 	game.viewport.context.stroke();
 	// collision centres
 	for (const collCtrGrp in this.collisionCentres) {
-		const collCtr = this.collisionCentres[collCtrGrp];
-		game.viewport.context.beginPath();
-		game.viewport.context.arc(collCtr.x, collCtr.y, collCtr.radius, 0, 2 * Math.PI, false);
-		game.viewport.context.lineWidth = 1;
-		game.viewport.context.strokeStyle = "yellow";
-		game.viewport.context.stroke();
+		if (this.collisionCentres[collCtrGrp].rotated) {
+			const collCtr = this.collisionCentres[collCtrGrp].rotated;
+			game.viewport.context.beginPath();
+			game.viewport.context.arc(
+				drawOrigin.x + collCtr.x, 
+				drawOrigin.y + collCtr.y, 
+				collCtr.radius, 
+				0, 
+				2 * Math.PI, 
+				false);
+			game.viewport.context.lineWidth = 1;
+			game.viewport.context.strokeStyle = "yellow";
+			game.viewport.context.stroke();
+		}
+		// const collCtr = this.collisionCentres[collCtrGrp].scaled ? 
+		// 	this.collisionCentres[collCtrGrp].scaled :
+		// 	this.collisionCentres[collCtrGrp];
 	}
-	// thrusters
-	for (let t = 0; t < this._thrusters.length; t += 1) {
-		this._thrusters[t].draw();
+	// // thrusters
+	// for (let t = 0; t < this._thrusters.length; t += 1) {
+	// 	this._thrusters[t].draw();
+	// }
+	// // hardpoints
+	// for (let i = 0; i < this._hardpoints.length; i++) {
+	// 	this._hardpoints[i].draw();
+	// }
+	// bounding box
+	game.viewport.context.beginPath();
+	// const o = origin.clone();
+	// o.rotate(centre, this._heading);
+	//const x0y0 = rotatePoint(centre.x, centre.y, origin.x, origin.y, this._heading + 90);
+	const pointsToRotate = [];
+	pointsToRotate.push(new Point2d(game.viewport.drawOrigin(this).x + this._width, game.viewport.drawOrigin(this).y));
+	pointsToRotate.push(new Point2d(game.viewport.drawOrigin(this).x + this._width, game.viewport.drawOrigin(this).y + this._height));
+	pointsToRotate.push(new Point2d(game.viewport.drawOrigin(this).x, game.viewport.drawOrigin(this).y + this._height));
+	pointsToRotate.push(new Point2d(game.viewport.drawOrigin(this).x, game.viewport.drawOrigin(this).y));
+
+	game.viewport.context.moveTo(drawOrigin.x, drawOrigin.y);
+
+	for (p in pointsToRotate) {
+		const point = pointsToRotate[p];
+		const r = rotatePoint(drawCentre.x, drawCentre.y, point.x, point.y, this._heading + 90);
+		game.viewport.context.lineTo(r.x, r.y);
 	}
-	// hardpoints
-	for (let i = 0; i < this._hardpoints.length; i++) {
-  	this._hardpoints[i].draw();
-  }
+	game.viewport.context.strokeStyle = "gray";
+	game.viewport.context.stroke();
 
 	game.viewport.context.restore();
-
 }
 
 const ThreatTypes = {
@@ -803,7 +919,7 @@ const ThreatMarker = {
 	TARGET: '0'
 }
 
-const ShipTypes = {
+const SHIPS = {
 	SIDEWINDER: SideWinder,
 	COBRA3: Cobra3,
 	COBRA4: Cobra4,
@@ -813,7 +929,7 @@ const ShipTypes = {
 	VIPER3: Viper3
 }
 
-const ShipTypes_84 = {
+const SHIPS_84 = {
 	ADDER: Adder_84,
 	ANACONDA: Anaconda_84,
 	ASP2: Asp2_84,

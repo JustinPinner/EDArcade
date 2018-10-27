@@ -92,5 +92,27 @@ Midground.prototype.draw = function() {
 class Viewport extends Canvas2D {
 	constructor(x, y, width, height, selector) {
 		super(x, y, width, height, selector || '#fgcanvas');
-	}	
+	}
 };
+
+Viewport.prototype.drawOrigin = function(forObject) {
+	if (!forObject || !this.coordinates) {
+		return new Coordinate3d(0,0,0);
+	}
+	return new Coordinate3d(
+		x = forObject.coordinates.origin.x + -this.coordinates.x,
+		y = forObject.coordinates.origin.y + -this.coordinates.y,
+		z = forObject.coordinates.z
+	);
+};
+
+Viewport.prototype.drawCentre = function(forObject) {
+	if (!forObject || !this.coordinates) {
+		return new Coordinate3d(0,0,0);
+	}
+	return new Coordinate3d(
+		x = forObject.coordinates.centre.x + -this.coordinates.x,
+		y = forObject.coordinates.centre.y + -this.coordinates.y,
+		z = forObject.coordinates.z
+	);	
+};	

@@ -8,11 +8,15 @@ const minNPC = 0;
 const fps = 30;
 const imageService = new ImageService();
 const gamepadSupport = "getGamepads" in navigator;
+const MAX_SPAWN_SCREENS_WIDE = 1;
+const MAX_SPAWN_SCREENS_HIGH = 1;
 
 class Game {
-  constructor(playerName, shipName) {   
+  constructor() {
+    this._loggedEvents = [];
+    this._ticks = 0;   
     this._touchSupport = window.navigator.maxTouchPoints > 0;
-
+    this._shipSet = oldSchool ? SHIPS_84 : SHIPS;
     this._gameObjects = [];
     this._background = new Background();
     // size and style background wrapper div
@@ -97,10 +101,6 @@ class Game {
     this._keyHandler = new KeyHandler();
     this._gamepadHandler = new GamepadHandler();
       
-    this._player = new Player(playerName);
-    this._playerShip = null;
-    this._playerShipName = shipName;
-  
   }
 
   /* getters */
@@ -121,16 +121,16 @@ class Game {
     return this._viewport;
   }
 
-  get playerShip() {
-    return this._playerShip;
+  get localPlayer() {
+    return this._localPlayer;
   }
 
   get maxSpawnDistanceX() {
-    return (this._viewport.width / 2) * 15;
+    return (this._viewport.width / 2) * MAX_SPAWN_SCREENS_WIDE;
   }
 
   get maxSpawnDistanceY() {
-    return (this._viewport.height / 2) * 15;
+    return (this._viewport.height / 2) * MAX_SPAWN_SCREENS_HIGH;
   }
 
   get despawnRange() {
@@ -159,16 +159,29 @@ class Game {
     return this._touchSupport && this._touchInterface.touchHandler;
   }
   
+  get shipSet() {
+    return this._shipSet;
+  }
+
   /* setters */
 
-  set playerShip(ship) {
-    this._playerShip = ship;
+  set localPlayer(player) {
+    this._localPlayer = player;
   }
+
+}
+
+Game.prototype.logEvent = function(ev) {
+  this._loggedEvents.push(ev);
 }
 
 Game.prototype.tick = function() {
+  this._ticks += 1;
   if (!this.isReady) {
     return;
+  }
+  if (this._ticks % 10 == 0) {
+    this.flushLoggedEvents();
   }
   this._viewport.clear();  
   const deadAndAlive = this._gameObjects.partition(function(obj) {
@@ -192,26 +205,26 @@ Game.prototype.tick = function() {
       npcCount++;
     }
     gameObject.updateAndDraw(debug);
-    if (gameObject === this._playerShip) {
+    if (gameObject === this.localPlayer.ship) {
       const uiCoord = document.querySelector(".ui.debug.coord");
       if (uiCoord) {
-        uiCoord.innerHTML = "<p>x:" + (this._playerShip.coordinates.x ? this._playerShip.coordinates.x.toFixed(1) : " ") + " y:" + (this._playerShip.coordinates.y ? this._playerShip.coordinates.y.toFixed(1) : " ") + "</p>";
+        uiCoord.innerHTML = "<p>x:" + (this._localPlayer.ship.coordinates.x ? this._localPlayer.ship.coordinates.x.toFixed(1) : " ") + " y:" + (this._localPlayer.ship.coordinates.y ? this._localPlayer.ship.coordinates.y.toFixed(1) : " ") + "</p>";
       }
       const uiVector = document.querySelector(".ui.debug.vector");
       if (uiVector) {
-        uiVector.innerHTML = "<p>vel:" + (this._playerShip.velocity ? this._playerShip.velocity.length : " N/A ") + " hdg:" + (this._playerShip.heading ? this._playerShip.heading.toFixed(1) : " ") + "</p>";
+        uiVector.innerHTML = "<p>vel:" + (this._localPlayer.ship.velocity ? this._localPlayer.ship.velocity.length : " N/A ") + " hdg:" + (this._localPlayer.ship.heading ? this._localPlayer.ship.heading.toFixed(1) : " ") + "</p>";
       }
       const uiStatus = document.querySelector(".ui.debug.status");
       if (uiStatus) {
-        uiStatus.innerHTML = "<p>status:" + this._playerShip.status + "</p>";
+        uiStatus.innerHTML = "<p>status:" + this._localPlayer.ship.status + "</p>";
       }
       const uiCondition = document.querySelector(".ui.debug.condition");
       if (uiCondition) {
-        uiCondition.innerHTML = "<p>shields:" + this._playerShip.shield.charge + "% armour:" + this._playerShip.armour + " hull:" + this._playerShip.hullIntegrity + "%</p>";
+        uiCondition.innerHTML = "<p>shields:" + this._localPlayer.ship.shield.charge + "% armour:" + this._localPlayer.ship.armour + " hull:" + this._localPlayer.ship.hullIntegrity + "%</p>";
       }
       const uiInputs = document.querySelector(".ui.debug.inputs");
       if (uiInputs) {
-        uiInputs.innerHTML = "<p>thrust:" + (this._playerShip.thrust ? this._playerShip.thrust.toFixed(1) : " ") + "</p>";
+        uiInputs.innerHTML = "<p>thrust:" + (this._localPlayer.ship.thrust ? this._localPlayer.ship.thrust.toFixed(1) : " ") + "</p>";
       }
     }
   }
@@ -221,10 +234,9 @@ Game.prototype.tick = function() {
   }
   // spawn new / maintain min. NPC ships
   for (var i = npcCount; i < minNPC; i++) {
-    const shipSet = oldSchool ? ShipTypes_84 : ShipTypes;
-    const spawnShipType = shipSet[Object.keys(shipSet)[Math.floor(rand(Object.keys(shipSet).length))]];
-    const spawnShipRole = PilotRoles[Object.keys(PilotRoles)[Math.floor(rand(Object.keys(PilotRoles).length - 1))]];
-    const newShip = new Ship(spawnShipType, 'NPC' + i, spawnShipRole);
+    const spawnShipType = this._shipSet[Object.keys(this._shipSet)[Math.floor(rand(Object.keys(this._shipSet).length))]];
+    const newShip = new Ship(spawnShipType, false);
+    newShip.init();
     this._gameObjects.push(newShip);
   }
 
@@ -244,10 +256,21 @@ Game.prototype.start = function() {
   this._viewport.init();
   this._touchSupport && this._touchInterface.init();
 
-  // create player's ship
-  const shipSet = oldSchool ? ShipTypes_84 : ShipTypes;
-  this._playerShip = new Ship(shipSet.COBRA3, this._playerShipName, this._player);
-  this._gameObjects.push(this._playerShip);
+  // create local player
+  this.localPlayer = new Player();
+  this.localPlayer.init();
+
+  // create local player's ship
+  this.localPlayer.ship = new Ship(this._shipSet.COBRA3, true);
+  this.localPlayer.ship.player = this.localPlayer;
+  this.localPlayer.ship.init();
+
+  // set viewport focus
+  this._viewport.focus(this.localPlayer.ship);
+
+  // push player's ship to the object stack 
+  this._gameObjects.push(this.localPlayer.ship);
+
   // all systems go!
 	setInterval(main, 1000/fps);
 }
@@ -255,10 +278,23 @@ Game.prototype.start = function() {
 Game.prototype.filterObjects = function(objectTypeOrTypes) {
   if (objectTypeOrTypes) {
     return this.objects.filter(function(obj) {
-      return objectTypeOrTypes instanceof Array ? objectTypeOrTypes.includes(obj.constructor) : obj instanceof objectTypeOrTypes;
+      return objectTypeOrTypes instanceof Array ? 
+        objectTypeOrTypes.includes(obj.constructor) : 
+        obj instanceof objectTypeOrTypes;
     })
   }
   return this.objects;
+}
+
+Game.prototype.log = function(loggedEvent) {
+  this._loggedEvents.push(loggedEvent.dump);
+}
+
+Game.prototype.flushLoggedEvents = function() {
+  for (let ev=0; ev < this._loggedEvents.length; ev += 1) {
+    console.log(this._loggedEvents[ev]);
+  }
+  this._loggedEvents = [];
 }
 
 const game = new Game();
@@ -270,3 +306,4 @@ function main() {
 (function() {
   game.start();
 })();
+

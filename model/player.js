@@ -1,42 +1,88 @@
 
-var Player = function(name) {
-	this.name = 'Cmdr ' + name ? name : 'Jameson';
-	this.rank = 'Harmless';
-	this.credits = 100;
-	this.ship = null;
-	this.increaseThrust = function() {
-		if (this.ship) {
-			this.ship.increaseThrust();
-		}
+class Player {
+	constructor(name) {
+		this._name = name ? 'Cmdr ' + name : 'Cmdr Jameson';
+		this._rank = 'Harmless';
+		this._credits = 100;
+		this._ship = null;
+		this._ready = null;
 	}
-	this.decreaseThrust = function() {
-		if (this.ship) {
-			this.ship.decreaseThrust();
-		}
+	// getters
+	get name() {
+		return this._name;
 	}
-	this.yawRight = function() {
-		if (this.ship) {
-			this.ship.yaw('cw');
-		}
+	get rank() {
+		return this._rank;
 	}
-	this.yawLeft = function() {
-		if (this.ship) {
-			this.ship.yaw('ccw');
-		}
+	get credits() {
+		return this._credits;
 	}
-	this.boost = function() {
-		if (this.ship) {
-			this.ship.boost();
-		}
+	get ship() {
+		return this._ship;
 	}
-	this.fire = function() {
-		if (this.ship) {
-			this.ship.fireWeapons();
-		}
+	get ready() {
+		return this.ready;
 	}
-	this.toggleFlightAssist = function() {
-		if (this.ship) {
-			this.ship.flightAssist = !this.ship.flightAssist;
-		}
+	// setters
+	set name(val) {
+		this._name = val;
 	}
-};
+	set rank(val) {
+		this._rank = val;
+	}
+	set credits(val) {
+		this._credits = val;
+	}
+	set ship(val) {
+		this._ship = val;
+	}
+	set ready(val) {
+		this._ready = val;
+	}
+}
+
+Player.prototype.init = function() {
+	this.ready = true;
+}
+
+Player.prototype.increaseThrust = function() {
+	if (this.ship) {
+		this.ship.increaseThrust();
+	}
+}
+
+Player.prototype.decreaseThrust = function() {
+	if (this.ship) {
+		this.ship.decreaseThrust();
+	}
+}
+
+Player.prototype.yawRight = function() {
+	if (this.ship) {
+		this.ship.yaw('cw');
+	}
+}
+
+Player.prototype.yawLeft = function() {
+	if (this.ship) {
+		this.ship.yaw('ccw');
+	}
+}
+
+Player.prototype.boost = function() {
+	if (this.ship) {
+		this.ship.boost();
+	}
+}
+
+Player.prototype.fire = function() {
+	if (this.ship) {
+		this.ship.fireWeapons();
+	}
+}
+
+Player.prototype.toggleFlightAssist = function() {
+	if (this.ship) {
+		this.ship.flightAssist = !this.ship.flightAssist;
+	}
+}

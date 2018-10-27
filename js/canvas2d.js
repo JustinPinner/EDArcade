@@ -49,7 +49,7 @@ class Canvas2D {
 	set scrollData(scrollDataObj) {
 		this._scrollData = scrollDataObj;
 	}
-}
+};
 
 Canvas2D.prototype.init = function(fillImage, callBack) {
 	if (this._selector && !this._context) {
@@ -62,7 +62,7 @@ Canvas2D.prototype.init = function(fillImage, callBack) {
 		this._image = imageService.loadImage(fillImage, callBack);		
 	}
 	this._ready = !!this._context;	
-}
+};
 
 Canvas2D.prototype.clear = function(fromPoint, toPoint) {
 	if (!this._context) return;
@@ -71,7 +71,7 @@ Canvas2D.prototype.clear = function(fromPoint, toPoint) {
 		(toPoint && toPoint.x) || this._width, 
 		(toPoint && toPoint.y) || this._height
 	);
-}
+};
 
 Canvas2D.prototype.draw = function() {
 	if (!this._ready || !this._context) return;
@@ -82,28 +82,61 @@ Canvas2D.prototype.draw = function() {
 Canvas2D.prototype.focus = function(gameObject) {
 	if (!gameObject) return;
 	this._anchor = gameObject;
-	this._coordinates.x = gameObject.centre.x - (this._width / 2);
-	this._coordinates.y = gameObject.centre.y - (this._height / 2);
-}
+	this._coordinates.x = gameObject.coordinates.centre.x - (this._width / 2);
+	this._coordinates.y = gameObject.coordinates.centre.y - (this._height / 2);
+};
 
 Canvas2D.prototype.scroll = function () {
 	this._coordinates.x += this._scrollData.velocity.x;
 	this._coordinates.y += this._scrollData.velocity.y;
-}
+};
 
-Canvas2D.prototype.contains = function(x, y, width, height) {
-	const centrePoint = this._anchor ? 
-		this._anchor.centre : 
-		new Point2d(
-			this._coordinates.x + (this.width / 2),
-			this._coordinates.y + (this.height / 2)
-		);
-	const minX = centrePoint.x - (this.width / 2);
-	const minY = centrePoint.y - (this.height / 2);
-	const maxX = centrePoint.x + (this.width / 2);
-	const maxY = centrePoint.y + (this.height / 2);
-	const isContained = 
-		((x + (width || 0) >= minX && y) + ((height || 0) >= minY)) && 
-		(x <= maxX && y <= maxY)
+Canvas2D.prototype.contains = function(x, y, width, height, heading) {
+	const x1 = x;
+	const y1 = y;
+	const x2 = x + width;
+	const y2 = y + height;
+	const cx = x1 + width / 2;
+	const cy = y1 + height / 2;
+
+	const p1 = heading ? 
+		rotatePoint(cx, cy, x1, y1, heading) :
+		new Point2d(x1, y1);
+	
+	const p2 = heading ?
+		rotatePoint(cx, cy, x2, y2, heading) :
+		new Point2d(x2, y2);
+
+	const isContained =
+		// p1.x >= this._coordinates.x && p1.y >= this._coordinates.y && 
+		// p2.x <= this._coordinates.x + this.width && p2.y <= this._coordinates.y + this.height;
+		this.focussedObject ?
+			p1.x >= this.focussedObject.coordinates.x - this._width / 2 && 
+			p1.y >= this.focussedObject.coordinates.y - this.height / 2 && 
+			p2.x <= this.focussedObject.coordinates.x + this.width / 2 &&
+			p2.y <= this.focussedObject.coordinates.y + this.height / 2
+		:
+			p1.x >= this._coordinates.x &&
+			p1.y >= this._coordinates.y &&
+			p2.x <= this._coordinates.x + this.width &&
+			p2.y <= this._coordinates.y + this.height;
+
+// 	if(!isContained) {
+//		debugger;
+// 	}
 	return isContained;
 };
+
+Canvas2D.prototype.containsObject = function(obj) {
+	if (this.focussedObject === obj) {
+		return true;
+	} else {
+		return this.contains(
+			obj.coordinates.x, 
+			obj.coordinates.y, 
+			obj.width, 
+			obj.height, 
+			obj.heading
+		);
+	}
+}

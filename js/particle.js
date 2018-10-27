@@ -60,10 +60,11 @@ Particle.prototype.updateAndDraw = function(debug) {
 };
 
 Particle.prototype.draw = function(debug) {
-	if (!this.isOnScreen(debug)) return;
+    if (!this._ready) return;
+    if (!this.isOnScreen(debug)) return;
 	game.viewport.context.fillStyle="rgba(" + this._rgba.red + "," + this._rgba.green + "," + this._rgba.blue + "," + this._rgba.alpha + ")";
     game.viewport.context.beginPath();
-    game.viewport.context.arc(this.drawOriginCentre.x, this.drawOriginCentre.y, this.geometry.width, 0, Math.PI * 2);
+    game.viewport.context.arc(this.drawOriginCentre.x, this.drawOriginCentre.y, this.width, 0, Math.PI * 2);
     game.viewport.context.closePath();
     game.viewport.context.fill();
 };
@@ -94,5 +95,6 @@ ParticleEmitter.prototype.emit = function(particleData) {
         particleData.fadeIn || this._fadeIn, 
         particleData.fadeOut || this._fadeOut
     );
+    particle.init();
     game.objects.push(particle);
 };

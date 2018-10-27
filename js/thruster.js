@@ -28,28 +28,35 @@ const ORIENTATION = {
 
 
 class Thruster extends ParticleEmitter {
-    constructor(hostObject, thrusterData, particleData) {
-        super(hostObject, particleData || DEFAULTTHRUSTPARTICLE);
-        this._host = hostObject;
+    constructor(host, thrusterData, particleData) {
+        super(host, particleData || DEFAULTTHRUSTPARTICLE);
+        this._host = host;
         this._orientation = thrusterData.orientation;
-        this._coordinates = thrusterData.coordinates;
+        this._model = thrusterData.coordinates;
+        this._coordinates = {
+            model: new Point2d(this._model.x, this._model.y)
+        };
     }
 
     get coordinates() {
-        return new Point2d(
-            this._host.coordinates.x + this._coordinates.x,
-            this._host.coordinates.y + this._coordinates.y
-        );
-    }
-
-    get nozzleCoordinates() {
-        return rotatePoint(
-            this._host.drawOriginCentre.x, 
-            this._host.drawOriginCentre.y, 
-            this._host.drawOrigin.x + this._coordinates.x, 
-            this._host.drawOrigin.y + this._coordinates.y, 
-            this._host.heading + 90
-        ); 
+        // return {
+        //     model: this._coordinates.model,
+        //     environment: {
+        //         x: this._host.coordinates.x + this._coordinates.model.x,
+        //         y: this._host.coordinates.y + this._coordinates.model.y,
+        //     },
+        //     screen: rotatePoint(
+        //         this._host.drawOriginCentre.x,
+        //         this._host.drawOriginCentre.y,
+        //         this._host.drawOrigin.x + this._coordinates.model.x,
+        //         this._host.drawOrigin.y + this._coordinates.model.y,
+        //         this._host.heading + 90
+        //     )
+        // };
+        return {
+            x: this._host.coordinates.origin.x + this._model.x,
+            y: this._host.coordinates.origin.y + this._model.y
+        }
     }
 
     get orientation() {
@@ -58,8 +65,8 @@ class Thruster extends ParticleEmitter {
 }
 
 Thruster.prototype.reScale = function() {
-    this._coordinates.x = this._host.scaleWidth(this._coordinates.x);
-    this._coordinates.y = this._host.scaleHeight(this._coordinates.y);
+    this._coordinates.model.x = this._host.scaleWidth(this._model.x);
+    this._coordinates.model.y = this._host.scaleHeight(this._model.y);
 }
 
 Thruster.prototype.thrust = function() {
@@ -68,7 +75,10 @@ Thruster.prototype.thrust = function() {
     // emit primary particle
     const primaryParticle = DEFAULTTHRUSTPARTICLE;
     primaryParticle.radius = radius * 1.25;
-    primaryParticle.emitPoint = this.nozzleCoordinates;
+    primaryParticle.emitPoint = {
+        x: this._host.coordinates.origin.x + this._coordinates.model.x,
+        y: this._host.coordinates.origin.y + this._coordinates.model.y
+    };
     primaryParticle.emitAngle = angle;
     primaryParticle.emitSpeed = 1;
     this.__proto__.emit(primaryParticle);
@@ -79,11 +89,15 @@ Thruster.prototype.thrust = function() {
     secondaryParticle.emitAngle = angle + rand(10, true);
     secondaryParticle.radius = radius;
     secondaryParticle.emitSpeed = 3;
+    secondaryParticle.emitPoint = {
+        x: this._host.coordinates.origin.x + this._coordinates.model.x,
+        y: this._host.coordinates.origin.y + this._coordinates.model.y
+    };
     this.__proto__.emit(secondaryParticle);
 }
 
 Thruster.prototype.draw = function() {
-    const r = this.nozzleCoordinates;
+    const r = this.coordinates.screen;
     game.viewport.context.moveTo(r.x, r.y);
 	game.viewport.context.beginPath();
 	game.viewport.context.strokeStyle = 'white';
