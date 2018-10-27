@@ -483,8 +483,11 @@ Ship.prototype.updateMomentum = function() {
 };
 
 Ship.prototype.updatePosition = function() {	
-	this._coordinates.x += this._velocity.x;
-	this._coordinates.y += this._velocity.y;
+	this._coordinates.centre.x += this._velocity.x;
+	this._coordinates.origin.x += this._velocity.x;
+	this._coordinates.centre.y += this._velocity.y;
+	this._coordinates.origin.y += this._velocity.y;
+	
 	if (this === game.localPlayer.ship) {
 		if (game.midground.scrollData.anchor !== this) {
 			game.midground.scrollData.anchor = this;
@@ -494,9 +497,9 @@ Ship.prototype.updatePosition = function() {
 		if (game.midground.scrollData.velocity.x !== 0 || game.midground.scrollData.velocity.y !== 0) {
 			game.midground.scroll();
 		}
-		if (game.viewport.focussedObject !== this) {
-			game.viewport.focus(this);
-		}
+		// if (game.viewport.focussedObject !== this) {
+		// 	game.viewport.focus(this);
+		// }
 	}
 };
 

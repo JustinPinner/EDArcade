@@ -95,6 +95,11 @@ class Viewport extends Canvas2D {
 	}
 };
 
+Viewport.prototype.trackFocussedObject = function() {
+	this.coordinates.x = this.focussedObject.coordinates.centre.x - this.width / 2;
+	this.coordinates.y = this.focussedObject.coordinates.centre.y - this.height / 2;	
+}
+
 Viewport.prototype.drawOrigin = function(forObject) {
 	if (!forObject || !this.coordinates) {
 		return new Coordinate3d(0,0,0);

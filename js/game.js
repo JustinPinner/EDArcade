@@ -208,7 +208,7 @@ Game.prototype.tick = function() {
     if (gameObject === this.localPlayer.ship) {
       const uiCoord = document.querySelector(".ui.debug.coord");
       if (uiCoord) {
-        uiCoord.innerHTML = "<p>x:" + (this._localPlayer.ship.coordinates.x ? this._localPlayer.ship.coordinates.x.toFixed(1) : " ") + " y:" + (this._localPlayer.ship.coordinates.y ? this._localPlayer.ship.coordinates.y.toFixed(1) : " ") + "</p>";
+        uiCoord.innerHTML = "<p>x:" + (this._localPlayer.ship.coordinates.centre.x ? this._localPlayer.ship.coordinates.centre.x.toFixed(1) : " ") + " y:" + (this._localPlayer.ship.coordinates.centre.y ? this._localPlayer.ship.coordinates.centre.y.toFixed(1) : " ") + "</p>";
       }
       const uiVector = document.querySelector(".ui.debug.vector");
       if (uiVector) {
@@ -239,6 +239,8 @@ Game.prototype.tick = function() {
     newShip.init();
     this._gameObjects.push(newShip);
   }
+
+  this._viewport.trackFocussedObject();
 
   this._midground.draw();
   
