@@ -23,13 +23,14 @@ class GameObject {
 		this._model = model;
 		this._colour = null;
 		this._velocity = new Vector2d(0, 0);
-		this._sprite = (model && model.vertices) ? null : model && new Sprite(0, 0, model.width, model.height, model.name, model.cells);
+		this._sprite = null;
 		this._name = model && model.name || null;
 		this._width = model && model.width || null;
 		this._height = model && model.height || null;
-		this._vertices = model && model.vertices ? model.vertices : null;
+		this._vertices = [];
 		this._scale = model && model.scale || null;
 		this._mass = model && model.mass || null;
+		this._collisionCentres = [];
 	}
 	// getters
 	get type() {
@@ -69,22 +70,6 @@ class GameObject {
 	get speed() {
 		return this._velocity.length * fps;
 	}
-	// get drawOriginCentre() {
-	// 	return {
-	// 		x: this.centre.x + -game.viewport.coordinates.x,
-	// 		y: this.centre.y + -game.viewport.coordinates.y
-	// 	};
-	// }
-	// get coordinatesRotated() {
-	// 	return this._coordinates && 
-	// 		rotatePoint(
-	// 			this.centre.x, 
-	// 			this.centre.y, 
-	// 			this._coordinates.x, 
-	// 			this._coordinates.y, 
-	// 			this._heading
-	// 		);
-	// }
 	get mass() {
 		return this._mass || 0;
 	}
@@ -132,36 +117,84 @@ class GameObject {
 	}
 }
 
+GameObject.prototype.loadSprite = function() {
+	if (!this._model || !this._model.width || !this._model.height || !this._model.width || !this._model.name || !this._model.cells) {
+		game.log(new LoggedEvent('gameobject.prototype.loadSprite', 'called with no _model or with missing model settings'));
+		return;
+	}
+	if (this._model && this._model.vertices) {
+		// vertex-based objects don't have sprite representation
+		return;
+	}
+	this._sprite = (model && model.vertices) ? null : model && new Sprite(0, 0, model.width, model.height, model.name, model.cells);
+}
+
+GameObject.prototype.loadVertices = function() {
+	if (!this._model || !this._model.vertices) {
+		game.log(new LoggedEvent('gameobject.prototype.loadVertices', 'called with no _model or _model.vertices'));
+		return;
+	}
+	this._vertices = [];
+	for (let v = 0; v < this._model.vertices.length; v += 1) {
+		const vertex = this._model.vertices[v];
+		const scaled = {
+			connectsTo: vertex.connectsTo,
+			id: vertex.id,
+			x: this.scaleWidth(vertex.x),
+			y: this.scaleHeight(vertex.y)
+		};
+		this._vertices.push(scaled);
+	}
+}
+
+GameObject.prototype.loadCollisionCentres = function() {
+	this._collisionCentres = [];
+	for (const collCtrGrp in this._model.collisionCentres) {
+		const collCtr = this._model.collisionCentres[collCtrGrp];
+		this._collisionCentres.push(collCtr);
+	}
+}
+
+GameObject.prototype.loadStatus = function() {
+	if (!this._role || !this._role.initialStatus) {
+		game.log(new LoggedEvent('gameobject.prototype.loadStatus', 'called with no _role or _role.initialStatus'));
+		return;
+	}
+	this._status = this._role.initialStatus;
+}
+
 GameObject.prototype.init = function() {
 	this._scale = this._model.scale || 1;
-	this._vertices = this._model.vertices || null;
+	this.loadSprite();
+	this.loadVertices();
+	this.loadCollisionCentres();
 	this._ready = true;
 }
 
-GameObject.prototype.scaleWidth = function(initial) {
+GameObject.prototype.scaleWidth = function(dim) {
 	if (this._model && this._model.scale && this._model.scale.x) {
-		return initial * this.model.scale.x;
+		return dim * this.model.scale.x;
 	}
-	return initial;
+	return dim;
 }
 
-GameObject.prototype.scaleHeight = function(initial) {
+GameObject.prototype.scaleHeight = function(dim) {
 	if (this._model && this._model.scale && this._model.scale.y) {
-		return initial * this.model.scale.y;
+		return dim * this.model.scale.y;
 	}
-	return initial;
+	return dim;
 }
 
-GameObject.prototype.scalePoint = function(initial, dimension) {
+GameObject.prototype.scalePoint = function(dim, dir) {
 	if (this._model && this._model.scale) {
-		if (dimension.toLowerCase() == 'w' || 'width' || 'x') {
-			 return initial * this._model.scale.x;
+		if (dir.toLowerCase() == 'w' || 'width' || 'x') {
+			 return dim * this._model.scale.x;
 		}
-		if (dimension.toLowerCase() == 'h' || 'height' || 'y') {
-			return initial * this._model.scale.y;
+		if (dir.toLowerCase() == 'h' || 'height' || 'y') {
+			return dim * this._model.scale.y;
 		}
 	}
-	return initial;
+	return dim;
 }
 
 GameObject.prototype.updatePosition = function() {

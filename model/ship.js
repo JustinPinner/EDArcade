@@ -4,14 +4,14 @@
 class Ship extends GameObject {
 	constructor(model, isPlayer) {
 		super(GameObjectTypes.SHIP, model);
-		const role = isPlayer ? PilotRoles['PLAYER'] : PilotRoles[Object.keys(PilotRoles)[Math.floor(rand(Object.keys(PilotRoles).length - 1))]];
+		this._isPlayer = isPlayer;
+		this._role = null;
 		this._flightAssist = isPlayer ? false : true;
 		this._heading = isPlayer ? 270 : rand(359);
 		this._thrust = 0;
 		this._direction = this._heading;
-		this._role = role;
-		this._fsm = isPlayer ? null : new FSM(this, this.role.initialState);
-		this._status = role ? this._role.initialStatus : null;
+		this._fsm = null;
+		this._status = null;
 		this._contacts = [];
 		this._attackers = [];
 		this._currentTarget = null;
@@ -20,22 +20,8 @@ class Ship extends GameObject {
 		this._armour = model.armour;
 		this._hullIntegrity = 100;
 		this._hardpoints = [];
-		//this._hardpointGeometry = model.hardpointGeometry;
-		this.randomiseWeaponHardpoints = function(self) {
-			for (const sizeGroup in model.hardpointGeometry[HardpointTypes.WEAPON]) {
-				for (const slot in model.hardpointGeometry[HardpointTypes.WEAPON][sizeGroup]) {
-					const loadSlot = randInt(100) > 32;
-					if (loadSlot) {
-						const i = Number(slot);
-						const sz = Size[sizeGroup].value;
-						const mnt = HardpointMountTypes[Object.keys(HardpointMountTypes)[Math.floor(rand(Object.keys(HardpointMountTypes).length))]];
-						const wpn = WeaponTypes[Object.keys(WeaponTypes)[Math.floor(rand(Object.keys(WeaponTypes).length))]];
-						const hpt = new WeaponHardpoint(self, sz, i, wpn, mnt, sz);
-						self._hardpoints.push(hpt);
-					}
-				}
-			}	    
-		};
+		this._vertices = [];
+		this._sprite = null;
 		this._thrusters = [];
 	}
 	/* Getters */
@@ -155,31 +141,73 @@ class Ship extends GameObject {
 	}
 };
 
+Ship.prototype.loadHardpoints = function() {
+	if (!this._model || !this._model.hardpointGeometry) {
+		game.log(new LoggedEvent('ship.prototype.randomiseWeaponHardpoints', 'called when no _model or _model.hardpointGeometry'));
+		return;
+	}
+	if (this._isPlayer){
+		this._model.loadHardpoints(this);
+		return;
+	}
+	// randomise weapon loadout
+	for (const sizeGroup in this._model.hardpointGeometry[HardpointTypes.WEAPON]) {
+		for (const slot in this._model.hardpointGeometry[HardpointTypes.WEAPON][sizeGroup]) {
+			const loadSlot = randInt(100) > 32;
+			if (loadSlot) {
+				const i = Number(slot);
+				const sz = Size[sizeGroup].value;
+				const mnt = HardpointMountTypes[Object.keys(HardpointMountTypes)[Math.floor(rand(Object.keys(HardpointMountTypes).length))]];
+				const wpn = WeaponTypes[Object.keys(WeaponTypes)[Math.floor(rand(Object.keys(WeaponTypes).length))]];
+				const hpt = new WeaponHardpoint(this, sz, i, wpn, mnt, sz);
+				this._hardpoints.push(hpt);
+			}
+		}
+	}	    
+};
+
+Ship.prototype.loadThrusters = function() {
+	if (!this._model || !this._model.thrusters) {
+		game.log(new LoggedEvent('ship.prototype.loadThrusters', 'called when no _model or _model.thrusters'));
+		return;
+	}
+	this._thrusters = [];
+	for (const thrusterGroup in this._model.thrusters) {
+		for (const thruster in this._model.thrusters[thrusterGroup]) {
+			const thrusterData = {
+				orientation: thrusterGroup,
+				coordinates: new Point2d(
+					this._model.thrusters[thrusterGroup][thruster].x, 
+					this._model.thrusters[thrusterGroup][thruster].y
+				)
+			};
+			this._thrusters.push(new Thruster(this, thrusterData));
+		}		
+	}			
+}
+
+Ship.prototype.loadFiniteStateMachine = function () {
+	if (this._isPlayer) {
+		// no FSM for player!
+		return;
+	}
+	if (!this._isPlayer && (!this._role || !this._role.initialState)) {
+		game.log(new LoggedEvent('ship.prototype.loadFiniteStateMachine', 'called for NPC with no _role or _role.initialState'))
+		return;
+	}
+	this._fsm = new FSM(this, this._role.initialState);
+}
+
 Ship.prototype.init = function() {
 	this._coordinates.centre = new Coordinate3d(
 		x = this._player ? 0 : game.localPlayer.ship.coordinates.centre.x + rand(game.maxSpawnDistanceX, true),
 		y = this._player ? 0 : game.localPlayer.ship.coordinates.centre.y + rand(game.maxSpawnDistanceY, true),	
 		z = 0
 	);
-	if (this._player){
-		this._model.loadHardpoints(this);
-	} else {
-		this.randomiseWeaponHardpoints(this);
-	}
-	if (this._model.thrusters) {
-		for (const thrusterGroup in this._model.thrusters) {
-			for (const thruster in this._model.thrusters[thrusterGroup]) {
-				const thrusterData = {
-					orientation: thrusterGroup,
-					coordinates: new Point2d(
-						this._model.thrusters[thrusterGroup][thruster].x, 
-						this._model.thrusters[thrusterGroup][thruster].y
-					)
-				};
-				this._thrusters.push(new Thruster(this, thrusterData));
-			}		
-		}			
-	}
+	this.loadVertices();
+	this.loadCollisionCentres();
+	this.loadHardpoints();
+	this.loadThrusters();
 	this.reScale();
 	this._coordinates.origin = new Coordinate3d(
 		x = this._coordinates.centre.x - this._width / 2,
@@ -187,6 +215,11 @@ Ship.prototype.init = function() {
 		z = this._coordinates.centre.z
 	);
 	this.rotate();
+	this._role = this._isPlayer ? 
+		PilotRoles['PLAYER'] : 
+		PilotRoles[Object.keys(PilotRoles)[Math.floor(rand(Object.keys(PilotRoles).length - 1))]];
+	this.loadStatus();
+	this.loadFiniteStateMachine();
 	this._ready = true;
 }
 
@@ -220,6 +253,7 @@ Ship.prototype.reScale = function(x,y) {
 	this.height = this.scaleHeight(this._model.height);
 	
 	// scale vertices
+	this._vertices = [];
 	for (let v = 0; v < this._model.vertices.length; v += 1) {
 		const vertex = this._model.vertices[v];
 		const scaled = {
@@ -228,17 +262,19 @@ Ship.prototype.reScale = function(x,y) {
 			x: this.scaleWidth(vertex.x),
 			y: this.scaleHeight(vertex.y)
 		};
-		this.vertices[v] = scaled;
+		this.vertices.push(scaled);
 	}
 
 	// scale collision centres
+	this._collisionCentres = [];
 	for (const collCtrGrp in this._model.collisionCentres) {
 		const collCtr = this._model.collisionCentres[collCtrGrp];
-		collCtr.scaled = {
+		const scaled = {
 			x: this.scaleWidth(collCtr.x),
 			y: this.scaleHeight(collCtr.y),
 			radius: this.scaleWidth(collCtr.radius)
 		};
+		this._collisionCentres.push(scaled);
 	}
 	// scale hardpoints
 	for (let h = 0; h < this._hardpoints.length; h += 1) {
@@ -254,8 +290,8 @@ Ship.prototype.rotate = function(degrees) {
 	// rotate vertices
 	const startTime = new Date().getTime();
 	const centreRef = new Point2d(this._width / 2, this._height / 2);
-	for (let v = 0; v < this.vertices.length; v += 1) {
-		const vertex = this.vertices[v];
+	for (let v = 0; v < this._vertices.length; v += 1) {
+		const vertex = this._vertices[v];
 		const rotated = rotatePoint(
 			centreRef.x,
 			centreRef.y,
@@ -263,29 +299,22 @@ Ship.prototype.rotate = function(degrees) {
 			vertex.y,
 			degrees || this._heading + 90 
 		);
-		this.vertices[v].x = rotated.x;
-		this.vertices[v].y = rotated.y;
+		this._vertices[v].x = rotated.x;
+		this._vertices[v].y = rotated.y;
 	}
 	// rotate collision centres
-	for (const collCtrGrp in this.collisionCentres) {
-		const collCtr = this.collisionCentres[collCtrGrp].rotated ? 
-			this.collisionCentres[collCtrGrp].rotated : 
-				this.collisionCentres[collCtrGrp].scaled ? 
-					this.collisionCentres[collCtrGrp].scaled :
-						this.collisionCentres[collCtrGrp];
-		const r = rotatePoint(
+	for (let c = 0; c < this._collisionCentres.length; c += 1) {
+		const centre = this._collisionCentres[c];
+		const rotated = rotatePoint(
 			centreRef.x,
 			centreRef.y,
-			collCtr.x,
-			collCtr.y,
+			centre.x,
+			centre.y,
 			degrees || this._heading + 90
 		);
-		this.collisionCentres[collCtrGrp].rotated = {
-			x: r.x,
-			y: r.y,
-			radius: collCtr.radius
-		}
-	};
+		this._collisionCentres[c].x = rotated.x;
+		this._collisionCentres[c].y = rotated.y;
+	}
 	const endTime = new Date().getTime();
 	game.log(new LoggedEvent('ship.prototype.rotate', `duration: ${endTime - startTime}ms`));
 }
@@ -693,7 +722,7 @@ Ship.prototype.draw = function(debug) {
 		return;
 	}
 	game.viewport.context.save();
-	if (this.vertices) {
+	if (this._vertices && this._vertices.length > 0) {
 		this.drawWithVertices();
 	} else {
 		game.viewport.context.translate(
@@ -721,15 +750,15 @@ Ship.prototype.drawWithVertices = function() {
 	game.viewport.context.moveTo(drawOrigin.x, drawOrigin.y);
 	game.viewport.context.beginPath();
 	game.viewport.context.strokeStyle = "white";
-	for (v0 = 0; v0 < this.vertices.length; v0++) {
-		const connects = this.vertices[v0].connectsTo;
-		const vertex = this.vertices[v0];
+	for (v0 = 0; v0 < this._vertices.length; v0++) {
+		const connects = this._vertices[v0].connectsTo;
+		const vertex = this._vertices[v0];
 		game.viewport.context.moveTo(
 			drawOrigin.x + vertex.x, //(vertex.x - this.width / 2), 
 			drawOrigin.y + vertex.y //(vertex.y - this.height / 2)
 		);
 		for (v1 = 0; v1 < connects.length; v1 += 1) {
-			const dest = this.vertices[connects[v1]];
+			const dest = this._vertices[connects[v1]];
 			game.viewport.context.lineTo(
 				drawOrigin.x + dest.x, //(dest.x - this.width / 2), 
 				drawOrigin.y + dest.y //(dest.y - this.height / 2)
@@ -847,25 +876,21 @@ Ship.prototype.drawDebug = function() {
 	game.viewport.context.strokeStyle = "red";
 	game.viewport.context.stroke();
 	// collision centres
-	for (const collCtrGrp in this.collisionCentres) {
-		if (this.collisionCentres[collCtrGrp].rotated) {
-			const collCtr = this.collisionCentres[collCtrGrp].rotated;
-			game.viewport.context.beginPath();
-			game.viewport.context.arc(
-				drawOrigin.x + collCtr.x, 
-				drawOrigin.y + collCtr.y, 
-				collCtr.radius, 
-				0, 
-				2 * Math.PI, 
-				false);
-			game.viewport.context.lineWidth = 1;
-			game.viewport.context.strokeStyle = "yellow";
-			game.viewport.context.stroke();
-		}
-		// const collCtr = this.collisionCentres[collCtrGrp].scaled ? 
-		// 	this.collisionCentres[collCtrGrp].scaled :
-		// 	this.collisionCentres[collCtrGrp];
+	for (let ctr = 0; ctr < this._collisionCentres.length; ctr += 1) {
+		const collCtr = this._collisionCentres[ctr];
+		game.viewport.context.beginPath();
+		game.viewport.context.arc(
+			drawOrigin.x + collCtr.x, 
+			drawOrigin.y + collCtr.y, 
+			collCtr.radius, 
+			0, 
+			2 * Math.PI, 
+			false);
+		game.viewport.context.lineWidth = 1;
+		game.viewport.context.strokeStyle = "yellow";
+		game.viewport.context.stroke();
 	}
+
 	// // thrusters
 	// for (let t = 0; t < this._thrusters.length; t += 1) {
 	// 	this._thrusters[t].draw();
@@ -874,19 +899,15 @@ Ship.prototype.drawDebug = function() {
 	// for (let i = 0; i < this._hardpoints.length; i++) {
 	// 	this._hardpoints[i].draw();
 	// }
+
 	// bounding box
 	game.viewport.context.beginPath();
-	// const o = origin.clone();
-	// o.rotate(centre, this._heading);
-	//const x0y0 = rotatePoint(centre.x, centre.y, origin.x, origin.y, this._heading + 90);
 	const pointsToRotate = [];
 	pointsToRotate.push(new Point2d(game.viewport.drawOrigin(this).x + this._width, game.viewport.drawOrigin(this).y));
 	pointsToRotate.push(new Point2d(game.viewport.drawOrigin(this).x + this._width, game.viewport.drawOrigin(this).y + this._height));
 	pointsToRotate.push(new Point2d(game.viewport.drawOrigin(this).x, game.viewport.drawOrigin(this).y + this._height));
 	pointsToRotate.push(new Point2d(game.viewport.drawOrigin(this).x, game.viewport.drawOrigin(this).y));
-
 	game.viewport.context.moveTo(drawOrigin.x, drawOrigin.y);
-
 	for (p in pointsToRotate) {
 		const point = pointsToRotate[p];
 		const r = rotatePoint(drawCentre.x, drawCentre.y, point.x, point.y, this._heading + 90);
