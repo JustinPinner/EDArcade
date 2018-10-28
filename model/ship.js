@@ -247,11 +247,13 @@ Ship.prototype.reScale = function(x,y) {
 	if (!this._model.scale) {
 		return;
 	}
+	const startCentre = new Point2d(this._coordinates.centre.x, this._coordinates.centre.y);
+	const startWidth = this._width;
+	const startHeight = this._height;
 	this._model.scale.x = x || this._model.scale.x || 1;
 	this._model.scale.y = y || this._model.scale.y || 1;
-	this.width = this.scaleWidth(this._model.width);
-	this.height = this.scaleHeight(this._model.height);
-	
+	this._width = this.scaleWidth(this._model.width);
+	this._height = this.scaleHeight(this._model.height);	
 	// scale vertices
 	this._vertices = [];
 	for (let v = 0; v < this._model.vertices.length; v += 1) {
@@ -264,7 +266,6 @@ Ship.prototype.reScale = function(x,y) {
 		};
 		this.vertices.push(scaled);
 	}
-
 	// scale collision centres
 	this._collisionCentres = [];
 	for (const collCtrGrp in this._model.collisionCentres) {
@@ -284,6 +285,11 @@ Ship.prototype.reScale = function(x,y) {
 	for (let t = 0; t < this._thrusters.length; t += 1) {
 		this._thrusters[t].reScale();
 	}
+	// reset origin
+	this._coordinates.origin = new Point3d(
+		this._coordinates.centre.x - this._width / 2,
+		this._coordinates.centre.y - this._height / 2
+	);
 } 
 
 Ship.prototype.rotate = function(degrees) {
