@@ -290,32 +290,32 @@ Ship.prototype.reScale = function(x,y) {
 		this._coordinates.centre.x - this._width / 2,
 		this._coordinates.centre.y - this._height / 2
 	);
+	this.rotate();
 } 
 
 Ship.prototype.rotate = function(degrees) {
 	// rotate vertices
 	const startTime = new Date().getTime();
 	const centreRef = new Point2d(this._width / 2, this._height / 2);
-	for (let v = 0; v < this._vertices.length; v += 1) {
-		const vertex = this._vertices[v];
+	for (v in this._vertices) {
+		//const vertex = this._vertices[v];
 		const rotated = rotatePoint(
 			centreRef.x,
 			centreRef.y,
-			vertex.x,
-			vertex.y,
+			this._vertices[v].x,
+			this._vertices[v].y,
 			degrees || this._heading + 90 
 		);
 		this._vertices[v].x = rotated.x;
 		this._vertices[v].y = rotated.y;
-	}
-	// rotate collision centres
-	for (let c = 0; c < this._collisionCentres.length; c += 1) {
-		const centre = this._collisionCentres[c];
+	}	
+	for (c in this._collisionCentres) {
+		//const ctr = this._collisionCentres[c];
 		const rotated = rotatePoint(
 			centreRef.x,
 			centreRef.y,
-			centre.x,
-			centre.y,
+			this._collisionCentres[c].x,
+			this._collisionCentres[c].y,
 			degrees || this._heading + 90
 		);
 		this._collisionCentres[c].x = rotated.x;
