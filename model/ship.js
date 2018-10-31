@@ -209,11 +209,6 @@ Ship.prototype.init = function() {
 	this.loadHardpoints();
 	this.loadThrusters();
 	this.reScale();
-	this._coordinates.origin = new Coordinate3d(
-		x = this._coordinates.centre.x - this._width / 2,
-		y = this._coordinates.centre.y - this._height / 2,
-		z = this._coordinates.centre.z
-	);
 	this.rotate();
 	this._role = this._isPlayer ? 
 		PilotRoles['PLAYER'] : 
@@ -231,6 +226,7 @@ Ship.prototype.ascend = function() {
 	this._model.scale.y *= 1.5;
 	this._coordinates.z += 1;
 	this.reScale();
+	this.rotate();
 }
 
 Ship.prototype.descend = function() {
@@ -241,6 +237,7 @@ Ship.prototype.descend = function() {
 	this._model.scale.y = this._model.scale.y / 1.5;
 	this._coordinates.z -= 1;
 	this.reScale();
+	this.rotate();
 }
 
 Ship.prototype.reScale = function(x,y) {
@@ -288,9 +285,9 @@ Ship.prototype.reScale = function(x,y) {
 	// reset origin
 	this._coordinates.origin = new Point3d(
 		this._coordinates.centre.x - this._width / 2,
-		this._coordinates.centre.y - this._height / 2
+		this._coordinates.centre.y - this._height / 2,
+		this._coordinates.centre.z
 	);
-	this.rotate();
 } 
 
 Ship.prototype.rotate = function(degrees) {
@@ -298,7 +295,6 @@ Ship.prototype.rotate = function(degrees) {
 	const startTime = new Date().getTime();
 	const centreRef = new Point2d(this._width / 2, this._height / 2);
 	for (v in this._vertices) {
-		//const vertex = this._vertices[v];
 		const rotated = rotatePoint(
 			centreRef.x,
 			centreRef.y,
@@ -310,7 +306,6 @@ Ship.prototype.rotate = function(degrees) {
 		this._vertices[v].y = rotated.y;
 	}	
 	for (c in this._collisionCentres) {
-		//const ctr = this._collisionCentres[c];
 		const rotated = rotatePoint(
 			centreRef.x,
 			centreRef.y,
@@ -834,13 +829,14 @@ Ship.prototype.drawDebug = function() {
 		return;
 	}
 	const drawCentre = game.viewport.drawCentre(this);
-	const drawOrigin = rotatePoint(drawCentre.x, drawCentre.y, game.viewport.drawOrigin(this).x, game.viewport.drawOrigin(this).y, this._heading + 90);
+	const drawOrigin = game.viewport.drawOrigin(this);
+	const drawOriginRotated = rotatePoint(drawCentre.x, drawCentre.y, game.viewport.drawOrigin(this).x, game.viewport.drawOrigin(this).y, this._heading + 90);
 	game.viewport.context.save();	
 	// origin mark
-	game.viewport.context.moveTo(drawOrigin.x, drawOrigin.y);
+	game.viewport.context.moveTo(drawOriginRotated.x, drawOriginRotated.y);
 	game.viewport.context.beginPath();
 	game.viewport.context.strokeStyle = "white";
-	game.viewport.context.arc(drawOrigin.x, drawOrigin.y, 2, 0, Math.PI * 2, false);
+	game.viewport.context.arc(drawOriginRotated.x, drawOriginRotated.y, 2, 0, Math.PI * 2, false);
 	game.viewport.context.stroke();		
 	// centre mark
 	game.viewport.context.moveTo(drawCentre.x, drawCentre.y);

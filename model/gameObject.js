@@ -74,9 +74,7 @@ class GameObject {
 		return this._mass || 0;
 	}
 	get collisionCentres() {
-		if (this._model && this._model.collisionCentres) {
-			return this._model.collisionCentres;
-		}
+		return this._collisionCentres;
 	}
 	get colour() {
 		return this._colour;
@@ -209,11 +207,11 @@ GameObject.prototype.collide = function(otherGameObject) {
 		return;
 	}
 	// iterate over each object's collision radii
-	for (let myCentre = 0; myCentre < this.collisionCentres.length; myCentre++) {
+	for (myCentre in this.collisionCentres) {
 		myCollisionCentre = this.collisionCentres[myCentre].scaled ? 
 			this.collisionCentres[myCentre].scaled : 
 			this.collisionCentres[myCentre];
-		for (let theirCentre = 0; theirCentre < otherGameObject.collisionCentres.length; theirCentre++) {
+		for (theirCentre in otherGameObject.collisionCentres) {			
 			const theirCollisionCentre = otherGameObject.collisionCentres[theirCentre].scaled ?
 				otherGameObject.collisionCentres[theirCentre].scaled : 
 				otherGameObject.collisionCentres[theirCentre];
@@ -300,6 +298,10 @@ GameObject.prototype.collisionDetect = function(x, y) {
 		if (obj instanceof ParticleEffect || self instanceof ParticleEffect) {
 			return false;
 		}
+		// cannot collide if at different altitudes
+		if (self.coordinates.centre.z !== obj.coordinates.centre.z) {
+			return;
+		}
 		// draw a circle to enclose the whole object
 		const selfCirc = {
 			x: self.coordinates.centre.x,
@@ -320,7 +322,7 @@ GameObject.prototype.collisionDetect = function(x, y) {
 	if (candidates.length > 0) {
 		for (var c = 0; c < candidates.length; c++) {
 			self.collide(candidates[c]);
-		}
+		}		
 	}
 }
 
