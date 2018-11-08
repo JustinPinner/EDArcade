@@ -147,9 +147,11 @@ GameObject.prototype.loadVertices = function() {
 
 GameObject.prototype.loadCollisionCentres = function() {
 	this._collisionCentres = [];
-	for (const collCtrGrp in this._model.collisionCentres) {
-		const collCtr = this._model.collisionCentres[collCtrGrp];
-		this._collisionCentres.push(collCtr);
+	if (this._model && this._model.collisionCentres) {
+		for (const collCtrGrp in this._model.collisionCentres) {
+			const collCtr = this._model.collisionCentres[collCtrGrp];
+			this._collisionCentres.push(collCtr);
+		}
 	}
 }
 
@@ -162,7 +164,7 @@ GameObject.prototype.loadStatus = function() {
 }
 
 GameObject.prototype.init = function() {
-	this._scale = this._model.scale || 1;
+	this._scale = (this._model && this._model.scale) || 1;
 	this.loadSprite();
 	this.loadVertices();
 	this.loadCollisionCentres();
@@ -330,7 +332,7 @@ GameObject.prototype.collisionDetect = function(x, y) {
 GameObject.prototype.takeHit = function(source) {};
 
 GameObject.prototype.isOnScreen = function() {
-	return game.viewport.focussedObject === this || game.viewport.containsObject(this);
+	return game.viewport.focussedObject === this || game.viewport.isVisible(this);
 };
 
 GameObject.prototype.draw = function() {

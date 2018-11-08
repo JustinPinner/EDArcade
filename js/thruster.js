@@ -9,14 +9,14 @@ const DEFAULTTHRUSTPARTICLE = {
         if (
             (this._ttl && this._ttl <= 0) || 
             (this._rgba.alpha && this._rgba.alpha <= 0) || 
-            (this._model.width < 1 || this.model.height < 1)
+            (this._width < 1 || this._height < 1)
         ) {
             this._disposable = true;
             return;
         }
-        const newWidth = particle._model.width * (particle._ttl / particle._lifeSpan);
-        particle._model.width = newWidth;
-        particle._model.height = newWidth;
+        const newWidth = particle._width * (particle._ttl / particle._lifeSpan);
+        particle._width = newWidth;
+        particle._height = newWidth;
     }
 };
 
@@ -28,35 +28,20 @@ const ORIENTATION = {
 
 
 class Thruster extends ParticleEmitter {
-    constructor(host, thrusterData, particleData) {
+    constructor(host, thrusterModel, particleData) {
         super(host, particleData || DEFAULTTHRUSTPARTICLE);
         this._host = host;
-        this._orientation = thrusterData.orientation;
-        this._model = thrusterData.coordinates;
-        this._coordinates = {
-            model: new Point2d(this._model.x, this._model.y)
-        };
+        this._orientation = thrusterModel.orientation;
+        this._model = thrusterModel.coordinates;
+        this._coordinates = new Point2d(this._model.x, this._model.y)
     }
 
     get coordinates() {
-        // return {
-        //     model: this._coordinates.model,
-        //     environment: {
-        //         x: this._host.coordinates.x + this._coordinates.model.x,
-        //         y: this._host.coordinates.y + this._coordinates.model.y,
-        //     },
-        //     screen: rotatePoint(
-        //         this._host.drawOriginCentre.x,
-        //         this._host.drawOriginCentre.y,
-        //         this._host.drawOrigin.x + this._coordinates.model.x,
-        //         this._host.drawOrigin.y + this._coordinates.model.y,
-        //         this._host.heading + 90
-        //     )
-        // };
-        return {
-            x: this._host.coordinates.origin.x + this._model.x,
-            y: this._host.coordinates.origin.y + this._model.y
-        }
+        return this._coordinates;
+    }
+
+    set coordinates(point2d) {
+        this._coordinates = point2d
     }
 
     get orientation() {
@@ -65,8 +50,8 @@ class Thruster extends ParticleEmitter {
 }
 
 Thruster.prototype.reScale = function() {
-    this._coordinates.model.x = this._host.scaleWidth(this._model.x);
-    this._coordinates.model.y = this._host.scaleHeight(this._model.y);
+    this._coordinates.x = this._host.scaleWidth(this._model.x);
+    this._coordinates.y = this._host.scaleHeight(this._model.y);
 }
 
 Thruster.prototype.thrust = function() {
@@ -76,8 +61,8 @@ Thruster.prototype.thrust = function() {
     const primaryParticle = DEFAULTTHRUSTPARTICLE;
     primaryParticle.radius = radius * 1.25;
     primaryParticle.emitPoint = {
-        x: this._host.coordinates.origin.x + this._coordinates.model.x,
-        y: this._host.coordinates.origin.y + this._coordinates.model.y
+        x: this._host.coordinates.origin.x + this._coordinates.x,
+        y: this._host.coordinates.origin.y + this._coordinates.y
     };
     primaryParticle.emitAngle = angle;
     primaryParticle.emitSpeed = 1;
@@ -90,17 +75,8 @@ Thruster.prototype.thrust = function() {
     secondaryParticle.radius = radius;
     secondaryParticle.emitSpeed = 3;
     secondaryParticle.emitPoint = {
-        x: this._host.coordinates.origin.x + this._coordinates.model.x,
-        y: this._host.coordinates.origin.y + this._coordinates.model.y
+        x: this._host.coordinates.origin.x + this._coordinates.x,
+        y: this._host.coordinates.origin.y + this._coordinates.y
     };
     this.__proto__.emit(secondaryParticle);
-}
-
-Thruster.prototype.draw = function() {
-    const r = this.coordinates.screen;
-    game.viewport.context.moveTo(r.x, r.y);
-	game.viewport.context.beginPath();
-	game.viewport.context.strokeStyle = 'white';
-	game.viewport.context.arc(r.x, r.y, 2, 0, Math.PI * 2, false);
-    game.viewport.context.stroke();
 }

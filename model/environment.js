@@ -104,10 +104,11 @@ Viewport.prototype.drawOrigin = function(forObject) {
 	if (!forObject || !this.coordinates) {
 		return new Coordinate3d(0,0,0);
 	}
+	const objOrigin = (forObject.coordinates && forObject.coordinates.origin) || forObject.coordinates;
 	return new Coordinate3d(
-		x = forObject.coordinates.origin.x + -this.coordinates.x,
-		y = forObject.coordinates.origin.y + -this.coordinates.y,
-		z = forObject.coordinates.z
+		x = objOrigin.x + -this.coordinates.x,
+		y = objOrigin.y + -this.coordinates.y,
+		z = objOrigin.z || 0
 	);
 };
 
@@ -115,9 +116,21 @@ Viewport.prototype.drawCentre = function(forObject) {
 	if (!forObject || !this.coordinates) {
 		return new Coordinate3d(0,0,0);
 	}
+	const objCentre = (forObject.coordinates && forObject.coordinates.centre) || forObject.coordinates;
 	return new Coordinate3d(
-		x = forObject.coordinates.centre.x + -this.coordinates.x,
-		y = forObject.coordinates.centre.y + -this.coordinates.y,
-		z = forObject.coordinates.z
+		x = objCentre.x + -this.coordinates.x,
+		y = objCentre.y + -this.coordinates.y,
+		z = objCentre.z || 0
 	);	
-};	
+};
+
+Viewport.prototype.isVisible = function(gameObject) {
+	const _x = (gameObject.coordinates && gameObject.coordinates.origin && gameObject.coordinates.origin.x) || gameObject.coordinates.x;
+	const _y = (gameObject.coordinates && gameObject.coordinates.origin && gameObject.coordinates.origin.y) || gameObject.coordinates.y;
+	return(
+		_x >= this.coordinates.x &&
+		_y >= this.coordinates.y &&
+		_x <= this.coordinates.x + this.width &&
+		_y <= this.coordinates.y + this.height
+	);
+}

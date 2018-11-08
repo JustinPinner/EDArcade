@@ -34,7 +34,7 @@ function dir_y(length, angle) {
 
 function rotatePoint(cx, cy, px, py, degrees)
 {
-  const deg = (degrees > 359) ? (degrees - 359) : degrees;
+  const deg = (degrees > 359) ? (degrees - 359) : degrees || 0;
   const angle = degreesToRadians(deg);
   const s = Math.sin(angle);
   const c = Math.cos(angle);

@@ -174,14 +174,14 @@ Ship.prototype.loadThrusters = function() {
 	this._thrusters = [];
 	for (const thrusterGroup in this._model.thrusters) {
 		for (const thruster in this._model.thrusters[thrusterGroup]) {
-			const thrusterData = {
+			const thrusterModel = {
 				orientation: thrusterGroup,
 				coordinates: new Point2d(
 					this._model.thrusters[thrusterGroup][thruster].x, 
 					this._model.thrusters[thrusterGroup][thruster].y
 				)
 			};
-			this._thrusters.push(new Thruster(this, thrusterData));
+			this._thrusters.push(new Thruster(this, thrusterModel));
 		}		
 	}			
 }
@@ -291,9 +291,20 @@ Ship.prototype.reScale = function(x,y) {
 } 
 
 Ship.prototype.rotate = function(degrees) {
-	// rotate vertices
 	const startTime = new Date().getTime();
 	const centreRef = new Point2d(this._width / 2, this._height / 2);
+	// const originRef = new Point2d(this._coordinates.origin.x, this._coordinates.origin.y);
+	// // rotate origin
+	// const newOrigin = rotatePoint(
+	// 	centreRef.x,
+	// 	centreRef.y,
+	// 	originRef.x,
+	// 	originRef.y,
+	// 	degrees
+	// );
+	// this._coordinates.origin.x = newOrigin.x;
+	// this._coordinates.origin.y = newOrigin.y;	
+	// rotate vertices
 	for (v in this._vertices) {
 		const rotated = rotatePoint(
 			centreRef.x,
@@ -315,6 +326,17 @@ Ship.prototype.rotate = function(degrees) {
 		);
 		this._collisionCentres[c].x = rotated.x;
 		this._collisionCentres[c].y = rotated.y;
+	}
+	for (let t = 0; t < this._thrusters.length; t += 1) {
+		const rotated = rotatePoint(
+			centreRef.x,
+			centreRef.y,
+			this._thrusters[t].coordinates.x,
+			this._thrusters[t].coordinates.y,
+			degrees || this._heading + 90
+		);
+		this._thrusters[t].coordinates.x = rotated.x;
+		this._thrusters[t].coordinates.y = rotated.y;
 	}
 	const endTime = new Date().getTime();
 	game.log(new LoggedEvent('ship.prototype.rotate', `duration: ${endTime - startTime}ms`));
@@ -498,9 +520,6 @@ Ship.prototype.updatePosition = function() {
 		if (game.midground.scrollData.velocity.x !== 0 || game.midground.scrollData.velocity.y !== 0) {
 			game.midground.scroll();
 		}
-		// if (game.viewport.focussedObject !== this) {
-		// 	game.viewport.focus(this);
-		// }
 	}
 };
 
@@ -895,11 +914,25 @@ Ship.prototype.drawDebug = function() {
 		game.viewport.context.strokeStyle = "yellow";
 		game.viewport.context.stroke();
 	}
-
-	// // thrusters
-	// for (let t = 0; t < this._thrusters.length; t += 1) {
-	// 	this._thrusters[t].draw();
-	// }
+	// thrusters
+	for (let t = 0; t < this._thrusters.length; t += 1) {
+		const thruster = this._thrusters[t];
+		game.viewport.context.moveTo(
+			drawOrigin.x + thruster.coordinates.x, 
+			drawOrigin.y + thruster.coordinates.y
+		);
+		game.viewport.context.beginPath();
+		game.viewport.context.strokeStyle = "blue";
+		game.viewport.context.arc(
+			drawOrigin.x + thruster.coordinates.x, 
+			drawOrigin.y + thruster.coordinates.y, 
+			2, 
+			0, 
+			Math.PI * 2, 
+			false
+		);
+		game.viewport.context.stroke();
+	}
 	// // hardpoints
 	// for (let i = 0; i < this._hardpoints.length; i++) {
 	// 	this._hardpoints[i].draw();
@@ -912,7 +945,7 @@ Ship.prototype.drawDebug = function() {
 	pointsToRotate.push(new Point2d(game.viewport.drawOrigin(this).x + this._width, game.viewport.drawOrigin(this).y + this._height));
 	pointsToRotate.push(new Point2d(game.viewport.drawOrigin(this).x, game.viewport.drawOrigin(this).y + this._height));
 	pointsToRotate.push(new Point2d(game.viewport.drawOrigin(this).x, game.viewport.drawOrigin(this).y));
-	game.viewport.context.moveTo(drawOrigin.x, drawOrigin.y);
+	game.viewport.context.moveTo(drawOriginRotated.x, drawOriginRotated.y);
 	for (p in pointsToRotate) {
 		const point = pointsToRotate[p];
 		const r = rotatePoint(drawCentre.x, drawCentre.y, point.x, point.y, this._heading + 90);

@@ -3,10 +3,8 @@
 class Particle extends GameObject {
     constructor(rgba, radius, coordinates, speed, heading, ttl, onUpdated, fadeIn, fadeOut) {
         super(GameObjectTypes.PARTICLE);
-        this._model = {
-            height: radius, 
-            width: radius
-        };
+        this._width = radius;
+        this._height = radius; 
         this._rgba = rgba || {red: 255, green: 255, blue: 255, alpha: 1.0}
         this._coordinates = coordinates;
         this._speed = speed;
@@ -27,12 +25,8 @@ class Particle extends GameObject {
 		return this._lastTtlTick;
     }
 	get drawOriginCentre() {
-		return {
-			x: this._coordinates.x,
-			y: this._coordinates.y
-		};
-	}
-    
+        return game.viewport.drawCentre(this);
+    }    
 	set TTL(timeToLive) {
         this._ttl = timeToLive;
 	}
