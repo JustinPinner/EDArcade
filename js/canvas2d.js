@@ -81,6 +81,7 @@ Canvas2D.prototype.draw = function() {
 
 Canvas2D.prototype.focus = function(gameObject) {
 	if (!gameObject) return;
+	if (this._anchor === gameObject) return;
 	this._anchor = gameObject;
 	this._coordinates.x = gameObject.coordinates.centre.x - (this._width / 2);
 	this._coordinates.y = gameObject.coordinates.centre.y - (this._height / 2);
@@ -121,9 +122,6 @@ Canvas2D.prototype.contains = function(x, y, width, height, heading) {
 			p2.x <= this._coordinates.x + this.width &&
 			p2.y <= this._coordinates.y + this.height;
 
-// 	if(!isContained) {
-//		debugger;
-// 	}
 	return isContained;
 };
 

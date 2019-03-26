@@ -338,6 +338,18 @@ Ship.prototype.rotate = function(degrees) {
 		this._thrusters[t].coordinates.x = rotated.x;
 		this._thrusters[t].coordinates.y = rotated.y;
 	}
+	for (let h = 0; h < this._hardpoints.length; h += 1) {
+		const rotated = rotatePoint(
+			centreRef.x,
+			centreRef.y,
+			this._hardpoints[h].coordinates.x,
+			this._hardpoints[h].coordinates.y,
+			degrees || this._heading + 90
+		);
+		this._hardpoints[h].coordinates.x = rotated.x;
+		this._hardpoints[h].coordinates.y = rotated.y;
+	}
+
 	const endTime = new Date().getTime();
 	game.log(new LoggedEvent('ship.prototype.rotate', `duration: ${endTime - startTime}ms`));
 }
@@ -933,11 +945,25 @@ Ship.prototype.drawDebug = function() {
 		);
 		game.viewport.context.stroke();
 	}
-	// // hardpoints
-	// for (let i = 0; i < this._hardpoints.length; i++) {
-	// 	this._hardpoints[i].draw();
-	// }
-
+	// hardpoints
+	for (let h = 0; h < this._hardpoints.length; h += 1) {
+		const hardpoint = this._hardpoints[h];
+		game.viewport.context.moveTo(
+			drawOrigin.x + hardpoint.coordinates.x, 
+			drawOrigin.y + hardpoint.coordinates.y
+		);
+		game.viewport.context.beginPath();
+		game.viewport.context.strokeStyle = "green";
+		game.viewport.context.arc(
+			drawOrigin.x + hardpoint.coordinates.x, 
+			drawOrigin.y + hardpoint.coordinates.y, 
+			2, 
+			0, 
+			Math.PI * 2, 
+			false
+		);
+		game.viewport.context.stroke();
+	}
 	// bounding box
 	game.viewport.context.beginPath();
 	const pointsToRotate = [];

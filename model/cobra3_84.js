@@ -14,8 +14,8 @@ const Cobra3_84 = {
     hardpointGeometry: {
         WEAPON: {
             SMALL: {
-                1: {x: 157, y: 33, z: -1},
-                2: {x: 157, y: 160, z: -1}					
+                1: {x: 39, y: 103, z: -1},
+                2: {x: 266, y: 103, z: -1}					
             }
         }
     },

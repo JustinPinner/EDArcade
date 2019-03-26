@@ -13,7 +13,7 @@ const systemGeometry = {
 class ScrollData {
 	constructor(anchorObject, vx, vy) {
 		this._anchor = anchorObject;
-		this._velocity = new Point2d(this._anchor && this._anchor.velocity.x || 0, this._anchor && this._anchor.velocity.y || 0);
+		this._velocity = new Point2d(this._anchor && (this._anchor.velocity.x || vx || 0), this._anchor && (this._anchor.velocity.y || vy || 0));
 	}
 
 	get anchor() {

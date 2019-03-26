@@ -17,10 +17,8 @@ class Hardpoint {
 		this._index = index;
 		this._model = this._parent.model.hardpointGeometry[this._type][this._sizeName][this._index];
 		this._coordinates = {
-			relative: {
-				x: this._model.x,
-				y: this._model.y
-			}
+			x: this._model.x,
+			y: this._model.y
 		};
 	}
 	/* Getters */
@@ -38,18 +36,33 @@ class Hardpoint {
 	}
 	get coordinates() {
 		return {
-			x: this._parent.coordinates.x + this._coordinates.scaled.x || 0, 
-			y: this._parent.coordinates.y + this._coordinates.scaled.y || 0, 
-			z: this._model.z
+			x: this._coordinates.x || 0, 
+			y: this._coordinates.y || 0, 
+			z: this._model.z,
+			centre: {
+				x: this._coordinates.x || 0, 
+				y: this._coordinates.y || 0, 
+				z: this._model.z
+			}
 		};
+		// return {
+		// 	x: this._parent.coordinates.origin.x + this._coordinates.x || 0, 
+		// 	y: this._parent.coordinates.origin.y + this._coordinates.y || 0, 
+		// 	z: this._model.z,
+		// 	centre: {
+		// 		x: this._parent.coordinates.origin.x + this._coordinates.x || 0, 
+		// 		y: this._parent.coordinates.origin.y + this._coordinates.y || 0, 
+		// 		z: this._model.z
+		// 	}
+		// };
 	}
-	get coordinatesWithRotation() {
-		return rotatePoint(this._parent.centre.x, 
-			this._parent.centre.y, 
-			this.coordinates.x, 
-			this.coordinates.y, 
-			this._parent.heading + 90); 
-	}
+	// get coordinatesWithRotation() {
+	// 	return rotatePoint(this._parent.centre.x, 
+	// 		this._parent.centre.y, 
+	// 		this.coordinates.x, 
+	// 		this.coordinates.y, 
+	// 		this._parent.heading + 90); 
+	// }
 	get parent() {
 		return this._parent;
 	}
@@ -59,27 +72,25 @@ class Hardpoint {
 }
 
 Hardpoint.prototype.reScale = function() {
-	this._coordinates.scaled = {
+	this._coordinates = {
 		x: this._parent.scaleWidth(this._model.x),
 		y: this._parent.scaleHeight(this._model.y)
 	};
-	// this._coordinates.relative.x = this._parent.scaleWidth(this._model.x);
-	// this._coordinates.relative.y = this._parent.scaleHeight(this._model.y);
 }
 
-Hardpoint.prototype.draw = function() {
-	const r = rotatePoint(this._parent.drawOriginCentre.x, 
-		this._parent.drawOriginCentre.y, 
-		this._parent.drawOrigin.x + this._coordinates.scaled.x, 
-		this._parent.drawOrigin.y + this._coordinates.scaled.y, 
-		this._parent.heading + 90); 
+// Hardpoint.prototype.draw = function() {
+// 	const r = rotatePoint(this._parent.drawOriginCentre.x, 
+// 		this._parent.drawOriginCentre.y, 
+// 		this._parent.drawOrigin.x + this._coordinates.scaled.x, 
+// 		this._parent.drawOrigin.y + this._coordinates.scaled.y, 
+// 		this._parent.heading + 90); 
 
-	game.viewport.context.moveTo(r.x, r.y);
-	game.viewport.context.beginPath();
-	game.viewport.context.strokeStyle = (this.coordinates.z == 1 ? 'yellow' : 'orange');
-	game.viewport.context.arc(r.x, r.y, 2, 0, Math.PI * 2, false);
-	game.viewport.context.stroke();
-}
+// 	game.viewport.context.moveTo(r.x, r.y);
+// 	game.viewport.context.beginPath();
+// 	game.viewport.context.strokeStyle = (this.coordinates.z == 1 ? 'yellow' : 'orange');
+// 	game.viewport.context.arc(r.x, r.y, 2, 0, Math.PI * 2, false);
+// 	game.viewport.context.stroke();
+// }
 
 Hardpoint.prototype.loaded = function() {
 	return this._loaded;

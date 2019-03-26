@@ -137,7 +137,7 @@ class LaserBeam extends Munition {
 		this._colour = LaserBeams[type][size].colour;
 		this._strength = LaserBeams[type][size].strength;
 		this._hardpoint = hardpoint;
-		this._coordinates = hardpoint.coordinatesWithRotation;
+		this._coordinates = hardpoint.coordinates;
 		this._heading = (hardpoint.parent.currentTarget && hardpoint.weapon.mount == HardpointMountTypes.TURRET) ? angleBetween(hardpoint.parent.centre.x, hardpoint.parent.centre.y, hardpoint.parent.currentTarget.echo.centre.x, hardpoint.parent.currentTarget.echo.centre.y) + 180 - 360 : hardpoint.parent.heading;
 		this._velocity = new Vector2d(0, 0);
 	}
