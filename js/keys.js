@@ -135,9 +135,9 @@ KeyHandler.prototype.deQueue = function(key) {
 }
 
 KeyHandler.prototype.handleKeyDown = function(e) {
-  e.preventDefault();
+  e && e.preventDefault && e.preventDefault()
   this._enabled = true;
-  const pressed = e.code.toUpperCase();
+  const pressed = e && e.code && e.code.toUpperCase();
   // if (this.queued(pressed)) {
   //   debugger;
   //   return;
@@ -202,8 +202,8 @@ KeyHandler.prototype.handleKeyDown = function(e) {
 }
 
 KeyHandler.prototype.handleKeyUp = function(e) {
-  e.preventDefault();
-  const pressed = e.code.toUpperCase();
+  e && e.preventDefault && e.preventDefault()
+  const pressed = e && e.code && e.code.toUpperCase();
   switch (pressed) {
     case this._keys.ARROWUP:
     case this._keys.W:
