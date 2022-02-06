@@ -4,7 +4,7 @@ rm -rf dist
 mkdir -p dist/js
 
 echo 'js...'
-# until uglifyjs works with all sources
+# combine all source js files into a single game.js file
 cat js/gamepad.js > dist/js/game.js
 cat js/keys.js >> dist/js/game.js
 cat js/lib.js >> dist/js/game.js
@@ -34,13 +34,17 @@ cat model/ship.js >> dist/js/game.js
 cat model/player.js >> dist/js/game.js
 cat js/game.js >> dist/js/game.js
 
-babili dist/js/game.js -o dist/js/game.min.js
+# relies on npm install --save-dev babel-minify (see package.json)
+# squeeze out unnecessary bytes so the browser doesn't have to load them
+minify dist/js/game.js > dist/js/game.min.js
 
 rm dist/js/game.js
 
 echo 'css...'
 mkdir -p dist/css
 cp css/* dist/css
+
+minify dist/css/game.css > dist/css/game.min.css
 
 echo 'html...'
 mkdir -p dist/play
