@@ -28,6 +28,10 @@ Clone this repo.
 Run ./compile.sh
 Open the ./dist/play/index.html file in a browser
 
+**Can I just play it now?**
+
+Yes, there's [a functioning build on my github.io page](https://justinpinner.github.io/ed-arcade-playable/play/) if I haven't broken it.
+
 **What does it do?**
 
 You are Commander Jameson, and you own a Cobra Mk III general-purpose ship. Congratulations!
