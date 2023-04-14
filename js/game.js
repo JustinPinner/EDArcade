@@ -147,6 +147,10 @@ class Game {
     return this._keyHandler;
   }
 
+  get gamepads() {
+    return this._gamepadHandler.gamepads || [];
+  }
+
   get gamepad() {
     return this._gamepadHandler.gamepad;
   }

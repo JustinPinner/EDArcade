@@ -412,21 +412,9 @@ Ship.prototype.playerUpdate = function() {
 		if (buttons.y) {
 			this.selectClosestTarget();
 		}
-		if (buttons.a) {
-			this.increaseThrust();
-		} else if (buttons.x) {
-			this.decreaseThrust();
-		} else {
-			this.thrustOff();
-		}
 	}
 	
 	if (game.touch) {
-		if (game.touchHandler.buttons['thrustButton'].touched) {
-			this.increaseThrust();
-		} else {
-			this.thrustOff();
-		}
 		if (game.touchHandler.buttons['leftButton'].touched) {
 			this.yaw('ccw');
 		}
@@ -438,50 +426,63 @@ Ship.prototype.playerUpdate = function() {
 		}
 	}
 
-	if (!game.gamepad && !game.touch) {
-		if (game.keys.up) {
-			this.increaseThrust();
-		} else if (game.keys.down) {
-			this.decreaseThrust();
-		} else {
-			this.thrustOff();
-		}
-		if (game.keys.ascend) {
-			this.ascend();
-		}
-		if (game.keys.descend) {
-			this.descend();
-		}
+	if (game.keys.ascend) {
+		this.ascend();
+	}
+	if (game.keys.descend) {
+		this.descend();
 	}
 	
-	if (!game.touch) {
-		if (game.keys.left) {
-			this.yaw('ccw');
-		}
-		if (game.keys.right) {
-			this.yaw('cw');
-		}
-		if (game.keys.boost) {
-			this.boost();
-		}
-		if (game.keys.switchTarget) {
-			this.selectClosestTarget();
-		}
-		if (game.keys.fire) {
-			this.fireWeapons();
-		}
-		if (game.keys.flightAssist) {
-			this._flightAssist = !this._flightAssist;
-		}
-		if (game.keys.thrust) {
-			this.increaseThrust();
-		}
-		if (game.keys.stop) {
-			this.allStop();
-		}
-		if (this._thrust != 0) {
-			this.updateMomentum();
-		}
+	if (game.keys.left) {
+		this.yaw('ccw');
+	}
+	if (game.keys.right) {
+		this.yaw('cw');
+	}
+	if (game.keys.boost) {
+		this.boost();
+	}
+	if (game.keys.switchTarget) {
+		this.selectClosestTarget();
+	}
+	if (game.keys.fire) {
+		this.fireWeapons();
+	}
+	if (game.keys.flightAssist) {
+		this._flightAssist = !this._flightAssist;
+	}
+	if (game.keys.stop) {
+		this.allStop();
+	}
+	if (this._thrust != 0) {
+		this.updateMomentum();
+	}
+
+	// main thrusters
+	if (
+		// (game.gamepads.length > 0 && game.gamepad.buttons.a) ||
+		(game.touch && game.touchHandler.buttons['thrustButton'].touched) ||
+		game.keys.up	
+	) {
+		this.increaseThrust();
+	}
+
+	// reverse thrusters
+	if (
+		// (game.gamepads.length > 0 && game.gamepad.buttons.x) ||
+		game.keys.down
+	) {
+		this.decreaseThrust();
+	}
+
+	// thrusters off?
+	if (
+		// (game.gamepads.length > 0 && !game.gamepad.buttons.a && !game.gamepad.buttons.x) &&
+		(game.touch && !game.touchHandler.buttons['thrustButton'].touched) &&
+		!game.keys.up &&
+		!game.keys.down
+	) {
+		this.thrustOff();
 	}
 
 	this.updatePosition();
