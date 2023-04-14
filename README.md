@@ -7,7 +7,7 @@ A 2D 360 degree arcade-style top-down endless scroller based on Elite Dangerous 
 **Why is it?**
 
 Because I like Elite Dangerous, and figured we needed a 2D arcade version. This seemed like a decent challenge for my first game attempt. 
-And I was curious to see what I could a) figure out and b) pull off using just vanilla JS. And jeez, I learned a lot!
+And I was curious to see what I could a) figure out and b) pull off using just vanilla JS. And I learned a lot!
 
 Fun fact: when Elite Dangerous first launched (I was a beta tier Kickstarter backer) the Cobra Mk3 had this little console looking thing that would have made an ideal screen to play this on, and I had the idea whilst making one of my flights out to [Hutton Orbital](https://elite-dangerous.fandom.com/wiki/Hutton_Orbital). I figured I might be able to hack something together and share it with Frontier in the hope that it might become a gift to players. However, I somewhat underestimated how long it would take to make _something_, never mind something _good enough_. 
 
